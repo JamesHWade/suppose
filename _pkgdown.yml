@@ -37,6 +37,8 @@ navbar:
         href: articles/regression.html
       - text: Plan the next measurement
         href: articles/research-design.html
+      - text: Continue, test and challenge a plan
+        href: articles/research-loop.html
       - text: Use the terminal
         href: articles/terminal.html
       - text: Methods and limits
@@ -52,6 +54,7 @@ articles:
   - measurements
   - regression
   - research-design
+  - research-loop
 - title: Understand and extend
   contents:
   - methods
@@ -77,11 +80,17 @@ reference:
   - record_update
 - title: Commit and assess
   contents:
+  - plan_regression_test
+  - commit_regression_test
+  - record_regression_test_data
+  - assess_regression_test
   - commit_test
   - assess_test
   - plot_test
 - title: Review sensitivity
   contents:
+  - sensitivity_regression
+  - record_regression_sensitivity
   - sensitivity_analysis
   - record_sensitivity
   - plot_sensitivity
@@ -98,6 +107,7 @@ reference:
   - regression_prior
   - fit_regression
   - predict_regression
+  - research_design_settings
   - design_regression
   - record_research_design
   - record_regression
@@ -128,6 +138,7 @@ search:
   exclude:
   - CONCEPT.html
   - WORK-REGRESSION.html
+  - WORK-RESEARCH-LOOP.html
   - QUALITY-REVIEW.html
   - CONTEXT.html
   - OBSERVATIONS-REVIEW.html

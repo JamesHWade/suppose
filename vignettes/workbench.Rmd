@@ -123,7 +123,9 @@ Corrections preserve the suggestion and the reviewer's changes separately.
 | Attach a CSV table | Import a table | Columns, units, source, exposure, and measurement identities |
 | Update a two-condition model | Learn from measurements | Condition mapping and independence |
 | Compare regression models | Fit and compare models | Predictors, priors, checks, and scientific reason |
-| Explore assumptions | Check sensitivity | Prior strength and likelihood weight, varied separately |
+| Explore assumptions | Check sensitivity, or Regression and design sensitivity for a retained regression | Prior and likelihood powers varied separately; optional utility thresholds separate |
+| Continue a saved plan | Plan the next measurement | Restore reviewed settings and recompute before a new review |
+| Challenge regression predictions | A future regression test | Exact future settings, joint uncertainty, complete cohorts and preserved corrections |
 | Plan a measurement | Plan the next measurement | Target contrast, feasible alternatives, costs, and preferences |
 | Freeze a future check | A future test | Model basis, planned cohort, protocol, and deadline |
 

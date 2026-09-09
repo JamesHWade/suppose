@@ -1,5 +1,11 @@
 # suppose 0.0.0.9000
 
+* The workbench can resume reviewed research plans, freeze and assess regression predictions, and review regression/design sensitivity through chat-assisted forms. Saved records support schema 13 and preserve earlier reviews and measurement corrections.
+* `plan_regression_test()` and `commit_regression_test()` freeze exact future IDs, settings, collection assumptions and joint Student-t predictions. `record_regression_test_data()` retains future data and corrections; `assess_regression_test()` checks complete eligible cohorts without refitting.
+* `research_design_settings()` restores reviewed candidates, targets, costs, budgets and preferences for a new comparison linked to its original plan.
+* `sensitivity_regression()` solves supported joint-prior and likelihood perturbations exactly, comparing contrasts, noise, predictive checks and optional design rankings. Utility changes remain separate; `record_regression_sensitivity()` retains the review.
+* Opening a saved conversation with automatic history enabled now uses shinychat's supported new-conversation operation.
+
 * `suppose_worked_example()` provides four guided learning records, also available from Examples in the workbench. Examples open in separate sessions and cover qualitative inquiry, prior draws, a retrospective PlantGrowth update, and synthetic regression comparison.
 
 * The workbench’s Possible outcomes view links prior means, future measurements and contrasts in reproducible realizations, with manual stepping, probability dots and exact threshold probabilities.

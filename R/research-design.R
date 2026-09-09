@@ -24,6 +24,7 @@
 #' @param max_units Maximum independent units available for an experiment, 1 to 100.
 #' @param rationale Scientific purpose, protocol, feasibility and cost assumptions.
 #' @param preference Explicit utility/preference explanation; required for `decide`.
+#' @param source_plan_id Optional reviewed plan ID when revising its settings.
 #' @return A sealed preview with references, costs, eligibility, exact benefits,
 #'   ties and inherited model-check limitations. No experiment is authorized,
 #'   executed, frozen as a prospective test or retained automatically.
@@ -37,7 +38,8 @@ design_regression <- function(
   threshold = 0,
   max_units = 6L,
   rationale,
-  preference = ""
+  preference = "",
+  source_plan_id = NULL
 ) {
   validate_record(x)
   rlang::check_installed(
@@ -51,6 +53,16 @@ design_regression <- function(
     )
   }
   entry <- research_regression(x, regression_id)
+  if (!is.null(source_plan_id)) {
+    original <- research_plan(x, source_plan_id)
+    if (!identical(original$design$regression_id, regression_id)) {
+      abort_suppose(
+        "A resumed plan must keep its original model. Start a new plan to use a different model.",
+        "stale"
+      )
+    }
+    research_current_model(x, entry)
+  }
   result <- entry$result
   f <- Filter(function(f) identical(f$label, entry$choice), result$fits)[[1]]
   fields <- f$terms[-1]
@@ -180,6 +192,7 @@ design_regression <- function(
       record_id = x$record_id,
       basis_id = proposal_basis_id(x),
       regression_id = regression_id,
+      source_plan_id = source_plan_id,
       fit_id = result$id,
       model = entry$choice,
       purpose = purpose,
@@ -339,6 +352,16 @@ validate_research_designs <- function(x) {
     ) {
       abort_suppose("Research design references disagree.", "reference")
     }
+    if (!is.null(d$source_plan_id)) {
+      parent <- research_plan(x, d$source_plan_id)
+      order <- vapply(x$research_designs, `[[`, character(1), "id")
+      if (
+        match(parent$id, order) >= match(entry$id, order) ||
+          !identical(parent$design$regression_id, d$regression_id)
+      ) {
+        abort_suppose("Research-plan ancestry is inconsistent.", "reference")
+      }
+    }
     if (!is.null(entry$form_draft)) {
       check_seal(entry$form_draft, "suppose_form_draft")
     }
@@ -350,4 +373,66 @@ research_design_inventory <- function(x) {
   lapply(x$research_designs, function(e) {
     list(id = e$id, choice = e$choice, reason = e$reason, design = e$design)
   })
+}
+
+research_plan <- function(x, id) {
+  check_text(id, "plan_id")
+  found <- Filter(function(e) identical(e$id, id), x$research_designs)
+  if (length(found) != 1L) {
+    abort_suppose("Select a reviewed plan in this record.", "reference")
+  }
+  found[[1]]
+}
+
+research_current_model <- function(x, entry) {
+  spec <- entry$result$spec
+  if (
+    spec$revision != length(x$revisions) ||
+      !identical(spec$claim_id, utils::tail(x$revisions, 1)[[1]]$claim$id)
+  ) {
+    abort_suppose(
+      "This model belongs to an earlier claim revision. Review a model for the current claim before creating a new plan or analysis.",
+      "stale"
+    )
+  }
+  invisible(entry)
+}
+
+#' Start new design settings from a reviewed plan
+#'
+#' Restores the actual reviewed settings, not the earlier chat suggestions.
+#' This returns inputs only. Recompute with [design_regression()] and review
+#' before retaining a new choice. The original review is unchanged.
+#' @param x A record containing the reviewed research plan.
+#' @param plan_id ID of a retained research-design entry.
+#' @return Named inputs for [design_regression()], including source-plan identity.
+#' @export
+research_design_settings <- function(x, plan_id) {
+  validate_record(x)
+  e <- research_plan(x, plan_id)
+  d <- e$design
+  research_current_model(x, research_regression(x, d$regression_id))
+  list(
+    regression_id = d$regression_id,
+    candidates = do.call(
+      rbind,
+      lapply(d$candidates, function(r) {
+        as.data.frame(
+          c(
+            list(candidate_id = r$candidate_id),
+            r$predictors,
+            list(repeats = r$repeats, cost = r$cost, feasible = r$feasible)
+          ),
+          stringsAsFactors = FALSE
+        )
+      })
+    ),
+    contrast = do.call(rbind, lapply(d$target, as.data.frame)),
+    purpose = d$purpose,
+    threshold = d$threshold,
+    max_units = d$max_units,
+    rationale = d$rationale,
+    preference = d$preference,
+    source_plan_id = e$id
+  )
 }

@@ -6,50 +6,55 @@ research_design_ui <- function(id) {
     shiny::tags$p(
       "Compare exact expected learning or decision benefits. Chat can prepare settings for review. Each row is an alternative experiment; saving a choice does not execute or freeze a test."
     ),
+    shiny::uiOutput(ns("saved_plans")),
     shiny::uiOutput(ns("model")),
-    shiny::selectInput(
-      ns("purpose"),
-      "Research purpose",
-      c(
-        "Estimate a mean difference" = "estimate",
-        "Choose between two protocols" = "decide"
-      )
-    ),
-    shiny::textAreaInput(
-      ns("contrast_csv"),
-      "Protocols A and B: two rows in original predictor units",
-      width = "100%"
-    ),
-    shiny::textAreaInput(
-      ns("candidates_csv"),
-      "Candidate experiments: candidate_id, predictors, repeats, cost, feasible",
-      width = "100%",
-      height = "170px"
-    ),
-    shiny::numericInput(
-      ns("max_units"),
-      "Available independent measurement units",
-      6,
-      min = 1,
-      max = 100
-    ),
-    shiny::numericInput(
-      ns("threshold"),
-      "Required mean gain to choose B (zero for estimation)",
-      0
-    ),
-    shiny::textAreaInput(
-      ns("preference"),
-      "Decision preference and its meaning",
-      width = "100%"
-    ),
-    shiny::textAreaInput(
-      ns("rationale"),
-      "Research purpose, protocol, feasibility and cost assumptions",
-      width = "100%"
-    ),
-    shiny::tags$p(
-      "Experiment cost is a total in the selected loss units: squared outcome units for estimation, outcome-equivalent utility for decisions. Zero explicitly omits experiment costs. Money cannot be subtracted without a stated conversion."
+    shiny::tags$details(
+      id = ns("settings"),
+      shiny::tags$summary("Adjust candidate settings and assumptions"),
+      shiny::selectInput(
+        ns("purpose"),
+        "Research purpose",
+        c(
+          "Estimate a mean difference" = "estimate",
+          "Choose between two protocols" = "decide"
+        )
+      ),
+      shiny::textAreaInput(
+        ns("contrast_csv"),
+        "Protocols A and B: two rows in original predictor units",
+        width = "100%"
+      ),
+      shiny::textAreaInput(
+        ns("candidates_csv"),
+        "Candidate experiments: candidate_id, predictors, repeats, cost, feasible",
+        width = "100%",
+        height = "170px"
+      ),
+      shiny::numericInput(
+        ns("max_units"),
+        "Available independent measurement units",
+        6,
+        min = 1,
+        max = 100
+      ),
+      shiny::numericInput(
+        ns("threshold"),
+        "Required mean gain to choose B (zero for estimation)",
+        0
+      ),
+      shiny::textAreaInput(
+        ns("preference"),
+        "Decision preference and its meaning",
+        width = "100%"
+      ),
+      shiny::textAreaInput(
+        ns("rationale"),
+        "Research purpose, protocol, feasibility and cost assumptions",
+        width = "100%"
+      ),
+      shiny::tags$p(
+        "Experiment cost is a total in the selected loss units: squared outcome units for estimation, outcome-equivalent utility for decisions. Zero explicitly omits experiment costs. Money cannot be subtracted without a stated conversion."
+      ),
     ),
     shiny::actionButton(ns("preview"), "Compare candidate experiments"),
     shiny::uiOutput(ns("incoming")),
@@ -98,34 +103,53 @@ research_design_details <- function(d) {
         collapse = "; "
       )
     ),
+    if (!is.null(d$source_plan_id)) {
+      inquiry_field("Continues reviewed plan", d$source_plan_id)
+    },
     inquiry_field("Preference", d$preference),
     inquiry_field("Research assumptions", d$rationale),
-    shiny::tags$table(
-      class = "table table-sm",
-      shiny::tags$caption(paste("Candidate benefit and cost in", d$loss_units)),
-      shiny::tags$thead(shiny::tags$tr(lapply(
-        c("Candidate / setting", "Units", "Eligible", "Benefit", "Cost", "Net"),
-        shiny::tags$th
-      ))),
-      shiny::tags$tbody(lapply(d$candidates, function(r) {
-        shiny::tags$tr(
-          shiny::tags$td(paste(
-            r$candidate_id,
-            paste(
-              names(r$predictors),
-              unlist(r$predictors),
-              sep = "=",
-              collapse = ", "
-            ),
-            if (r$outside_observed_range) "(outside observed range)"
-          )),
-          shiny::tags$td(r$repeats),
-          shiny::tags$td(if (r$eligible) "Yes" else "No"),
-          shiny::tags$td(sprintf("%.5g", r$benefit)),
-          shiny::tags$td(sprintf("%.5g", r$cost)),
-          shiny::tags$td(sprintf("%.5g", r$net_benefit))
-        )
-      }))
+    shiny::tags$div(
+      class = "table-responsive",
+      role = "region",
+      tabindex = "0",
+      `aria-label` = "Candidate experiment comparison",
+      shiny::tags$table(
+        class = "table table-sm",
+        shiny::tags$caption(paste(
+          "Candidate benefit and cost in",
+          d$loss_units
+        )),
+        shiny::tags$thead(shiny::tags$tr(lapply(
+          c(
+            "Candidate / setting",
+            "Units",
+            "Eligible",
+            "Benefit",
+            "Cost",
+            "Net"
+          ),
+          shiny::tags$th
+        ))),
+        shiny::tags$tbody(lapply(d$candidates, function(r) {
+          shiny::tags$tr(
+            shiny::tags$td(paste(
+              r$candidate_id,
+              paste(
+                names(r$predictors),
+                unlist(r$predictors),
+                sep = "=",
+                collapse = ", "
+              ),
+              if (r$outside_observed_range) "(outside observed range)"
+            )),
+            shiny::tags$td(r$repeats),
+            shiny::tags$td(if (r$eligible) "Yes" else "No"),
+            shiny::tags$td(sprintf("%.5g", r$benefit)),
+            shiny::tags$td(sprintf("%.5g", r$cost)),
+            shiny::tags$td(sprintf("%.5g", r$net_benefit))
+          )
+        }))
+      )
     ),
     shiny::tags$p(
       if (length(d$recommended)) {
@@ -175,6 +199,8 @@ research_design_server <- function(
     preview <- shiny::reactiveVal(NULL)
     source <- shiny::reactiveVal(NULL)
     incoming <- shiny::reactiveVal(NULL)
+    resumed <- shiny::reactiveVal(NULL)
+    pending_plan <- shiny::reactiveVal(NULL)
     status <- shiny::reactiveVal(
       "Retain a model, then ask chat to prepare next-measurement options."
     )
@@ -214,7 +240,13 @@ research_design_server <- function(
       }
       v <- research_design_defaults(current())
       for (name in names(v)) {
-        v[[name]] <- input[[name]] %||% v[[name]]
+        v[name] <- list(
+          if (name == "source_plan_id") {
+            resumed()
+          } else {
+            input[[name]] %||% v[[name]]
+          }
+        )
       }
       v
     })
@@ -223,6 +255,7 @@ research_design_server <- function(
       version = object_id(values())
     ))
     update <- function(v) {
+      resumed(v$source_plan_id)
       shiny::updateSelectInput(
         session,
         "regression_id",
@@ -241,6 +274,79 @@ research_design_server <- function(
         shiny::updateTextAreaInput(session, name, value = v[[name]])
       }
     }
+    output$saved_plans <- shiny::renderUI({
+      plans <- current()$research_designs
+      if (!length(plans)) {
+        return(NULL)
+      }
+      shiny::tagList(
+        shiny::selectInput(
+          session$ns("plan_id"),
+          "Reviewed plan to continue",
+          stats::setNames(
+            vapply(plans, `[[`, character(1), "id"),
+            vapply(plans, function(e) paste(e$choice, e$reason), character(1))
+          )
+        ),
+        shiny::actionButton(
+          session$ns("resume_plan"),
+          "Start draft from reviewed plan"
+        ),
+        shiny::actionButton(session$ns("blank_plan"), "Start a blank plan"),
+        if (!is.null(pending_plan())) {
+          shiny::actionButton(
+            session$ns("replace_plan"),
+            "Replace current form with reviewed plan"
+          )
+        }
+      )
+    })
+    resume_plan <- function(id) {
+      v <- research_plan_form_values(current(), id)
+      update(v)
+      preview(NULL)
+      source(NULL)
+      incoming(NULL)
+      pending_plan(NULL)
+      shiny::updateCheckboxInput(session, "reviewed", value = FALSE)
+      status(
+        "Reviewed settings restored as a new draft. Compare candidates again before a fresh review; the original plan is unchanged."
+      )
+    }
+    shiny::observeEvent(
+      input$resume_plan,
+      safely({
+        guard()
+        if (nzchar(values()$candidates_csv %||% "")) {
+          pending_plan(input$plan_id)
+          status(
+            "Current form edits are preserved. Choose Replace current form with reviewed plan to use the saved settings."
+          )
+        } else {
+          resume_plan(input$plan_id)
+        }
+      })
+    )
+    shiny::observeEvent(
+      input$replace_plan,
+      safely({
+        guard()
+        shiny::req(pending_plan())
+        resume_plan(pending_plan())
+      })
+    )
+    shiny::observeEvent(
+      input$blank_plan,
+      safely({
+        guard()
+        update(research_design_defaults(current()))
+        preview(NULL)
+        source(NULL)
+        incoming(NULL)
+        pending_plan(NULL)
+        status("New blank plan. Earlier reviews are unchanged.")
+      })
+    )
     apply_draft <- function(d) {
       check_seal(d, "suppose_form_draft")
       if (!identical(d$base_id, proposal_basis_id(current()))) {
@@ -394,6 +500,7 @@ research_design_server <- function(
     )
     output$status <- shiny::renderText(status())
     list(
+      resume_plan = resume_plan,
       preview = preview,
       source = source,
       incoming = incoming,

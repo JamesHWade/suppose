@@ -79,6 +79,7 @@ You can retain `"none"` if none is appropriate. In the workbench,
 **Plan the next measurement** provides the preview and review controls.
 
 A saved plan is neither an executed experiment nor a frozen prospective test.
-The existing `commit_test()` workflow applies to the two-condition fixed-noise
-model, not these regressions. Multi-setting batch optimization, interactions,
-and general nonlinear models remain outside the current method.
+Use the [continue, test and sensitivity guide](research-loop.html) to resume a
+reviewed plan, freeze a regression prediction, attach future measurements, or
+review assumption dependence. Multi-setting batch optimization, interactions,
+and general nonlinear models remain outside the planning method.

@@ -86,6 +86,14 @@ inquiry_context_summary <- function(request) {
       research_design_inventory(x),
       1
     )),
+    latest_regression_tests = compact(utils::tail(
+      regression_test_inventory(x),
+      2
+    )),
+    latest_regression_sensitivity = compact(utils::tail(
+      x$regression_sensitivities,
+      1
+    )),
     workbench_forms = lapply(request$form_state, function(f) {
       if (is.null(f)) {
         return(NULL)
@@ -101,6 +109,8 @@ inquiry_context_summary <- function(request) {
       "draft_measurements prepares pasted CSV outcomes and predictors for one human-reviewed import.",
       "draft_regression prepares priors only; the human fits and retains in Fit and compare models.",
       "draft_research_design prepares exact BED planning reviews from a retained chosen regression; /design does not freeze or execute a test.",
+      "draft_regression_test prepares joint unknown-noise future-test reviews; only the human freezes and assesses. Use the regression-specific form for retained regressions.",
+      "draft_regression_sensitivity compares exact prior/likelihood perturbations and optional plan rankings; utility changes are separate.",
       "read_inquiry retrieves details omitted here; no routine read is necessary."
     )
   )

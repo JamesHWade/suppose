@@ -29,6 +29,9 @@ cli_record_summary <- function(x) {
     model_extensions = plain(x$model_extensions),
     predictor_datasets = plain(x$predictors),
     regressions = plain(x$regressions),
-    research_designs = plain(x$research_designs)
+    research_designs = plain(x$research_designs),
+    regression_tests = plain(regression_test_inventory(x)),
+    regression_test_data = plain(x$regression_test_data),
+    regression_sensitivities = plain(x$regression_sensitivities)
   )
 }

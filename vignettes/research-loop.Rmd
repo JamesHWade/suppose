@@ -1,0 +1,211 @@
+---
+title: "Continue, test, and challenge a research plan"
+output: rmarkdown::html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7,
+  fig.height = 4.5, out.width = "100%", dpi = 144)
+library(suppose)
+```
+
+A reviewed model supports several different questions: where to measure next,
+what future result would challenge its prediction, and whether changing an
+assumption changes the recommendation. Each has its own review. Saving a planning
+choice does not freeze a prediction or run an experiment.
+
+This executable example uses an invented coating dataset. Its results provide
+no evidence about a real material. The optional alloptr design engine is needed
+for the planning sections.
+
+```{r example}
+record <- suppose_worked_example("regression", seed = 1)
+model <- tail(record$regressions, 1)[[1]]
+contrast <- data.frame(temperature = c(140, 160), duration = 60)
+```
+
+## Continue a reviewed plan
+
+In **Record > Plan the next measurement**, choose a saved plan and click
+**Start draft from reviewed plan**. This restores its actual candidates, target,
+costs, budget and preference. Populated forms require an explicit replacement.
+The comparison stays visible while the CSV and numerical controls sit under
+**Adjust candidate settings and assumptions**.
+
+Ask chat to change one assumption, such as the cost of one experiment. Other
+settings are preserved. If you edit the form while chat works, the incoming draft
+waits for you to choose whether to use it. Every revised plan needs a new
+comparison and review, and points back to the original planning review. A model
+from an earlier claim revision must be reviewed for the current claim first.
+
+```{r plan, eval=requireNamespace("alloptr", quietly=TRUE)}
+candidates <- data.frame(
+  candidate_id = c("low", "high"),
+  temperature = c(140, 160), duration = 60,
+  repeats = 6, cost = 0, feasible = TRUE
+)
+comparison <- design_regression(
+  record, model$id, candidates, contrast,
+  rationale = "Invented independent preparations; explicitly omit costs."
+)
+record <- record_research_design(
+  record, comparison, comparison$recommended[1],
+  "Tutorial analyst", "Review the synthetic learning comparison", reviewed = TRUE
+)
+first_plan <- record$research_designs[[1]]
+settings <- research_design_settings(record, first_plan$id)
+settings$candidates$cost[2] <- 0.01
+revised <- do.call(design_regression, c(list(x = record), settings))
+record <- record_research_design(
+  record, revised, revised$recommended[1],
+  "Tutorial analyst", "Change only high-temperature experiment cost", reviewed = TRUE
+)
+stopifnot(identical(record$research_designs[[1]], first_plan))
+```
+
+## Challenge a frozen prediction
+
+With a chosen regression, `/test` opens **A future regression test**. Plan the
+exact future IDs, predictor settings in original units, collection protocol,
+assignment procedure, deadline and assessment rule. Review the computed
+prediction and confirm independent units and unexamined outcomes before freezing.
+Chat can prepare the form; the person freezes it.
+
+Two rules are available:
+
+| Rule | What is assessed | Uncertainty |
+|---|---|---|
+| `joint_outcomes` | All planned outcomes in one joint region | Joint coefficient uncertainty and unknown common noise; one simultaneous check |
+| `mean_difference` | Future sample mean B minus A | A Student-t interval including future measurement noise |
+
+A population mean is unobserved. Its uncertainty is narrower than the uncertainty
+of a future sample mean difference. Neither rule checks independent marginal
+intervals as if they were a simultaneous region. Both require the complete
+planned cohort; missing outcomes cannot silently change the statistic.
+
+Here the six measurements form a separate two-setting test. A linked research
+plan must instead match its chosen single setting and replicate count exactly;
+a declined plan cannot create a commitment.
+
+```{r freeze}
+planned <- data.frame(
+  observation_id = paste0("future-", 1:6),
+  condition = rep(c("A", "B"), each = 3),
+  temperature = rep(c(140, 160), each = 3), duration = 60
+)
+deadline <- format(Sys.time() + 7 * 86400, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+preview <- plan_regression_test(
+  record, model$id, planned,
+  source = "fictional:future-coating", protocol = "independent-randomized-v1",
+  horizon = deadline, target = "Fixed-time temperature contrast",
+  design = "intervention",
+  design_details = "Invented independent batches with randomized assignment and oven order.",
+  rule = "mean_difference"
+)
+preview$prediction$contrast[c("mean", "lower", "upper")]
+record <- commit_regression_test(
+  record, preview, "Tutorial analyst", "Freeze before generating the fictional outcomes",
+  independent = TRUE, outcomes_unseen = TRUE
+)
+commitment <- tail(record$regression_commitments, 1)[[1]]
+```
+
+## Attach outcomes and preserve corrections
+
+Download the measurement template from the frozen test. Fill in actual settings,
+outcomes, independent-unit identities and observation times. Declare actual
+source, protocol and units; the template's planned values are not proof of what
+happened. Review the uploaded table before attaching it, then preview and retain
+an assessment.
+
+The example generates fictional outcomes **after** freezing. It is a software
+rehearsal, not a scientific validation.
+
+```{r collect}
+future <- planned
+future$outcome <- 54 + 0.4 * (future$temperature - 150) + c(-1, 0, 1, 1, -1, 0)
+future$batch <- future$observation_id
+future$specimen <- future$observation_id
+future$observed_at <- format(Sys.time(), "%Y-%m-%dT%H:%M:%OS6Z", tz = "UTC")
+record <- record_regression_test_data(
+  record, commitment$id, future,
+  source = "fictional:future-coating", protocol = "independent-randomized-v1",
+  units = "MPa", predictor_units = c(temperature = "degC", duration = "minutes"),
+  author = "Tutorial analyst", reason = "Invented future measurements",
+  outcomes_unseen = TRUE
+)
+record <- assess_regression_test(
+  record, commitment$id, "Tutorial analyst", "Review the complete fictional cohort",
+  protocol_followed = TRUE
+)
+tail(record$regression_assessments, 1)[[1]]$status
+```
+
+Before the deadline, incomplete cohorts await outcomes. After the deadline they
+are inconclusive. Wrong settings, mismatched units or protocols, repeated units,
+unknown times, outcomes before freezing, and outcomes after the deadline prevent
+an eligible assessment. Declarations do not authenticate collection or establish
+causality.
+
+A correction names the active attachment in `supersedes` and contains exactly its
+IDs. This retains the earlier measurements and assessments. A new assessment
+references the corrected evidence versions. Revising the claim or fitting a
+later model does not change the frozen prediction.
+
+## Check dependence on model and decision assumptions
+
+With a chosen regression, `/sensitivity` opens **Regression and design
+sensitivity**. Choose a two-setting mean contrast and powers for the joint prior,
+likelihood, or both separately. Review changes in the contrast interval, the
+probability of a scientifically meaningful gain, noise, predictive checks and,
+optionally, a saved plan's candidate benefits and recommendations.
+
+```{r sensitivity}
+comparison <- sensitivity_regression(
+  record, model$id, contrast, meaningful_gain = 8,
+  powers = c(0.8, 1, 1.25), draws = 200, seed = 1
+)
+do.call(rbind, lapply(comparison$variants, function(v) {
+  data.frame(component = v$component, power = v$power,
+    mean = v$contrast$mean, probability_above_8 = v$contrast$probability_above,
+    review_flag = v$review_flag)
+}))
+record <- record_regression_sensitivity(
+  record, comparison, "Tutorial analyst",
+  "Inspect the consequences of changing each assumption", reviewed = TRUE
+)
+```
+
+These powers act on the full joint prior density in coefficients and variance,
+or on the full likelihood. They are not replacements for alternative scientific
+models, and do not mean multiplying a coefficient's marginal SD. Improper powered
+priors are rejected. Each posterior is solved exactly; predictive checks retain
+finite simulation uncertainty and use the original measurement model.
+
+To include a saved research plan, supply its entry ID as `design_id`. Candidate
+settings, costs, feasibility and budget stay fixed. For a decision-purpose plan,
+`utility_thresholds` changes only the stated preference under the original
+posterior. It is separate from `meaningful_gain`, the scientific threshold. Equal
+best scores at numerical resolution remain tied; an empty recommendation means
+no positive net benefit.
+
+Power scaling follows the component-wise definition in the
+[priorsense guide](https://n-kall.github.io/priorsense/articles/powerscaling.html).
+Suppose solves this bounded conjugate family directly rather than applying
+importance sampling. A few unflagged perturbations do not establish robustness.
+See [the mathematical methods](methods.html) for the parameterization.
+
+## Save and reopen
+
+```{r save}
+path <- tempfile(fileext = ".json")
+write_record(record, path)
+reopened <- read_record(path)
+stopifnot(identical(reopened$regression_commitments[[1]]$id, commitment$id))
+length(reopened$regression_assessments)
+```
+
+The app's native history retains the conversation, reviewed plans, frozen tests,
+measurement versions, assessments and sensitivity reviews. Downloaded records
+are portable copies. Pending chat drafts reopen as suggestions, with no restored
+review confirmation or execution authority.

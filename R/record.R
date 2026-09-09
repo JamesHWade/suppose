@@ -203,10 +203,10 @@ validate_record <- function(x) {
       !is.numeric(x$schema_version) ||
       length(x$schema_version) != 1L ||
       is.na(x$schema_version) ||
-      !x$schema_version %in% c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+      !x$schema_version %in% c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)
   ) {
     abort_suppose(
-      "Unsupported bundle schema; this version reads schemas 1 through 12.",
+      "Unsupported bundle schema; this version reads schemas 1 through 13.",
       "schema"
     )
   }
@@ -226,7 +226,11 @@ validate_record <- function(x) {
           "predictors",
           "regressions",
           "research_designs",
-          "model_references"
+          "model_references",
+          "regression_commitments",
+          "regression_test_data",
+          "regression_assessments",
+          "regression_sensitivities"
         )
       ),
       c("schema_version", "record_id", "revisions")
@@ -286,6 +290,8 @@ validate_record <- function(x) {
   validate_regressions(x)
   validate_research_designs(x)
   validate_model_references(x)
+  validate_regression_tests(x)
+  validate_regression_sensitivities(x)
   invisible(x)
 }
 
@@ -413,7 +419,13 @@ restore_record_types <- function(z) {
           "suppose_regression",
           "suppose_regression_entry",
           "suppose_research_design",
-          "suppose_research_design_entry"
+          "suppose_research_design_entry",
+          "suppose_regression_test_plan",
+          "suppose_regression_commitment",
+          "suppose_regression_test_data",
+          "suppose_regression_assessment",
+          "suppose_regression_sensitivity",
+          "suppose_regression_sensitivity_entry"
         )
   ) {
     fields <- switch(
@@ -422,6 +434,11 @@ restore_record_types <- function(z) {
       suppose_judgment = c("observed", "issues"),
       suppose_analysis = "observation_ids",
       suppose_research_design = "recommended",
+      suppose_regression_assessment = c(
+        "evidence_ids",
+        "issues",
+        "missing_ids"
+      ),
       suppose_form_draft = c(
         "provided_fields",
         "defaulted_fields",

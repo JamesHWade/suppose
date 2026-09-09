@@ -19,6 +19,8 @@ inquiry_tool_choices <- function(tools) {
     draft_sensitivity = "Prepare sensitivity review",
     draft_regression = "Prepare regression priors",
     draft_research_design = "Prepare Bayesian research design",
+    draft_regression_test = "Prepare future regression test",
+    draft_regression_sensitivity = "Prepare regression sensitivity",
     propose_interpretation = "Draft an interpretation",
     propose_normal_contrast = "Propose a normal mean contrast",
     preview_proposal = "Preview the pending suggestion",

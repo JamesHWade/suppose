@@ -504,7 +504,8 @@ new_proposal_session <- function(
           ),
           workbench_form_tools(id, guard, state, receipt),
           measurement_form_tools(id, guard, state, receipt),
-          list(research_design_tool(id, guard, state, receipt))
+          list(research_design_tool(id, guard, state, receipt)),
+          regression_research_tools(id, guard, state, receipt)
         ),
         compact_inquiry_tool
       ))

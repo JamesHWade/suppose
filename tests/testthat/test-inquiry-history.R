@@ -42,3 +42,56 @@ test_that("tool failures persist their message without R execution internals", {
   expect_identical(restored$props$id, "call_1")
   expect_s3_class(inquiry_history_store(tempdir()), "FileConversationStore")
 })
+
+test_that("initial portable conversations open with persistent history enabled", {
+  skip_if_not_installed("deputy")
+  skip_if_not_installed("shinychat")
+  messages <- list(
+    list(role = "user", text = "A coating may help"),
+    list(role = "assistant", text = "Let us inspect the comparison.")
+  )
+  messages <- lapply(messages, function(m) {
+    m$status <- "completed"
+    m$created_at <- now_utc()
+    m
+  })
+  x <- record_conversation(
+    elicitation_record(claim("A coating may help", "You")),
+    messages
+  )
+  directory <- tempfile()
+  shiny::testServer(
+    function(input, output, session) {
+      state <- inquiry_server(
+        input,
+        output,
+        session,
+        initial = x,
+        history_dir = directory,
+        agent_factory = function() {
+          suppose_agent(ellmer::chat_openai_compatible(
+            base_url = "http://127.0.0.1:1/v1",
+            model = "fixture-model",
+            credentials = function() "fixture",
+            echo = "none"
+          ))
+        }
+      )
+    },
+    {
+      session$setInputs(inquiry_history_browser_token = "research-loop-test")
+      session$flushReact()
+      expect_identical(state$record(), x)
+      expect_identical(state$transcript(), messages)
+      expect_length(state$client()$get_turns(), 2)
+      path <- tempfile(fileext = ".json")
+      write_record(x, path)
+      session$setInputs(inquiry_history_new = 1)
+      expect_null(state$record())
+      session$setInputs(reopen = list(datapath = path))
+      expect_match(state$status(), "record reopened")
+      expect_identical(json_data(state$record()), json_data(x))
+      expect_length(state$client()$get_turns(), 2)
+    }
+  )
+})

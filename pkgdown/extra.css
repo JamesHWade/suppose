@@ -51,3 +51,6 @@ footer { border-top: 1px solid #e4dce9; color: #65566c; }
   .suppose-principle { padding: 1.25rem; }
   .table { font-size: .9rem; }
 }
+
+/* Keep long display equations readable without widening mobile pages. */
+.template-article .math.display, .template-article math[display="block"] { display: block; max-width: 100%; overflow-x: auto; }

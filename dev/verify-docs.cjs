@@ -9,7 +9,7 @@ const path = require('node:path');
   const base = process.argv[2] || 'http://127.0.0.1:3910';
   const articles = [
     'suppose', 'workbench', 'prior-consequences', 'measurements',
-    'regression', 'research-design', 'methods', 'terminal'
+    'regression', 'research-design', 'research-loop', 'methods', 'terminal'
   ];
   const pages = ['index.html', 'articles/index.html', 'reference/index.html',
     ...articles.map(name => `articles/${name}.html`)];

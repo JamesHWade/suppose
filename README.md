@@ -42,6 +42,7 @@ future measurements. Change an assumption and inspect how the consequences chang
 - **Ready for a model?** [Inspect prior consequences](vignettes/prior-consequences.Rmd),
   [learn from measurements](vignettes/measurements.Rmd), or
   [fit and revise a regression](vignettes/regression.Rmd).
+- **Planning follow-up?** [Continue, test and challenge a research plan](vignettes/research-loop.Rmd).
 
 ## Install
 

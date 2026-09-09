@@ -14,7 +14,8 @@ research_design_defaults <- function(record) {
     threshold = 0,
     max_units = 6,
     rationale = "",
-    preference = ""
+    preference = "",
+    source_plan_id = NULL
   )
 }
 
@@ -118,4 +119,18 @@ research_design_tool <- function(id, guard, state, receipt) {
     ),
     name = "draft_research_design"
   )
+}
+
+research_plan_form_values <- function(x, id) {
+  v <- research_design_settings(x, id)
+  csv <- function(d) {
+    paste(
+      utils::capture.output(utils::write.csv(d, row.names = FALSE)),
+      collapse = "\n"
+    )
+  }
+  v$candidates_csv <- csv(v$candidates)
+  v$contrast_csv <- csv(v$contrast)
+  v[c("candidates", "contrast")] <- NULL
+  v
 }

@@ -171,9 +171,10 @@ Close the remaining intended-user walkthrough in [SUP-011](#sup-011). The
 locally verifiable P0 implementation and acceptance checks are complete; the
 [P0 report](artifacts/p0-review.md) records the tested boundaries.
 
-For the current research-design direction, SUP-029 is implemented. Next close
-[SUP-030](#sup-030) (regression prospective commitments),
-[SUP-036](#sup-036) (sensitivity), and [SUP-020](#sup-020) (campaign dispatch).
+For the current research-design direction, SUP-029, [SUP-030](#sup-030),
+[SUP-036](#sup-036), and [SUP-037](#sup-037) are implemented: review a plan,
+resume it, freeze and assess future measurements, and inspect sensitivity.
+[SUP-020](#sup-020) remains the separate campaign-dispatch integration.
 [SUP-031](#sup-031) adds scientifically motivated model alternatives; then
 SUP-017/SUP-032 enable richer reference models. Evaluate SUP-033 before committing
 to learned Action-BED policies (SUP-034). Equation search (SUP-035) depends on
@@ -240,14 +241,14 @@ claim records, elicitation inputs, and numerical probe. That initial chunk is no
 | [SUP-027](#sup-027) | Ship the Suppose CLI through ir and rx | P0 | implemented | [SUP-007](#sup-007), [SUP-008](#sup-008), [SUP-026](#sup-026) |
 | [SUP-028](#sup-028) | Close a fitted Bayesian model-revision loop | P1 | implemented | [SUP-012](#sup-012), [SUP-013](#sup-013), [SUP-016](#sup-016) |
 | [SUP-029](#sup-029) | Review exact Bayesian next-measurement benefits | P1 | implemented | SUP-028 |
-| [SUP-030](#sup-030) | Freeze and assess regression-specific future measurements | P1 | ready | SUP-014, SUP-028, SUP-029 |
+| [SUP-030](#sup-030) | Freeze and assess regression-specific future measurements | P1 | implemented | SUP-014, SUP-028, SUP-029 |
 | [SUP-031](#sup-031) | Propose scientific interactions and transformations | P1 | ready | SUP-028 |
 | [SUP-032](#sup-032) | Connect richer reference models to projection predictive selection | P2 | needs-design | SUP-017, SUP-031 |
 | [SUP-033](#sup-033) | Evaluate multi-setting and nonlinear decision designs | P2 | needs-design | SUP-019, SUP-020, SUP-029 |
 | [SUP-034](#sup-034) | Evaluate Action-BED learned design and action policies | P3 | needs-design | SUP-017, SUP-033 |
 | [SUP-035](#sup-035) | Evaluate Bayesian equation alternatives as experimental hypotheses | P3 | needs-design | SUP-030, SUP-031, SUP-032, SUP-033 |
-| [SUP-036](#sup-036) | Review sensitivity of regression and design choices | P1 | ready | SUP-015, SUP-028, SUP-029 |
-| [SUP-037](#sup-037) | Continue a reviewed research plan without rebuilding its form | P1 | ready | SUP-029 |
+| [SUP-036](#sup-036) | Review sensitivity of regression and design choices | P1 | implemented | SUP-015, SUP-028, SUP-029 |
+| [SUP-037](#sup-037) | Continue a reviewed research plan without rebuilding its form | P1 | implemented | SUP-029 |
 
 ## Work items
 
@@ -938,19 +939,22 @@ are not alloptr campaign proposals, execution records or frozen prospective test
 **Outcome:** A reviewed research plan becomes a genuinely prospective check with
 immutable predictions, collection rules and later assessment.
 
-**Priority:** P1 · **Milestone:** M3 · **Type:** feature · **Status:** ready
+**Priority:** P1 · **Milestone:** M3 · **Type:** feature · **Status:** implemented
 
 **Depends on:** [SUP-014](#sup-014), [SUP-028](#sup-028), [SUP-029](#sup-029)
 
 **Acceptance criteria**
 
-- [ ] Freeze fit/model ID, target, exact future IDs and settings, independent-unit/assignment protocol, deadline and an explicit assessment rule before observations are seen.
-- [ ] Retain joint predictive dependence and unknown noise; distinguish population-mean targets from future-observation intervals and specify multiplicity for joint checks.
-- [ ] Require eligible unseen evidence with matching units/protocol; handle incomplete batches, corrected observations and expired deadlines without rewriting commitments.
-- [ ] Keep design utility, predictive adequacy and causal claims distinct; declining a plan never creates a commitment.
-- [ ] Expose review/freeze/assessment in chat-assisted forms and saved records.
+- [x] Freeze fit/model ID, target, exact future IDs and settings, independent-unit/assignment protocol, deadline and an explicit assessment rule before observations are seen.
+- [x] Retain joint predictive dependence and unknown noise; distinguish population-mean targets from future-observation intervals and specify multiplicity for joint checks.
+- [x] Require eligible unseen evidence with matching units/protocol; handle incomplete batches, corrected observations and expired deadlines without rewriting commitments.
+- [x] Keep design utility, predictive adequacy and causal claims distinct; declining a plan never creates a commitment.
+- [x] Expose review/freeze/assessment in chat-assisted forms and saved records.
 
-**Evidence:** The coating walkthrough exposed incorrect routing to fixed-noise
+**Implementation evidence:** [Research-loop acceptance](artifacts/research-loop-review.md)
+and the executable [continue, test and sensitivity guide](vignettes/research-loop.Rmd).
+
+**Original motivating evidence:** The coating walkthrough exposed incorrect routing to fixed-noise
 `/test`; current BED proposals explicitly remain uncommitted. [Walkthrough](artifacts/chat-walkthrough/review.md),
 [Bayesian workflow](artifacts/bayesian-research-design.md).
 
@@ -1119,18 +1123,21 @@ claims covering expressions discarded before the Bayesian stage.
 **Outcome:** A person sees whether plausible model/prior choices change the
 scientific conclusion or recommended next experiment.
 
-**Priority:** P1 · **Milestone:** M3 · **Type:** feature · **Status:** ready
+**Priority:** P1 · **Milestone:** M3 · **Type:** feature · **Status:** implemented
 
 **Depends on:** [SUP-015](#sup-015), [SUP-028](#sup-028), [SUP-029](#sup-029)
 
 **Acceptance criteria**
 
-- [ ] Define supported prior/likelihood perturbations for the normal/inverse-gamma model, preserving their exact mathematical meaning and properness.
-- [ ] Compare mean contrasts, noise, predictive checks and design benefits using identical rows, candidate settings and utility assumptions.
-- [ ] Distinguish utility sensitivity from model sensitivity; show when rankings are effectively tied or a recommendation changes.
-- [ ] Retain variants separately without changing original model reviews or frozen tests; expose a regression-specific chat-assisted review flow.
+- [x] Define supported prior/likelihood perturbations for the normal/inverse-gamma model, preserving their exact mathematical meaning and properness.
+- [x] Compare mean contrasts, noise, predictive checks and design benefits using identical rows, candidate settings and utility assumptions.
+- [x] Distinguish utility sensitivity from model sensitivity; show when rankings are effectively tied or a recommendation changes.
+- [x] Retain variants separately without changing original model reviews or frozen tests; expose a regression-specific chat-assisted review flow.
 
-**Evidence:** The live coating walkthrough initially proposed a slope prior too
+**Implementation evidence:** [Research-loop acceptance](artifacts/research-loop-review.md)
+and the executable [continue, test and sensitivity guide](vignettes/research-loop.Rmd).
+
+**Original motivating evidence:** The live coating walkthrough initially proposed a slope prior too
 tight for plausible useful gains; its final model check remained borderline.
 [Walkthrough](artifacts/chat-walkthrough/review.md), [BED evidence](artifacts/bed-implementation-evidence.md).
 
@@ -1147,18 +1154,21 @@ reuse of the older fixed-noise sensitivity form for unsupported regressions.
 
 **Outcome:** Reopening a plan makes its assumptions easy to reuse and revise.
 
-**Priority:** P1 · **Milestone:** M3 · **Type:** usability · **Status:** ready
+**Priority:** P1 · **Milestone:** M3 · **Type:** usability · **Status:** implemented
 
 **Depends on:** [SUP-029](#sup-029)
 
 **Acceptance criteria**
 
-- [ ] Provide an explicit action to start a new draft from a retained plan, restoring its actual reviewed candidate settings, target, costs, budget and preferences.
-- [ ] Preserve the original planning review and require a fresh comparison and review when any consequential setting changes.
-- [ ] Keep the candidate comparison and model limitations prominent; place CSV editing and numerical details behind optional controls.
-- [ ] Allow chat to revise one assumption without re-entering the others, while preserving concurrent manual edits and identifying stale source models.
+- [x] Provide an explicit action to start a new draft from a retained plan, restoring its actual reviewed candidate settings, target, costs, budget and preferences.
+- [x] Preserve the original planning review and require a fresh comparison and review when any consequential setting changes.
+- [x] Keep the candidate comparison and model limitations prominent; place CSV editing and numerical details behind optional controls.
+- [x] Allow chat to revise one assumption without re-entering the others, while preserving concurrent manual edits and identifying stale source models.
 
-**Evidence:** Native reopening in the [BED acceptance](artifacts/bed-review.md)
+**Implementation evidence:** [Research-loop acceptance](artifacts/research-loop-review.md)
+and the executable [continue, test and sensitivity guide](vignettes/research-loop.Rmd).
+
+**Original motivating evidence:** Native reopening in the [BED acceptance](artifacts/bed-review.md)
 preserved the reviewed plan exactly, but a new form still starts blank. The saved
 review is inspectable; continuing it is more work than it should be.
 

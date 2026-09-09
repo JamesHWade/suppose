@@ -41,8 +41,8 @@ of a claim.
 | Elicit two means | Normal quantiles fitted by least squares | Exactly two ordered numeric conditions |
 | Predict a contrast | Joint normal means plus independent normal batch variation | Correlation and batch SDs are supplied |
 | Update from observations | Analytic normal update | Positive known measurement SDs; independent units |
-| Check a future cohort | Frozen central normal interval for a sample-mean difference | Complete designated cohort; fixed-noise model |
-| Inspect sensitivity | Exact one-at-a-time prior or likelihood power scaling | Fixed-noise normal update only |
+| Check a future cohort | Frozen normal interval for the fixed-noise model, or joint Student-t region / sample-mean contrast for regression | Complete designated cohort; exact IDs, settings, timing and protocol |
+| Inspect sensitivity | Exact one-at-a-time prior or likelihood power scaling | Fixed-noise normal update or proper normal/inverse-gamma regression; utility changes separate |
 | Explore model growth | Add one shared independent normal coefficient | Prior implications, not fitting that extension |
 | Fit regression | Proper normal/inverse-gamma model | One or two numeric predictors; unknown common variance |
 | Compare regressions | Exact leave-one-out refits with fixed priors and transforms | Exploratory predictive comparison |
@@ -109,3 +109,49 @@ The package has automated numerical, record-integrity, and UI checks, together
 with synthetic and retrospective walkthroughs. Intended-scientist acceptance
 remains open. The site documents current behavior; a research backlog is not a
 list of shipped features.
+
+
+## Joint regression predictions and power sensitivity
+
+Write the retained posterior as
+$\beta \mid \sigma^2,y \sim N(m,\sigma^2 V)$ and
+$\sigma^2 \mid y \sim \mathrm{InvGamma}(a,b)$, with density proportional to
+$(\sigma^2)^{-(a+1)}\exp(-b/\sigma^2)$. At future design matrix $X_*$,
+
+$$
+y_* \mid y \sim t_{2a}\left(X_*m,\frac{b}{a}(I+X_* V X_*^T)\right).
+$$
+
+The matrix is a Student-t **scale**, not its covariance. For $k$ planned outcomes,
+the joint squared Mahalanobis distance divided by $k$ has an $F_{k,2a}$
+distribution. One quantile therefore gives one simultaneous region. For a linear
+contrast $w^T y_*$, use location $w^T X_*m$ and scale squared
+$w^T[b(I+X_*VX_*^T)/a]w$. The identity term represents future noise and cannot be
+omitted when assessing a sample mean difference. The normal/inverse-gamma
+mixture follows the standard conjugate construction in
+[Ausin's linear-model notes](https://www2.stat.duke.edu/~sayan/Sta613/2015/read/chapter_9.pdf).
+
+For joint-prior power $\alpha$ and likelihood power $\lambda$, let the original
+prior parameters be $(m_0,V_0,a_0,b_0)$ and let $p$ count coefficients including
+the intercept. Completing the square in the powered density gives
+
+$$
+a_\alpha=\alpha(a_0+1+p/2)-1-p/2, \qquad
+V_n=(\alpha V_0^{-1}+\lambda X^TX)^{-1},
+$$
+$$
+m_n=V_n(\alpha V_0^{-1}m_0+\lambda X^Ty), \qquad
+a_n=a_\alpha+\lambda n/2,
+$$
+$$
+b_n=\alpha b_0+
+\tfrac12\left[\lambda\|y-Xm_n\|^2+
+\alpha(m_n-m_0)^TV_0^{-1}(m_n-m_0)\right].
+$$
+
+This derivation powers the density in **coefficients and variance**; changing the
+parameterization changes the meaning of joint-prior power. Suppose requires
+$a_\alpha>0$ and $a_n>1$, the latter giving finite expected variance for design
+scoring. Only one component varies at a time. Quantities and design benefits are
+computed analytically; predictive checks use reproducible simulations from the
+original Gaussian observation model, with finite simulation uncertainty.

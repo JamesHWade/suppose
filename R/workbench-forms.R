@@ -37,6 +37,10 @@ workbench_form_values <- function(record, form, values) {
     defaults <- regression_form_defaults(record)
   } else if (form == "design") {
     defaults <- research_design_defaults(record)
+  } else if (form == "regression_test") {
+    defaults <- regression_test_form_defaults(record)
+  } else if (form == "regression_sensitivity") {
+    defaults <- regression_sensitivity_form_defaults(record)
   } else if (form == "import") {
     defaults <- measurement_form_defaults(record)
   } else {
@@ -61,6 +65,10 @@ workbench_form_preview <- function(record, form, values) {
     measurement_form_preview(record, values)
   } else if (form == "design") {
     research_design_form_preview(record, values)
+  } else if (form == "regression_test") {
+    regression_test_form_preview(record, values)
+  } else if (form == "regression_sensitivity") {
+    regression_sensitivity_form_preview(record, values)
   } else {
     do.call(sensitivity_analysis, c(list(x = record), values))
   }
@@ -127,6 +135,17 @@ stage_workbench_form <- function(state, form, values, source_quote, reason) {
         transforms = preview$fit$transforms,
         prior_changes = preview$fit$prior_changes,
         status = "Prior predictions only; review and confirm independence in the form before fitting."
+      )
+    } else if (form == "regression_test") {
+      list(
+        rule = regression_test_text(preview$fit),
+        assumptions = preview$fit$assumptions,
+        status = "Preview only; the human must freeze before outcomes are seen."
+      )
+    } else if (form == "regression_sensitivity") {
+      list(
+        variants = preview$fit$variants,
+        interpretation = preview$fit$interpretation
       )
     } else if (form == "design") {
       preview$fit

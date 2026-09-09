@@ -13,7 +13,8 @@ design_regression(
   threshold = 0,
   max_units = 6L,
   rationale,
-  preference = ""
+  preference = "",
+  source_plan_id = NULL
 )
 }
 \arguments{
@@ -36,6 +37,8 @@ experiment cost), and \code{feasible} (logical). One to 100 alternatives.}
 \item{rationale}{Scientific purpose, protocol, feasibility and cost assumptions.}
 
 \item{preference}{Explicit utility/preference explanation; required for \code{decide}.}
+
+\item{source_plan_id}{Optional reviewed plan ID when revising its settings.}
 }
 \value{
 A sealed preview with references, costs, eligibility, exact benefits,

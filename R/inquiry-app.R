@@ -118,6 +118,8 @@ suppose_app <- function(
     extension_ui("extension"),
     regression_ui("regression"),
     research_design_ui("design"),
+    regression_test_ui("regression_test"),
+    regression_sensitivity_ui("regression_sensitivity"),
     shiny::tags$details(
       shiny::tags$summary("Saved R analyses"),
       shiny::uiOutput("analyses")
@@ -155,7 +157,7 @@ suppose_app <- function(
        .inquiry-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;font-size:.8rem}
        .footer-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.footer-tools .btn{border:0;background:transparent;color:#695775;font-size:.8rem;padding:6px 8px;white-space:nowrap}
        .footer-tools .btn:hover{background:#eee5f8}.footer-status{color:#695775;max-width:58%;font-size:.75rem;line-height:1.35}
-       .modal-dialog{margin:16px auto}.modal-content{max-height:calc(100dvh - 32px)}.modal-body{overflow-y:auto}.modal-header,.modal-footer{flex-shrink:0}.model-facts{display:flex;gap:24px;flex-wrap:wrap}.command-list{display:grid;gap:8px}.command-list .btn{text-align:left;display:flex;gap:18px;align-items:baseline}.command-list strong{min-width:105px}.command-list span{white-space:normal}.footer-tools #open_models{max-width:180px;overflow:hidden;text-overflow:ellipsis}.inquiry-record{padding:10px 6px 24px}.inquiry-record h2{font-size:1.4rem}.inquiry-record .btn{margin:4px 5px 4px 0}
+       .modal-dialog{margin:16px auto}.modal-content{max-height:calc(100dvh - 32px)}.modal-body{overflow-y:auto}.modal-header,.modal-footer{flex-shrink:0}.model-facts{display:flex;gap:24px;flex-wrap:wrap}.command-list{display:grid;gap:8px}.command-list .btn{text-align:left;display:flex;gap:18px;align-items:baseline}.command-list strong{min-width:105px}.command-list span{white-space:normal}.footer-tools #open_models{max-width:180px;overflow:hidden;text-overflow:ellipsis}.inquiry-record{padding:10px 6px 24px;min-width:0;max-width:100%;overflow-wrap:anywhere}.inquiry-record .table-responsive{max-width:100%}.inquiry-record .table-responsive table{min-width:32rem;overflow-wrap:normal}.inquiry-record img{max-width:100%;height:auto}.inquiry-record h2{font-size:1.4rem}.inquiry-record .btn{margin:4px 5px 4px 0}
        .inquiry-record details{margin:16px 0}.inquiry-record summary{font-weight:600}.inquiry-record blockquote{border-left:3px solid #b7a0ea;background:#fff5db;padding:10px 14px;border-radius:0 8px 8px 0}.hint{font-size:.87rem;color:#695775}
        .record-field{margin-bottom:1rem}.record-field h3{font:600 .9rem system-ui;margin:0 0 .3rem}
        .inquiry-chat-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}.inquiry-chat-decision details{margin:.75rem 0}
@@ -246,7 +248,7 @@ suppose_app <- function(
         "button[aria-label='Edit message'], .shiny-chat-sibling-nav {display:none!important;}"
       ),
       shiny::tags$script(shiny::HTML(
-        "$(document).on('shiny:inputchanged', function(e) { if (['inquiry_message_edit','inquiry_message_navigate'].includes(e.name)) e.preventDefault(); }); $(document).on('shiny:connected', function() { Shiny.addCustomMessageHandler('suppose-open-section', function(id) { if (!['import-panel','prospective-panel','measurements-panel','sensitivity-panel','extension-panel','regression-panel','design-panel'].includes(id)) return; const panel = document.getElementById(id); if (panel) { panel.open = true; setTimeout(function() { panel.scrollIntoView({block: 'start'}); }, 250); } }); });"
+        "$(document).on('shiny:inputchanged', function(e) { if (['inquiry_message_edit','inquiry_message_navigate'].includes(e.name)) e.preventDefault(); }); $(document).on('shiny:connected', function() { Shiny.addCustomMessageHandler('suppose-open-section', function(id) { if (!['import-panel','prospective-panel','measurements-panel','sensitivity-panel','extension-panel','regression-panel','design-panel','regression_test-panel','regression_sensitivity-panel'].includes(id)) return; const panel = document.getElementById(id); if (panel) { panel.open = true; setTimeout(function() { panel.scrollIntoView({block: 'start'}); }, 250); } }); });"
       ))
     ),
     ui
@@ -354,6 +356,7 @@ inquiry_server <- function(
   proposal <- shiny::reactiveVal(NULL)
   forms <- shiny::reactiveVal(list())
   extension_controller <- sensitivity_controller <- regression_controller <- import_controller <- design_controller <- NULL
+  regression_test_controller <- regression_sensitivity_controller <- NULL
   editing_proposal <- shiny::reactiveVal(NULL)
   status <- shiny::reactiveVal(
     "Your record takes shape as we talk."
@@ -428,6 +431,18 @@ inquiry_server <- function(
           NULL
         } else {
           design_controller$form_state()
+        },
+        regression_test = if (is.null(regression_test_controller)) {
+          NULL
+        } else {
+          regression_test_controller$form_state()
+        },
+        regression_sensitivity = if (
+          is.null(regression_sensitivity_controller)
+        ) {
+          NULL
+        } else {
+          regression_sensitivity_controller$form_state()
         },
         regression = if (is.null(regression_controller)) {
           NULL
@@ -658,6 +673,14 @@ inquiry_server <- function(
               if (!is.null(state$forms$design)) {
                 design_controller$restore(state$forms$design)
               }
+              if (!is.null(state$forms$regression_test)) {
+                regression_test_controller$restore(state$forms$regression_test)
+              }
+              if (!is.null(state$forms$regression_sensitivity)) {
+                regression_sensitivity_controller$restore(
+                  state$forms$regression_sensitivity
+                )
+              }
               if (!is.null(state$forms$import)) {
                 import_controller$restore(state$forms$import)
               }
@@ -806,6 +829,17 @@ inquiry_server <- function(
       }))
     }
     if (!is.null(chat)) {
+      # Rebinding native history must not replay the last new/select/edit event.
+      for (event in c(
+        "history_new",
+        "history_select",
+        "history_rename",
+        "history_delete",
+        "message_edit",
+        "message_navigate"
+      )) {
+        shiny::freezeReactiveValue(input, paste0("inquiry_", event))
+      }
       chat$set_client(new_agent, sync = FALSE)
     }
     if (!is.null(client) && is.function(client$inquiry_close)) {
@@ -899,11 +933,35 @@ inquiry_server <- function(
     },
     open_sensitivity = function() {
       shinychat::chat_drawer_show("inquiry")
-      session$sendCustomMessage("suppose-open-section", "sensitivity-panel")
+      session$sendCustomMessage(
+        "suppose-open-section",
+        if (
+          length(Filter(
+            function(e) e$choice != "neither",
+            current()$regressions
+          ))
+        ) {
+          "regression_sensitivity-panel"
+        } else {
+          "sensitivity-panel"
+        }
+      )
     },
     open_test = function() {
       shinychat::chat_drawer_show("inquiry")
-      session$sendCustomMessage("suppose-open-section", "prospective-panel")
+      session$sendCustomMessage(
+        "suppose-open-section",
+        if (
+          length(Filter(
+            function(e) e$choice != "neither",
+            current()$regressions
+          ))
+        ) {
+          "regression_test-panel"
+        } else {
+          "prospective-panel"
+        }
+      )
     }
   )
   tools_panel <- inquiry_tools_server(
@@ -937,7 +995,18 @@ inquiry_server <- function(
   }
   restore_chat <- function() {
     if (!is.null(chat)) {
-      chat$clear()
+      if (is.null(history_dir)) {
+        chat$clear()
+      } else {
+        # Initial records and portable imports enter an unselected conversation.
+        # shinychat reserves clear() for chats without persistent history.
+        if (!is.null(chat$history$conversation_id())) {
+          abort_suppose(
+            "Start a new conversation before importing a saved record."
+          )
+        }
+        chat$new_chat()
+      }
     } else {
       shinychat::chat_clear("inquiry")
     }
@@ -953,7 +1022,14 @@ inquiry_server <- function(
   shiny::observeEvent(
     TRUE,
     {
-      if (length(assistant$messages)) restore_chat()
+      if (
+        length(assistant$messages) &&
+          (is.null(chat) ||
+            is.null(history_dir) ||
+            is.null(chat$history$conversation_id()))
+      ) {
+        restore_chat()
+      }
     },
     once = TRUE
   )
@@ -1506,6 +1582,32 @@ inquiry_server <- function(
       shinychat::chat_drawer_hide("inquiry", session = session)
     }
   )
+  research_guard <- function() {
+    busy()
+    if (!is.null(proposal())) {
+      abort_suppose(
+        "Apply or decline the pending interpretation before reviewing regression research."
+      )
+    }
+  }
+  regression_test_controller <- regression_review_server(
+    "regression_test",
+    current,
+    research_guard,
+    "regression_test",
+    draft = shiny::reactive(forms()$regression_test),
+    author = function() input$author %||% "You",
+    retained = function() clear_form("regression_test")
+  )
+  regression_sensitivity_controller <- regression_review_server(
+    "regression_sensitivity",
+    current,
+    research_guard,
+    "regression_sensitivity",
+    draft = shiny::reactive(forms()$regression_sensitivity),
+    author = function() input$author %||% "You",
+    retained = function() clear_form("regression_sensitivity")
+  )
   prospective_server(
     "prospective",
     current,
@@ -1590,8 +1692,8 @@ inquiry_server <- function(
         decision_cards$restore(NULL)
         runtime_activity(inquiry_saved_activity(out))
         transcript(assistant$messages)
-        restore_chat()
         reset_runtime()
+        restore_chat()
         status(
           "Conversation and record reopened. Stored results were not recomputed."
         )
