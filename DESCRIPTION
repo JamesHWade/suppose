@@ -1,0 +1,49 @@
+Package: suppose
+Title: Make Beliefs Explicit and Inspect Their Consequences
+Version: 0.0.0.9000
+Authors@R: 
+    person("James", "Wade", , "github@jameshwade.com", role = c("aut", "cre"))
+Description: Record attributed claims and elicited judgments, construct
+    bounded normal prior models, inspect predictive consequences, and
+    retain reviewed revisions in portable local bundles.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 8.0.0
+Suggests: 
+    alloptr,
+    ggplot2,
+    patchwork,
+    ggdist,
+    plotly,
+    leaflet,
+    gt,
+    htmlwidgets,
+    svglite,
+    callr,
+    evaluate,
+    later,
+    httr2,
+    promises,
+    bslib,
+    ellmer,
+    deputy,
+    R6,
+    pkgdown,
+    shiny (>= 1.10.0),
+    shinychat (>= 0.4.0.9000),
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Imports: 
+    S7,
+    cli,
+    digest,
+    fs,
+    jsonlite,
+    Rapp,
+    rlang,
+    withr
+Depends: 
+    R (>= 4.1.0)
+Config/suppose/verified-shinychat-revision: eb024589465f5227405d567854b96cc87e5bb9ac
+Config/suppose/verified-deputy-revision: d9a88f76e08a31301dd30788e446c1672f009c7b

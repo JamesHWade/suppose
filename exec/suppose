@@ -1,0 +1,83 @@
+#!/usr/bin/env Rapp
+#| name: suppose
+#| description: Inspect beliefs and reproduce prior predictions from local records.
+options(rlang_backtrace_on_error = "none")
+switch(
+  command <- "",
+  #| title: Create an illustrative record (invented judgments; no acceptance).
+  demo = {
+    #| description: Destination JSON file (must not exist).
+    output <- NULL
+    #| description: Reproducible simulation seed.
+    seed <- 47L
+    suppose::write_record(suppose::suppose_example(seed = seed), output)
+    cli::cli_inform("Saved illustrative record to {.path {output}}.")
+  },
+  #| title: Inspect a saved record.
+  inspect = {
+    #| description: Input JSON bundle.
+    input <- NULL
+    #| description: Write machine-readable JSON to stdout.
+    json <- FALSE
+    x <- suppose::read_record(input)
+    if (json) {
+      cat(jsonlite::toJSON(suppose:::cli_record_summary(x), auto_unbox = TRUE, digits = NA), "\n")
+    } else {
+      print(x)
+    }
+  },
+  #| title: Attach a reviewed measurements CSV to a record; save a new bundle.
+  observe = {
+    #| description: Input JSON bundle.
+    input <- NULL
+    #| description: Input measurements CSV.
+    csv <- NULL
+    #| description: Destination JSON bundle (must not exist).
+    output <- NULL
+    #| description: Stable measurement source identifier.
+    source <- NULL
+    #| description: Measurement protocol identifier or description.
+    protocol <- NULL
+    #| description: Person declaring provenance.
+    author <- NULL
+    #| description: Original outcome units.
+    units <- NULL
+    #| description: Reason for attaching measurements.
+    reason <- NULL
+    #| description: Intended use (exploration, update, assessment).
+    role <- "exploration"
+    #| description: Prior exposure (unknown, unseen, explored, prior).
+    exposure <- "unknown"
+    #| description: Converted units (empty keeps original units).
+    target_units <- ""
+    #| description: Multiply outcomes by this factor.
+    scale <- 1
+    #| description: Add after multiplication.
+    offset <- 0
+    d <- suppose::import_observations(csv, source, protocol, author, units,
+      role, exposure, if (nzchar(target_units)) target_units else units, scale, offset)
+    x <- suppose::record_observations(suppose::read_record(input), d, reason)
+    suppose::write_record(x, output)
+    cli::cli_inform("Saved measurements and record to {.path {output}}.")
+  },
+  #| title: Recompute the latest candidate with an explicit seed; emit JSON.
+  predict = {
+    #| description: Input JSON bundle.
+    input <- NULL
+    #| description: Required integer simulation seed.
+    seed <- NA_integer_
+    #| description: Number of draws.
+    n <- 4000L
+    x <- suppose::read_record(input)
+    p <- utils::tail(x$revisions, 1)[[1]]$candidate
+    if (is.null(p)) {
+      suppose:::abort_suppose("This record has no numerical candidate. Use inspect to read its qualitative interpretation.", "unsupported")
+    }
+    result <- suppose::predict_prior(p, n = n, seed = seed)
+    cat(jsonlite::toJSON(unclass(result), auto_unbox = TRUE, digits = NA), "\n")
+  },
+  #| title: Open the local manual workbench (requires UI packages).
+  app = {
+    shiny::runApp(suppose::suppose_app())
+  }
+)

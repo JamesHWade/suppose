@@ -1,0 +1,34 @@
+- generic [ref=f1e1]:
+  - banner [ref=f1e2]:
+    - strong [ref=f1e3]: Suppose
+    - generic [ref=f1e4]: A little more clarity starts here
+  - generic [ref=f1e5]:
+    - button "Show drawer" [ref=f1e6] [cursor=pointer]
+    - generic [ref=f1e10]:
+      - generic [ref=f1e11]:
+        - log [ref=f1e44]:
+          - paragraph [ref=f1e48]: Fictional final transport check. Read the inquiry and reply with a single short sentence. Do not propose a change.
+          - generic [ref=f1e58]:
+            - generic [ref=f1e59]:
+              - button "Thought for less than a second" [ref=f1e60] [cursor=pointer]
+              - paragraph [ref=f1e67]: Checking developer tool constraints before responding to the fictional transport check request.
+            - button [ref=f1e70] [cursor=pointer]:
+              - generic [ref=f1e74]:
+                - text: Used
+                - code [ref=f1e75]: read_inquiry
+            - paragraph [ref=f1e79]: Checked.
+        - generic [ref=f1e28]:
+          - textbox "Chat message" [active] [ref=f1e30]: I have a hunch that…
+          - button "Send message" [disabled] [ref=f1e80]
+      - generic [ref=f1e35]:
+        - generic [ref=f1e36]:
+          - button "Muse ▾" [ref=f1e52] [cursor=pointer]
+          - button "Inquiry commands" [ref=f1e38] [cursor=pointer]: /
+          - button "file-lines icon Record" [ref=f1e39] [cursor=pointer]:
+            - generic "file-lines icon" [ref=f1e41]: 
+            - text: Record
+        - status [ref=f1e54]:
+          - generic [ref=f1e55]: No record suggestion was created for this response. Your retained interpretation is unchanged.
+      - text: 
+  - log [ref=f1e42]
+  - log [ref=f1e43]

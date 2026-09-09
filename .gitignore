@@ -1,0 +1,21 @@
+# Local runtime, credentials, and session state
+.suppose/
+.Renviron
+.Renviron.*
+.env
+.env.*
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+.DS_Store
+
+# Generated documentation, browser captures, and build output
+/docs/
+/.playwright-mcp/
+*.Rcheck/
+*.tar.gz
+
+# Keep written review reports; generated data and conversations stay local.
+/artifacts/*
+!/artifacts/*.md

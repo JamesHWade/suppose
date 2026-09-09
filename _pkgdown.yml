@@ -1,0 +1,66 @@
+template:
+  bootstrap: 5
+reference:
+- title: Express and revise
+  contents:
+  - claim
+  - revise_claim
+  - judgment
+  - record_judgment
+  - record_model_reference
+- title: Inspect consequences
+  contents:
+  - fit_prior
+  - predict_prior
+  - check_expectations
+  - plot_prior
+  - update_prior
+  - plot_update
+  - record_update
+- title: Commit and assess
+  contents:
+  - commit_test
+  - assess_test
+  - plot_test
+- title: Review sensitivity
+  contents:
+  - sensitivity_analysis
+  - record_sensitivity
+  - plot_sensitivity
+- title: Review model growth
+  contents:
+  - compare_extension
+  - record_extension
+  - plot_extension
+- title: Fit and revise models
+  contents:
+  - regression_predictors
+  - record_predictors
+  - regression_prior
+  - fit_regression
+  - predict_regression
+  - design_regression
+  - record_research_design
+  - record_regression
+  - plot_regression
+- title: Retain measurements
+  contents:
+  - import_observations
+  - record_observations
+  - record_analysis
+- title: Review and retain
+  contents:
+  - elicitation_record
+  - apply_assistant_proposal
+  - accept_interpretation
+  - accept_revision
+  - write_record
+- title: Start here
+  contents:
+  - suppose_example
+  - suppose_app
+  - suppose_agent
+  - suppose_example_app
+  - suppose_muse
+  - install_suppose_cli
+
