@@ -30,6 +30,8 @@ Suggests:
     deputy,
     R6,
     pkgdown,
+    knitr,
+    rmarkdown,
     shiny (>= 1.10.0),
     shinychat (>= 0.4.0.9000),
     testthat (>= 3.0.0)
@@ -47,3 +49,5 @@ Depends:
     R (>= 4.1.0)
 Config/suppose/verified-shinychat-revision: eb024589465f5227405d567854b96cc87e5bb9ac
 Config/suppose/verified-deputy-revision: d9a88f76e08a31301dd30788e446c1672f009c7b
+URL: https://github.com/JamesHWade/suppose
+BugReports: https://github.com/JamesHWade/suppose/issues

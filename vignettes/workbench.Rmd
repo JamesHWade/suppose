@@ -1,0 +1,137 @@
+---
+title: "Work through a question in conversation"
+output: rmarkdown::html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  out.width = "100%",
+  dpi = 144
+)
+library(suppose)
+```
+
+The workbench puts a conversation beside a developing scientific record.
+You review the interpretation before it becomes a revision. You can also work
+entirely through the manual editor.
+
+## Installation
+
+The core package is available to people with access to the private repository:
+
+```{r install, eval=FALSE}
+pak::pak("JamesHWade/suppose", dependencies = NA)
+```
+
+The UI depends on Shiny, bslib, and a compatible development shinychat. AI
+conversations also use Deputy and ellmer. The ellmer and shinychat revisions below passed focused workbench checks on
+9 September 2026. The Deputy revision is the package's recorded compatibility
+reference. These are development snapshots; the complete installation recipe
+has not been revalidated in a fresh environment.
+
+```{r app-install, eval=FALSE}
+pak::pak(c(
+  "shiny",
+  "bslib",
+  "R6",
+  "ggplot2",
+  "posit-dev/shinychat/pkg-r@dde163ea6b27099304a658f3649dd1fac98208bd",
+  "tidyverse/ellmer@92cfa7f48270048105ea1bfb44d23a2e59c2df6e",
+  "JamesHWade/deputy@d9a88f76e08a31301dd30788e446c1672f009c7b"
+))
+```
+
+## Start without a model account
+
+```{r manual, eval=FALSE}
+library(suppose)
+suppose_app()
+```
+
+Open **Record** in the footer to edit your question, expectations, and assumptions.
+The labeled local guide does not interpret your messages with AI. Use JSON export
+to keep a portable copy of this manual session.
+
+For a connected conversation, use an ellmer provider that you have configured
+locally. For example, with an OpenAI API key available to ellmer:
+
+```{r provider, eval=FALSE}
+suppose_app(agent_factory = function() {
+  suppose_agent(chat = ellmer::chat_openai())
+})
+```
+
+The built-in `suppose_agent()` default instead uses OpenRouter. Configure
+`OPENROUTER_API_KEY` locally before using it. The default Contributor model has
+provider-specific data-use terms; review those terms or select another provider
+before sending research material. Conversation and requested record context go
+to the selected model provider.
+
+## Review the meaning
+
+1. Start with a question or edit one of the optional starting points.
+2. Clarify the outcome, scope, assumptions, and open questions in conversation.
+3. Expand **Review details** on a suggestion. Apply it, correct it, or decline it.
+4. In **Record**, say why the retained interpretation expresses your meaning and
+   what could change your mind.
+
+Applying creates a revision. Accepting its interpretation is a separate review.
+Assistant ideas stay under **Ideas to consider** until you choose to adopt them.
+Corrections preserve the suggestion and the reviewer's changes separately.
+
+## Bring the next task into the conversation
+
+| You want to… | Open… | What you review |
+|---|---|---|
+| Attach a CSV table | Import a table | Columns, units, source, exposure, and measurement identities |
+| Update a two-condition model | Learn from measurements | Condition mapping and independence |
+| Compare regression models | Fit and compare models | Predictors, priors, checks, and scientific reason |
+| Explore assumptions | Check sensitivity | Prior strength and likelihood weight, varied separately |
+| Plan a measurement | Plan the next measurement | Target contrast, feasible alternatives, costs, and preferences |
+| Freeze a future check | A future test | Model basis, planned cohort, protocol, and deadline |
+
+Chat can prepare forms. Review the fields and preview before retaining a result.
+You can select **Neither is adequate** after a regression comparison; retaining
+a review does not require declaring a winner.
+
+## Run and retain calculations
+
+Enable **Run R code** under **Tools** when you need calculations or static plots.
+One persistent R process supports follow-up requests in the open conversation.
+**Saved R analyses** retains code, ordered output, and static plots.
+
+Switching or reopening a conversation starts a fresh process. Saved results
+remain, but variables must be recreated from code. Arbitrary interactive widgets
+and rich HTML tables are not supported by this runtime.
+
+Optional tool bundles start disabled. File writes use the chosen working folder;
+R and shell run with the local account's access and can write or use the network.
+They are trusted execution capabilities, not an operating-system sandbox.
+**Settings** controls request, tool, token, and estimated-cost limits; token and
+cost limits can overshoot by one response. **Activity** shows usage and outcomes.
+
+## Return to your work
+
+Agent-backed conversations save their records and pending suggestions with native
+history. Use the sidebar to search, rename, delete, or reopen them. Apply manual
+editor changes before switching conversations; unsubmitted editor text is not
+autosaved. Import a portable JSON bundle into a new conversation.
+
+History defaults to `.suppose/conversations`. Set `history_dir` to another folder
+or `NULL` to disable it. This is a local, single-user arrangement; shared sessions
+using the same folder do not acquire separate authenticated storage.
+
+Saved history does not restore broader tool permissions. A restored record is
+data, and does not execute its saved analysis code.
+
+## When a response goes wrong
+
+Stop a running response with the activity control. Retry after an interruption,
+or correct the request in a new message. Review any pending suggestion before
+applying another change. If a provider is unavailable, the manual editor and
+portable export remain usable. See [get started](suppose.html) for the same
+record operations directly in R.

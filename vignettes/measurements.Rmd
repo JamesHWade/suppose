@@ -1,0 +1,161 @@
+---
+title: "Learn from measurements"
+output: rmarkdown::html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  out.width = "100%",
+  dpi = 144
+)
+library(suppose)
+```
+
+This example uses R's built-in `PlantGrowth` data to update a two-condition
+normal model. It is retrospective: the outcomes are public, and the prior and
+fixed measurement SD below are illustrative analyst choices. They are not
+prospectively elicited beliefs.
+
+## State the question and prior
+
+Compare treatment 2 with control. R's dataset description does not supply physical
+weight units, so the record uses “weight units” rather than inventing grams.
+
+```{r prior}
+belief <- claim(
+  "Does treatment 2 increase mean dried weight by more than 0.5 weight units?",
+  author = "Tutorial analyst",
+  target = "Mean dried weight for trt2 minus ctrl",
+  units = "weight units",
+  threshold = 0.5,
+  scope = "PlantGrowth; group codes 0 = ctrl and 1 = trt2",
+  assumptions = "Independent normal measurements; SD fixed at 0.6 for illustration",
+  unresolved = "Retrospective example; independence and causal meaning need justification"
+)
+judgments <- lapply(0:1, function(condition) {
+  judgment(
+    condition,
+    c(4, 6),
+    c(0.05, 0.95),
+    units = "weight units",
+    condition_units = "group code",
+    author = "Tutorial analyst",
+    answer = "Illustrative central 90% interval for the population mean: [4, 6]",
+    source = "Analyst-selected tutorial prior",
+    observed = "Public PlantGrowth outcomes already available"
+  )
+})
+prior <- fit_prior(belief, judgments, correlation = 0, batch_sd = c(0.6, 0.6))
+record <- record_revision(
+  elicitation_record(belief),
+  belief,
+  prior,
+  predict_prior(prior, seed = 47),
+  reason = "Keep an explicitly illustrative prior for the retrospective example"
+)
+```
+
+## Retain the measurements and their source
+
+The observation format separates identity, condition, outcome, batch, specimen,
+and observation time. Unknown times stay unknown. In this example each row is
+assumed to represent a separate plant.
+
+```{r measurements}
+plants <- subset(datasets::PlantGrowth, group %in% c("ctrl", "trt2"))
+ids <- paste0("plant-", seq_len(nrow(plants)))
+rows <- data.frame(
+  observation_id = ids,
+  condition = as.character(plants$group),
+  outcome = plants$weight,
+  batch = ids,
+  specimen = ids,
+  observed_at = "unknown"
+)
+observations <- import_observations(
+  rows,
+  source = "R datasets::PlantGrowth; ctrl and trt2",
+  protocol = "Published dried plant weights; independence assumed for tutorial",
+  author = "Tutorial analyst",
+  units = "weight units",
+  role = "update",
+  exposure = "explored"
+)
+record <- record_observations(
+  record,
+  observations,
+  reason = "Retain published outcomes with explicit prior exposure"
+)
+```
+
+Use a CSV path in place of `rows` for your own data. Missing outcomes remain in
+the imported record. An explicit unit conversion uses `outcome * scale + offset`;
+Suppose does not infer a conversion from a column name.
+
+## Update under the stated model
+
+Map the observed labels to the two conditions in the prior. Confirming
+independence is a scientific assertion, not something this function establishes.
+
+```{r update}
+updated <- update_prior(
+  prior,
+  observations,
+  condition_map = c(ctrl = 0, trt2 = 1),
+  independent = TRUE
+)
+record <- record_update(
+  record,
+  updated,
+  reason = "Retrospective update under fixed SD assumptions"
+)
+updated
+```
+
+```{r update-plot, fig.alt="Prior and posterior uncertainty for the PlantGrowth treatment contrast under an illustrative normal model with fixed measurement SDs."}
+plot_update(updated)
+```
+
+The posterior conditions on both the measurements and the model. The fixed SD
+of 0.6 is not estimated here. If uncertainty about measurement noise matters,
+consider the separate [regression workflow](regression.html), which uses a new
+prior specification and an unknown common variance.
+
+## Check sensitivity
+
+Vary prior strength and likelihood weight separately. Power 1 is the original
+update. Here a change of 0.1 weight units or five percentage points is an
+illustrative threshold for closer review.
+
+```{r sensitivity}
+sensitivity <- sensitivity_analysis(
+  record,
+  record$updates[[1]]$id,
+  quantities = c("estimate", "probability"),
+  estimate_change = 0.1,
+  probability_change = 0.05
+)
+```
+
+```{r sensitivity-plot, fig.alt="Changes in the posterior mean contrast as prior strength and likelihood weight are varied separately around the original model."}
+plot_sensitivity(sensitivity)
+```
+
+This checks selected strength changes. It does not test alternative distribution
+shapes, dependence assumptions, or measurement SDs. Retain a reviewed comparison
+with `record_sensitivity()`.
+
+## Keep exploration separate from a future check
+
+These explored outcomes are not an independent prospective test. For future,
+unseen outcomes, `commit_test()` freezes the model basis, planned measurement IDs,
+protocol, deadline, and predictive interval. `assess_test()` later compares the
+complete designated cohort against that original commitment.
+
+Missing outcomes can leave an assessment awaiting data or inconclusive. A later
+model revision does not rewrite the frozen prediction. The [methods guide](methods.html)
+explains the interpretation and current restrictions of this check.

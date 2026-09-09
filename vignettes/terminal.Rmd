@@ -1,0 +1,66 @@
+---
+title: "Use Suppose from the terminal"
+output: rmarkdown::html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  out.width = "100%",
+  dpi = 144
+)
+library(suppose)
+```
+
+The command-line interface calls the same record and numerical operations as
+the R API. It is useful for inspecting bundles and producing reproducible JSON
+without opening the workbench.
+
+## Install a launcher
+
+With Suppose installed in your R library, choose a directory on your shell's
+`PATH`:
+
+```{r launcher, eval=FALSE}
+suppose::install_suppose_cli(destdir = "~/bin")
+```
+
+For an isolated environment, the external [ir launcher](https://r-lib.github.io/ir/tools.html)
+can install from an authenticated clone:
+
+```sh
+ir tool install "local::$(pwd)"
+```
+
+The UI additionally requires the development packages described in the
+[workbench setup](workbench.html#installation).
+
+## Create and inspect a worked example
+
+```sh
+suppose demo example.json --seed 47
+suppose inspect example.json
+suppose inspect example.json --json
+```
+
+`demo` refuses an existing destination. `inspect` works for qualitative records
+as well as numerical ones, including judgments, model references, and retained
+research designs.
+
+## Calculate without changing the bundle
+
+```sh
+suppose predict example.json --seed 47 --n 4000 > predictions.json
+```
+
+Prediction requires an explicit seed and writes a separate JSON result. It does
+not modify the input record. JSON goes to standard output, diagnostics go to
+standard error, and failures return a nonzero exit status. A qualitative record
+without a numerical candidate cannot be used for `predict`.
+
+Use `suppose --help` for commands and `suppose observe --help` for observation
+import options. The [measurement guide](measurements.html) explains source,
+exposure, and intended-use declarations.

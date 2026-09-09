@@ -1,0 +1,199 @@
+---
+title: "Fit, check, and revise a model"
+output: rmarkdown::html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  out.width = "100%",
+  dpi = 144
+)
+library(suppose)
+```
+
+A model can predict poorly for a reason that matters scientifically. This
+worked example follows a temperature-only model, inspects what it misses, and
+adds cure duration. The measurements are synthetic, constructed to illustrate
+an omitted predictor. They provide no evidence about a real coating.
+
+## Attach outcomes and predictors
+
+Each row below represents an invented independent preparation. Temperature and
+duration have separate identities and units in the retained predictor table.
+
+Run this setup once to create `record` and `predictors`. Expand it to inspect
+or copy the complete construction and provenance declarations.
+
+<details>
+<summary>Build the synthetic example record</summary>
+
+```{r data}
+temperature <- rep(c(140, 150, 160, 150), length.out = 40)
+duration <- rep(c(50, 50, 70, 70, 60), length.out = 40)
+strength <- 54 +
+  0.4 * (temperature - 150) +
+  1.8 * (duration - 60) +
+  rep(c(-1, 1, -2, 2, 0), length.out = 40)
+ids <- paste0("preparation-", seq_along(strength))
+rows <- data.frame(
+  observation_id = ids,
+  condition = as.character(temperature),
+  outcome = strength,
+  batch = ids,
+  specimen = ids,
+  observed_at = "unknown"
+)
+record <- suppose_example()
+observations <- import_observations(
+  rows,
+  source = "synthetic:documentation",
+  protocol = "Invented independent preparations",
+  author = "Tutorial analyst",
+  units = "MPa",
+  role = "update",
+  exposure = "explored"
+)
+record <- record_observations(
+  record,
+  observations,
+  "Inspect the synthetic measurements"
+)
+predictors <- regression_predictors(
+  record,
+  record$observations[[1]]$id,
+  data.frame(observation_id = ids, temperature, duration),
+  units = c(temperature = "degC", duration = "minutes"),
+  source = "synthetic:documentation-predictors",
+  author = "Tutorial analyst"
+)
+record <- record_predictors(record, predictors)
+```
+
+</details>
+
+```{r preview, echo=FALSE}
+knitr::kable(
+  data.frame(temperature, duration, strength)[1:6, ],
+  col.names = c("Temperature (°C)", "Duration (minutes)", "Strength (MPa)"),
+  caption = "The first six synthetic measurements."
+)
+```
+
+The API checks matched measurement IDs. It does not silently remove rows with
+missing outcomes or predictors. The supported workflow requires 6–500
+independent measurements and one or two numeric predictors.
+
+## Review a baseline prior
+
+This regression has normal measurement errors with unknown common variance and
+a proper normal/inverse-gamma prior. It is a new specification; it does not
+convert the earlier two-condition elicitation automatically.
+
+```{r baseline}
+baseline_prior <- regression_prior(
+  record,
+  predictors$id,
+  "temperature",
+  location = 54,
+  intercept_sd = 10,
+  effect_sd = 20,
+  noise_sd = 3
+)
+```
+
+The prior location is the expected outcome at the predictor reference value.
+`effect_sd` is in outcome units per meaningful predictor change. Default reference
+values use predictor midranges and half-ranges, without inspecting outcomes.
+`noise_sd` is the square root of expected noise variance, not a known measurement SD.
+Review the prior predictive intervals before fitting. The wide intervals below
+express the illustrative uncertainty supplied for this example.
+
+```{r prior-check, fig.alt="Prior predictive outcome intervals for a temperature regression, before fitting the synthetic outcomes."}
+plot_regression(baseline_prior, view = "prior")
+```
+
+```{r fit-baseline}
+baseline <- fit_regression(
+  record,
+  baseline_prior,
+  independent = TRUE,
+  reviewed = TRUE,
+  seed = 42
+)
+```
+
+```{r residuals, fig.alt="Residual patterns from a temperature-only model of synthetic strength data. Duration is an omitted predictor available for inspection.", fig.height=5.5}
+plot_regression(baseline, view = "residuals")
+```
+
+The synthetic construction makes duration important. Retain that concern before
+fitting a second model:
+
+```{r baseline-review}
+record <- record_regression(
+  record,
+  baseline,
+  choice = "neither",
+  author = "Tutorial analyst",
+  reason = "The temperature-only model misses the constructed duration effect.",
+  reviewed = TRUE
+)
+```
+
+## Add duration and compare on the same rows
+
+Predictor order defines the baseline and extension. Shared priors and transforms
+remain the same across the two models.
+
+```{r extended}
+extended_prior <- regression_prior(
+  record,
+  predictors$id,
+  c("temperature", "duration"),
+  location = 54,
+  intercept_sd = 10,
+  effect_sd = 20,
+  noise_sd = 3
+)
+extended <- fit_regression(
+  record,
+  extended_prior,
+  independent = TRUE,
+  reviewed = TRUE,
+  seed = 42
+)
+extended$comparison[c("extended_minus_baseline", "paired_se")]
+```
+
+The comparison uses exact leave-one-out refits and reports a paired standard
+error. A positive extended-minus-baseline log-score difference favors the
+expanded model's held-out prediction. Model search after examining the data is
+still exploratory.
+
+```{r comparison, fig.alt="Pointwise leave-one-out predictive comparison of the temperature-only model and the model that also includes duration."}
+plot_regression(extended, view = "comparison")
+```
+
+Review joint predictive checks and residuals as well as the score. Simulation
+intervals help distinguish a borderline check from a clear mismatch; a favorable
+score cannot certify adequate fit.
+
+```{r retain}
+record <- record_regression(
+  record,
+  extended,
+  choice = "extended",
+  author = "Tutorial analyst",
+  reason = "Duration addresses the constructed omission; this is an exploratory synthetic example.",
+  reviewed = TRUE
+)
+```
+
+Both reviews remain in the record. Use `predict_regression()` for new cases in
+the original predictor units, or [plan the next measurement](research-design.html)
+from a retained model. Interactions, hierarchical models, arbitrary formulas,
+and regression-specific prospective commitments are not implemented.

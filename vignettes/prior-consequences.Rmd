@@ -1,0 +1,109 @@
+---
+title: "Inspect what your beliefs imply"
+output: rmarkdown::html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  out.width = "100%",
+  dpi = 144
+)
+library(suppose)
+```
+
+Two intervals can look reasonable on their own and imply quite different
+answers to the question you care about. Here we investigate an invented claim:
+higher cure temperature increases mean strength by more than 5 MPa.
+
+## Distinguish means from measurements
+
+The tutorial judgments assign 90% probability to the **population mean** falling
+between 45–55 MPa at 140 °C and 51–65 MPa at 160 °C. They are not prediction
+intervals for individual batches. Known batch SDs of 3 MPa supply a separate
+measurement-variation assumption.
+
+```{r model}
+record <- suppose_example()
+independent <- record$revisions[[2]]$candidate
+correlated <- record$revisions[[3]]$candidate
+```
+
+```{r marginals, fig.alt="Normal prior densities for mean strength at 140 and 160 degrees Celsius, centered at 50 and 58 MPa respectively."}
+plot_prior(correlated, view = "means")
+```
+
+`fit_prior()` fits normal quantiles by least squares and reports elicited versus
+implied quantiles. Quantiles that the method cannot represent adequately prevent
+numerical acceptance. Plausible ranges with no probability interpretation remain
+unfitted judgments.
+
+## Ask which assumptions matter
+
+The first candidate assumes independent mean uncertainty. The second keeps the
+same marginal judgments but sets their correlation to 0.8. Neither correlation
+can be learned from the two marginal intervals.
+
+```{r compare}
+probability <- function(prior) {
+  predict_prior(prior, seed = 47)$summary$mean_difference$probability_above
+}
+data.frame(
+  correlation = c(0, 0.8),
+  probability_gain_above_5 = round(
+    c(probability(independent), probability(correlated)),
+    3
+  )
+)
+```
+
+Positive correlation makes the two uncertain means move together, reducing
+uncertainty in their difference. The probability changes even though neither
+marginal interval has changed. This is a consequence of an assumption, not new
+evidence for the claim.
+
+```{r differences, fig.alt="Prior distributions of the mean strength contrast and a future-batch contrast, with a reference at a 5 MPa gain."}
+plot_prior(correlated, view = "contrast")
+```
+
+## Keep additional expectations visible
+
+An answer can be worth keeping even when it cannot be fitted.
+
+```{r expectation}
+comparison <- judgment(
+  160,
+  kind = "comparison",
+  reference_condition = 140,
+  units = "MPa",
+  author = "Tutorial researcher",
+  answer = "I expect a higher mean at 160, but have not stated a probability."
+)
+record <- record_judgment(record, comparison, "Retain a qualitative comparison")
+```
+
+Ranges, explicit quantiles, comparisons, and shape judgments retain their
+original wording and interpretation. A straight-line projection beyond the two
+anchors is available only with an additional, explicit assumption:
+
+```{r projection}
+checks <- check_expectations(record, linear = TRUE)
+```
+
+This does not make a line a consequence of the original judgments. A peak or
+other incompatible shape remains a limitation to investigate. See
+`check_expectations()` for the returned comparisons and unsupported checks.
+
+## Review before accepting
+
+`accept_revision()` records who reviewed a numerical candidate, why it expresses
+the intended judgment, and what evidence could challenge it. The previous
+candidate remains available. Editing the meaning does not silently transfer
+acceptance to a different model.
+
+For the mathematics and support restrictions, see [methods and limits](methods.html).
+Next, [bring in observations](measurements.html) while retaining their source
+and prior exposure.

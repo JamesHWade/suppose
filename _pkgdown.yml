@@ -1,7 +1,64 @@
+title: Suppose
+home:
+  title: Make beliefs explicit. Explore what follows.
+  description: An R package and local chat workbench for inspectable beliefs, models, and scientific revisions.
+  sidebar: false
 template:
   bootstrap: 5
+  bslib:
+    bg: "#fffdf9"
+    fg: "#332b39"
+    primary: "#633b83"
+    secondary: "#79508d"
+    link-color: "#633b83"
+    border-color: "#e4dce9"
+    code-bg: "#f4f0f8"
+    base_font: "Avenir Next, Avenir, system-ui, sans-serif"
+    heading_font: "Avenir Next, Avenir, system-ui, sans-serif"
+    code_font: "SFMono-Regular, Consolas, Liberation Mono, monospace"
+    headings-font-weight: 600
+    border-radius: 0.4rem
+navbar:
+  bg: light
+  structure:
+    left: [intro, articles, reference, news]
+    right: [search, github]
+  components:
+    articles:
+      text: Guides
+      menu:
+      - text: Work in conversation
+        href: articles/workbench.html
+      - text: Inspect prior consequences
+        href: articles/prior-consequences.html
+      - text: Learn from measurements
+        href: articles/measurements.html
+      - text: Fit and revise a regression
+        href: articles/regression.html
+      - text: Plan the next measurement
+        href: articles/research-design.html
+      - text: Use the terminal
+        href: articles/terminal.html
+      - text: Methods and limits
+        href: articles/methods.html
+articles:
+- title: Start an inquiry
+  contents:
+  - suppose
+  - workbench
+- title: Work with a model
+  contents:
+  - prior-consequences
+  - measurements
+  - regression
+  - research-design
+- title: Understand and extend
+  contents:
+  - methods
+  - terminal
 reference:
 - title: Express and revise
+  desc: Preserve a belief, its wording, and the judgments that give it meaning.
   contents:
   - claim
   - revise_claim
@@ -9,6 +66,7 @@ reference:
   - record_judgment
   - record_model_reference
 - title: Inspect consequences
+  desc: Explore prior predictions and update a two-condition model from measurements.
   contents:
   - fit_prior
   - predict_prior
@@ -33,6 +91,7 @@ reference:
   - record_extension
   - plot_extension
 - title: Fit and revise models
+  desc: Attach predictors, compare bounded regressions, and review possible next measurements.
   contents:
   - regression_predictors
   - record_predictors
@@ -49,6 +108,7 @@ reference:
   - record_observations
   - record_analysis
 - title: Review and retain
+  desc: Record human review and keep portable, inspectable revisions.
   contents:
   - elicitation_record
   - apply_assistant_proposal
@@ -63,4 +123,19 @@ reference:
   - suppose_example_app
   - suppose_muse
   - install_suppose_cli
-
+search:
+  exclude:
+  - CONCEPT.html
+  - WORK-REGRESSION.html
+  - QUALITY-REVIEW.html
+  - CONTEXT.html
+  - OBSERVATIONS-REVIEW.html
+  - WORK-CHAT-WORKFLOW.html
+  - WORK-P0.html
+  - WORK-BED.html
+  - WORK-OBSERVATIONS.html
+  - WORK-SESSION.html
+  - WALKTHROUGH.html
+  - BACKLOG.html
+  - NAME-CHECK.html
+  - ACCEPTANCE.html

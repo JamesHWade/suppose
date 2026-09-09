@@ -1,5 +1,7 @@
 # suppose 0.0.0.9000
 
+* Documentation now includes a concise introduction, eight task-oriented guides, evaluated statistical examples, and a redesigned pkgdown site.
+
 * The workbench adopts the hex sticker's plum, lavender and cream palette, bold typography and fox mark; prior plots use matching colors.
 
 * Chat can retry after cancellation without inheriting the earlier stop signal.

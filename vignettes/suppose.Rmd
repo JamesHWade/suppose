@@ -1,0 +1,120 @@
+---
+title: "Start with a belief"
+output: rmarkdown::html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  out.width = "100%",
+  dpi = 144
+)
+library(suppose)
+```
+
+Suppose helps you keep a scientific question, its assumptions, and its revisions
+in one inspectable record. This guide takes about five minutes and needs no AI
+account. Install ggplot2 for the figures (`install.packages("ggplot2")`).
+All statements and judgments here are invented for the tutorial.
+
+## Write down what you mean
+
+You do not need to know the right model before starting. A `claim()` can retain
+an incomplete thought and the questions it leaves open.
+
+```{r claim}
+belief <- claim(
+  "A longer cure may make this coating more durable.",
+  author = "Tutorial researcher",
+  scope = "Coating formulation F under our current preparation protocol",
+  unresolved = "Does the improvement justify the extra time?"
+)
+record <- elicitation_record(belief)
+record
+```
+
+The wording belongs to the named person. The unresolved question stays visible;
+Suppose does not turn it into a numerical threshold or a probability.
+
+## Clarify without erasing
+
+Suppose the intended outcome is resistance to abrasion, rather than durability
+in every possible sense. Create a revision and say why it changed.
+
+```{r revise}
+clearer <- revise_claim(
+  belief,
+  author = "Tutorial researcher",
+  reason = "Specify the outcome we intend to measure",
+  wording = "A longer cure may increase the number of abrasion cycles before failure.",
+  target = "Mean abrasion cycles before failure",
+  units = "cycles"
+)
+record <- record_revision(
+  record,
+  clearer,
+  reason = "Narrow durability to the planned abrasion measurement"
+)
+length(record$revisions)
+```
+
+Both versions remain in the record. When the interpretation expresses your
+meaning, record the review and what could challenge the belief.
+
+```{r accept}
+record <- accept_interpretation(
+  record,
+  author = "Tutorial researcher",
+  reason = "This expresses the outcome I have in mind.",
+  challenge = "Independently prepared specimens show little gain at longer cure times."
+)
+```
+
+This accepts the interpretation. It does not fit a model or establish the claim.
+
+## Add numbers when they help
+
+`suppose_example()` supplies a separate, invented strength inquiry with two
+candidate priors. The last candidate uses correlated uncertainty about the means
+at 140 and 160 °C. Its judgments are about population means, not individual batches.
+
+```{r consequences}
+example <- suppose_example()
+prior <- example$revisions[[3]]$candidate
+prediction <- predict_prior(prior, seed = 47)
+prediction
+```
+
+```{r contrast, fig.alt="Two prior distributions of strength differences. Future-batch differences are more dispersed than the uncertain population mean difference."}
+plot_prior(prior, view = "contrast")
+```
+
+A future measurement varies around an uncertain mean. That extra variation
+matters when you decide what to measure. The [prior consequences guide](prior-consequences.html)
+works through how the assumptions produce this plot.
+
+## Save a record you can reopen
+
+Portable bundles are JSON data. Reopening one restores the retained objects;
+it does not rerun a model or execute saved R code.
+
+```{r save}
+path <- tempfile(fileext = ".json")
+write_record(record, path)
+reopened <- read_record(path)
+length(reopened$revisions)
+```
+
+Use a lasting path such as `"coating-inquiry.json"` for your own work.
+`write_record()` refuses to overwrite an existing file unless you explicitly
+request it.
+
+## Keep going
+
+Use the [workbench](workbench.html) for the same review process in conversation,
+or [learn from measurements](measurements.html) once you have observations.
+The [function reference](../reference/index.html) groups operations by the work
+you are trying to do.

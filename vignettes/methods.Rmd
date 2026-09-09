@@ -1,0 +1,111 @@
+---
+title: "Methods, meaning, and limits"
+output: rmarkdown::html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  out.width = "100%",
+  dpi = 144
+)
+library(suppose)
+```
+
+Suppose makes assumptions and review decisions inspectable. Its numerical
+methods each answer a bounded question; combining their outputs does not erase
+their different assumptions.
+
+## Keep three questions separate
+
+**Does this express the belief?** Elicitation fit checks correspondence between
+stated judgments and a numerical representation. Interpretation acceptance
+records a person's review of meaning.
+
+**What follows if the assumptions hold?** Prior and posterior predictions show
+consequences under a specified model. Future-measurement variation is distinct
+from uncertainty about a mean.
+
+**How does it meet observations?** Predictive checks and prospective assessments
+compare model implications with measurements, subject to the collection design
+and any prior exposure. None of these is a universal confidence score or proof
+of a claim.
+
+## Supported numerical families
+
+| Workflow | Implemented method | Main boundary |
+|---|---|---|
+| Elicit two means | Normal quantiles fitted by least squares | Exactly two ordered numeric conditions |
+| Predict a contrast | Joint normal means plus independent normal batch variation | Correlation and batch SDs are supplied |
+| Update from observations | Analytic normal update | Positive known measurement SDs; independent units |
+| Check a future cohort | Frozen central normal interval for a sample-mean difference | Complete designated cohort; fixed-noise model |
+| Inspect sensitivity | Exact one-at-a-time prior or likelihood power scaling | Fixed-noise normal update only |
+| Explore model growth | Add one shared independent normal coefficient | Prior implications, not fitting that extension |
+| Fit regression | Proper normal/inverse-gamma model | One or two numeric predictors; unknown common variance |
+| Compare regressions | Exact leave-one-out refits with fixed priors and transforms | Exploratory predictive comparison |
+| Design a measurement | Exact expected loss reduction through alloptr | One setting per alternative; independent replicates |
+
+## Two-condition elicitation
+
+The prior represents two uncertain means with supplied correlation. The marginal
+quantiles do not identify that correlation. Normal support can imply negative
+strengths; the diagnostic reports that probability rather than truncating it.
+Two anchors do not imply a monotone curve, causal effect, or behavior at other
+conditions. A straight-line projection is an explicit additional assumption.
+
+Ranges without probabilities, qualitative comparisons, and shape judgments
+remain meaningful records. Unsupported judgments do not acquire numerical
+probabilities merely because a model is available.
+
+## Updating and sensitivity
+
+The fixed-noise update treats measurement SDs as known. Paired and clustered
+measurements, inferred SDs, and arbitrary likelihoods are outside that method.
+Power sensitivity changes the joint prior covariance or likelihood weight.
+It leaves distribution support, correlation, and physical measurement noise
+specified by the original model. It is not an omnibus robustness test.
+
+## Regression
+
+With variance $\sigma^2$, the model uses a proper inverse-gamma prior for
+$\sigma^2$ and a normal prior for coefficients conditional on that variance.
+Coefficients therefore share uncertainty about scale: conditional independence
+does not imply marginal independence.
+
+Posterior fits and leave-one-out refits are exact conjugate calculations.
+Only predictive checks use simulation. A better predictive score does not
+establish causal meaning or adequate fit. The current implementation does not
+support interactions, arbitrary formulas, or hierarchical models.
+
+## Prospective assessment
+
+A commitment fixes measurement IDs, source, protocol, model basis, deadline,
+and predictive interval before the declared unseen outcomes are examined.
+All planned outcomes are required. Incomplete data wait before the deadline
+and become inconclusive afterward; exposure, timing, or protocol problems can
+also prevent a numeric verdict.
+
+An interval match does not establish claim truth or global model fit. An unseen
+outcomes declaration and timestamp do not independently establish absence of
+exposure. Changing a claim later does not change an earlier commitment.
+
+## Records and provenance
+
+Revisions preserve previous wording and numerical candidates. Retained results
+refer to their particular prior, measurements, and review. Claim-to-model links
+can be many-to-many; a link records a relationship to inspect, not evidence that
+the model supports the claim.
+
+Portable bundles contain data and integrity checks. They do not execute code on
+load, and integrity checks do not certify truthful attribution or a valid
+experimental protocol. Analyst-generated code still needs scientific review.
+
+## Development status
+
+The package has automated numerical, record-integrity, and UI checks, together
+with synthetic and retrospective walkthroughs. Intended-scientist acceptance
+remains open. The site documents current behavior; a research backlog is not a
+list of shipped features.

@@ -1,0 +1,84 @@
+---
+title: "Plan the next measurement"
+output: rmarkdown::html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  out.width = "100%",
+  dpi = 144
+)
+library(suppose)
+```
+
+After reviewing a regression, the next useful question may be where a new
+measurement would change your understanding most. Suppose compares explicit,
+feasible alternatives under that retained model. It does not conduct experiments.
+
+This workflow requires an optional alloptr build exporting
+`bed_normal_contrast()`. The score is an exact calculation for the supported
+normal/inverse-gamma model; it does not train a learned design policy.
+
+## Decide what you want to learn
+
+There are two supported purposes:
+
+| Purpose | Target | Cost units |
+|---|---|---|
+| Estimate | Reduce expected squared error for a mean contrast | Squared outcome units |
+| Decide | Reduce expected opportunity loss between two protocols | Outcome-equivalent utility units |
+
+For a decision, the preference threshold is the outcome-equivalent penalty for
+choosing the second protocol. A practically useful strength gain is not, by
+itself, a conversion from time or money into utility. State that tradeoff explicitly.
+
+## Describe alternatives in original units
+
+Continue from the retained `record` at the end of the
+[regression tutorial](regression.html). These example calls are not run on this
+page because they depend on that record and the optional alloptr method.
+
+```{r candidates, eval=FALSE}
+contrast <- data.frame(temperature = c(140, 160), duration = c(60, 60))
+candidates <- data.frame(
+  candidate_id = c("low-1", "high-1", "low-6", "high-6"),
+  temperature = c(140, 160, 140, 160),
+  duration = 60,
+  repeats = c(1, 1, 6, 6),
+  cost = 0,
+  feasible = TRUE
+)
+plan <- design_regression(
+  record,
+  regression_id = tail(record$regressions, 1)[[1]]$id,
+  candidates = candidates,
+  contrast = contrast,
+  purpose = "estimate",
+  max_units = 6,
+  rationale = "Compare independent preparations; omit costs explicitly under a six-unit budget."
+)
+```
+
+The target is the second contrast row minus the first. Each candidate is a
+separate alternative experiment, with independent replicates at one setting.
+It is not a batch containing all candidate rows. Zero costs compare learning
+benefits under the unit budget alone.
+
+## Review before retaining
+
+Inspect eligibility, expected benefit, net benefit, ties, extrapolation flags,
+and inherited model-check limitations. A precise design score can still rest on
+an inadequate scientific model.
+
+`record_research_design()` retains a chosen candidate ID, reviewer, and reason.
+You can retain `"none"` if none is appropriate. In the workbench,
+**Plan the next measurement** provides the preview and review controls.
+
+A saved plan is neither an executed experiment nor a frozen prospective test.
+The existing `commit_test()` workflow applies to the two-condition fixed-noise
+model, not these regressions. Multi-setting batch optimization, interactions,
+and general nonlinear models remain outside the current method.

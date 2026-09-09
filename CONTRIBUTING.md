@@ -1,10 +1,8 @@
 # Developing Suppose
 
-Package setup is recorded in `dev/setup.R`: usethis created metadata, dependency
-entries, the testthat edition-3 layout, R/test files, NEWS, license, pkgdown, and
-build exclusions. Author details use the local Git identity. Existing design
-notes and artwork were preserved. There is no Git repository or configured
-remote yet, so no CI workflow, PR, or publication has been created.
+Source is maintained in the private [GitHub repository](https://github.com/JamesHWade/suppose).
+The R API owns statistical operations and record integrity; Shiny and the CLI
+call that API. Keep tests independent of model credentials.
 
 ```r
 pkgload::load_all()
@@ -27,11 +25,24 @@ Conditions inherit `suppose_error` and a more specific class such as
 `suppose_integrity`; contextual fields remain available to callers. Use cli
 markup and strip ANSI styling when displaying a condition in the browser.
 
-Build the local documentation with `pkgdown::build_site(preview = FALSE)`.
-The reference index and examples should build successfully. `pkgdown::check_pkgdown()`
-currently reports the missing canonical site URL because hosting has not been
-established; do not invent a published URL to silence it. Set the real URL in
-DESCRIPTION and `_pkgdown.yml` when hosting exists.
+## Documentation
+
+The README is a short package introduction. `pkgdown/index.md` is the site landing
+page; `vignettes/` holds task-oriented guides. These site-only articles
+are excluded from the R package build. Numerical tutorial chunks execute during
+the site build; app launch and installation snippets are explicitly unevaluated.
+Keep synthetic and retrospective examples labeled, and put method restrictions
+beside the result they qualify.
+
+Run `Rscript dev/build-docs.R` to build the site in `docs/`. The script uses the
+project runtime library when available. Serve that directory locally to inspect
+navigation, search, figures, and mobile layouts. Generated HTML stays out of Git.
+
+The repository is private and no public documentation host is configured.
+`pkgdown::check_pkgdown()` therefore still reports the missing canonical site URL;
+article and reference indexes can be checked separately. Configure the canonical
+URL only after a hosting destination is agreed. Do not publish private-repository
+content as a side effect of a documentation build.
 
 Development tools such as pak, pkgload, pkgbuild, rcmdcheck, and pkgdown do not
 belong in runtime Imports unless the package actually uses them. Use usethis CI
