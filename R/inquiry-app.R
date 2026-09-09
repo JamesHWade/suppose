@@ -131,14 +131,7 @@ suppose_app <- function(
     shiny::downloadButton("save", "Save conversation and record"),
     shiny::tags$p(
       class = "hint",
-      if (
-        !is.null(history_dir) &&
-          (!is.null(agent_factory) || !is.null(chat_factory))
-      ) {
-        "Conversations, records and pending suggestions are saved automatically. Apply editor changes before leaving. Download a separate copy here."
-      } else {
-        "Save before closing. Unapplied suggestions and unsaved editor changes are not retained as revisions."
-      }
+      shiny::textOutput("save_notice", inline = TRUE)
     ),
     shiny::fileInput(
       "reopen",
@@ -147,17 +140,13 @@ suppose_app <- function(
     ),
     shiny::tags$div(role = "status", shiny::textOutput("reopen_status")),
     shiny::tags$details(
-      shiny::tags$summary("Explore a numerical example"),
-      shiny::tags$p(
-        class = "hint",
-        "The available numerical method compares two jointly normal uncertain means with known measurement variation. Other questions can still be clarified and saved without a numerical model."
-      ),
-      shiny::uiOutput("worked_example")
+      shiny::tags$summary("Worked examples"),
+      worked_examples_ui()
     )
   )
   page_style <- shiny::tags$head(shiny::tags$style(shiny::HTML(
     "shiny-chat-container{min-height:0;--shiny-chat-message-bg-assistant:transparent}
-       .suppose-brand-mark{display:block;object-fit:contain;margin-bottom:20px}.welcome{max-width:650px;margin:0 auto;padding:30px 0 16px}
+       .suppose-brand-mark{display:block;object-fit:contain;margin-bottom:20px}.worked-example-card{padding:16px 0;border-bottom:1px solid #dfd3e8}.worked-example-card h3{font-size:1.15rem}.welcome{max-width:650px;margin:0 auto;padding:30px 0 16px}
        .welcome .eyebrow{letter-spacing:.13em;font-size:.72rem;color:#79508d;text-transform:uppercase}
        .welcome h1{font:700 clamp(2.25rem,5vw,3.6rem)/1.08 var(--bs-font-sans-serif);letter-spacing:-.035em;margin:16px 0 22px}
        .welcome .intro{font-size:1.1rem;line-height:1.6;max-width:570px;color:#695775}
@@ -206,6 +195,12 @@ suppose_app <- function(
         shiny::actionButton("example_work", "Rethink how we work"),
         shiny::actionButton("example_service", "Explore an idea"),
         shiny::actionButton("example_research", "Untangle a question")
+      ),
+      shiny::tags$p(
+        shiny::actionButton(
+          "open_examples_welcome",
+          "Learn with worked examples"
+        )
       )
     ),
     drawer = shinychat::chat_drawer(
@@ -229,6 +224,7 @@ suppose_app <- function(
           `aria-label` = "Inquiry commands"
         ),
         shiny::actionButton("open_tools", "Tools"),
+        shiny::actionButton("open_examples", "Examples"),
         shiny::actionButton(
           "toggle_record",
           "Record",
@@ -256,14 +252,19 @@ suppose_app <- function(
     ui
   )
   shiny::shinyApp(ui, function(input, output, session) {
+    learning <- worked_example_session(
+      shiny::isolate(session$clientData$url_search),
+      record,
+      history_dir
+    )
     inquiry_server(
       input,
       output,
       session,
-      record,
+      learning$record,
       chat_factory,
       agent_factory,
-      history_dir
+      learning$history_dir
     )
   })
 }
@@ -974,33 +975,17 @@ inquiry_server <- function(
       })
     })
   }
-  output$worked_example <- shiny::renderUI({
-    if (is.null(current())) {
-      shiny::tagList(
-        shiny::tags$p(
-          class = "hint",
-          "Or inspect an invented, already modeled temperature example:"
-        ),
-        shiny::actionButton("load_worked", "Load worked numerical record")
-      )
-    }
-  })
-  shiny::observeEvent(
-    input$load_worked,
-    safely({
-      busy()
-      if (!is.null(current())) {
-        abort_suppose(
-          "A conversation is already open. Save it and open a fresh session to load the worked example.",
-          "stale"
-        )
-      }
-      current(suppose_example())
-      status(
-        "Loaded the invented temperature example. Its numerical method is optional; it does not define other inquiries."
-      )
-    })
-  )
+  show_examples <- function() {
+    shiny::showModal(shiny::modalDialog(
+      worked_examples_ui(),
+      title = "Learn with worked examples",
+      size = "l",
+      easyClose = TRUE,
+      footer = shiny::modalButton("Back to my conversation")
+    ))
+  }
+  shiny::observeEvent(input$open_examples, show_examples())
+  shiny::observeEvent(input$open_examples_welcome, show_examples())
   output$record_card <- shiny::renderUI({
     e <- visible()
     if (is.null(e)) {
@@ -1564,6 +1549,13 @@ inquiry_server <- function(
       )
     }
   )
+  output$save_notice <- shiny::renderText({
+    if (!is.null(history_dir) && !is.null(client)) {
+      "Conversations, records and pending suggestions are saved automatically. Apply editor changes before leaving. Download a separate copy here."
+    } else {
+      "Save before closing. Unapplied suggestions and unsaved editor changes are not retained as revisions."
+    }
+  })
   output$save <- shiny::downloadHandler(
     filename = function() "suppose-conversation.json",
     content = function(path) {

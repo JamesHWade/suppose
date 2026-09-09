@@ -168,3 +168,42 @@ or correct the request in a new message. Review any pending suggestion before
 applying another change. If a provider is unavailable, the manual editor and
 portable export remain usable. See [get started](suppose.html) for the same
 record operations directly in R.
+
+## Explore possible outcomes
+
+For a two-condition numerical prior, open **Possible outcomes** under its
+consequences. Use **Next realization**, **Previous realization**, or the labeled
+slider to inspect the saved draws. Each realization links the two population
+means, one future measurement at each condition, and their differences. The axes
+stay fixed as you step; text reports the same values and the prior ID and seed.
+
+Probability dots summarize each contrast: each dot represents 1% of the analytic
+distribution, rather than a random simulation or an observed measurement. The
+black diamond marks the selected realization, and the dashed line marks the
+scientific threshold. Exact probabilities remain visible, so the number of
+frames you inspect does not determine the probability estimate. These are prior
+consequences, not evidence from observations.
+
+## Learn with worked examples
+
+Select **Examples** in the toolbar or **Learn with worked examples** on the
+welcome screen. Each opens a separate tab with a guided record; your current
+conversation stays in place. The examples work without a model provider.
+
+| Example | What to learn | Evidence |
+|:--|:--|:--|
+| Turn a hunch into a question | Clarify, revise, and review an interpretation | Fictional workplace scenario |
+| Explore beliefs through possible outcomes | Correlation, linked draws, and mean versus measurement uncertainty | Invented strength judgments |
+| Learn from measurements | Prior-to-posterior updating and sensitivity | Retrospective PlantGrowth analysis with illustrative assumptions |
+| Find what a model misses | Residual checks and a regression comparison | Synthetic data with a constructed duration effect |
+
+The first message explains what to inspect, what to try, and what the result
+cannot establish. Tutorial reviews are attributed to the tutorial analyst.
+Use **Save conversation and record** before closing an example tab to retain
+changes and the walkthrough. These separate example sessions do not autosave.
+
+The same records are available in R:
+
+```{r worked-record, eval=FALSE}
+suppose_app(suppose_worked_example("plants"))
+```

@@ -1,0 +1,42 @@
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+(async()=>{
+ const browser=await chromium.launch({channel:'chrome',headless:true});
+ try {
+  const page=await browser.newPage({viewport:{width:1280,height:1000}});
+  const errors=[]; page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('http://127.0.0.1:3912');
+  await page.waitForFunction(()=>document.querySelector('#model_label')?.textContent.includes('Local guide'),{},{timeout:60000});
+  await page.locator('#toggle_record').click();
+  await page.waitForFunction(()=>{const i=document.querySelector('#record_prior_plot img'); return i?.complete&&i.naturalWidth>0&&!document.documentElement.classList.contains('shiny-busy');});
+  await page.getByText('Possible outcomes',{exact:true}).click();
+  const summary=page.locator('#record_prior_plot_draw_summary');
+  await summary.filter({hasText:'Realization 1 of'}).waitFor();
+  const initial=await summary.textContent();
+  const probability=await page.locator('#record_prior_plot_draw_probability').textContent();
+  await page.getByRole('button',{name:'Next realization',exact:true}).click();
+  await summary.filter({hasText:'Realization 2 of'}).waitFor();
+  await page.getByRole('button',{name:'Previous realization',exact:true}).click();
+  await summary.filter({hasText:'Realization 1 of'}).waitFor();
+  assert.equal(await summary.textContent(),initial);
+  await page.getByRole('button',{name:'Next realization',exact:true}).focus();
+  await page.keyboard.press('Enter');
+  await summary.filter({hasText:'Realization 2 of'}).waitFor();
+  await page.waitForFunction(()=>['pair','dots'].every(k=>{const i=document.querySelector('#record_prior_plot_draw_'+k+' img');return i?.complete&&i.naturalWidth>0;}));
+  await page.locator('#record_prior_plot_draw_controls').scrollIntoViewIfNeeded();
+  await page.screenshot({path:'artifacts/prior-draws-desktop.png'});
+  await page.getByText('Intervals',{exact:true}).click();
+  await page.getByText('Possible outcomes',{exact:true}).click();
+  assert.match(await summary.textContent(),/Realization 2 of/);
+  await page.setViewportSize({width:390,height:844});
+  await page.waitForTimeout(1200);
+  assert.match(await summary.textContent(),/Realization 2 of/);
+  assert.equal(await page.locator('#record_prior_plot_draw_probability').textContent(),probability);
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  await page.locator('#record_prior_plot_draw_pair').screenshot({path:'artifacts/prior-draws-pair-mobile.png'});
+  await page.locator('#record_prior_plot_draw_dots').screenshot({path:'artifacts/prior-draws-dots-mobile.png'});
+  assert.equal(await page.locator('.shiny-output-error:visible').count(),0);
+  assert.deepEqual(errors,[]);
+  console.log('PASS: linked next/previous, keyboard activation, tab/resize stability, fixed probability, both rendered charts, no mobile overflow or browser errors.');
+ } catch(e) {for(const p of browser.contexts().flatMap(c=>c.pages())) {console.log((await p.locator('body').innerText()).slice(-9000));await p.screenshot({path:'artifacts/prior-draws-failure.png'});}throw e;} finally {await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

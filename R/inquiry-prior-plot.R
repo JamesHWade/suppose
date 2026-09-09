@@ -3,6 +3,9 @@ inquiry_prior_visual <- function(p) {
     return(NULL)
   }
   list(
+    draws = p$prediction$draws,
+    seed = p$prediction$seed,
+    prior_id = p$prediction$prior_id,
     means = p$candidate$means,
     mean_sd = p$candidate$mean_sd,
     conditions = p$candidate$conditions,
@@ -57,6 +60,20 @@ inquiry_prior_output <- function(id) {
       shiny::plotOutput(paste0(id, "_intervals"), height = "260px")
     ),
     bslib::nav_panel(
+      "Possible outcomes",
+      shiny::p(
+        "Explore consequences of your beliefs, not observed data. Each realization links two population means with one future measurement at each condition."
+      ),
+      shiny::uiOutput(paste0(id, "_draw_controls")),
+      shiny::textOutput(paste0(id, "_draw_summary")),
+      shiny::plotOutput(paste0(id, "_draw_pair"), height = "340px"),
+      shiny::plotOutput(paste0(id, "_draw_dots"), height = "380px"),
+      shiny::p(
+        "Each colored dot represents 1% of its distribution, placed at a representative quantile. Dots are not measurements or random simulations. The black diamond marks the selected realization; the dashed line marks your threshold."
+      ),
+      shiny::textOutput(paste0(id, "_draw_probability"))
+    ),
+    bslib::nav_panel(
       "Explore",
       plotly::plotlyOutput(paste0(id, "_interactive"), height = "420px"),
       shiny::textOutput(paste0(id, "_summary"))
@@ -64,7 +81,13 @@ inquiry_prior_output <- function(id) {
   )
 }
 
-bind_inquiry_prior <- function(output, id, visual) {
+bind_inquiry_prior <- function(
+  output,
+  id,
+  visual,
+  session = shiny::getDefaultReactiveDomain()
+) {
+  bind_prior_draws(output, id, visual, session)
   output[[id]] <- shiny::renderPlot(
     {
       x <- visual()

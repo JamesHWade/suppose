@@ -1,5 +1,9 @@
 # suppose 0.0.0.9000
 
+* `suppose_worked_example()` provides four guided learning records, also available from Examples in the workbench. Examples open in separate sessions and cover qualitative inquiry, prior draws, a retrospective PlantGrowth update, and synthetic regression comparison.
+
+* The workbench’s Possible outcomes view links prior means, future measurements and contrasts in reproducible realizations, with manual stepping, probability dots and exact threshold probabilities.
+
 * `suppose_app()` and `suppose_example_app()` accept an ellmer chat object or constructor through `chat`. Object templates preserve provider and model configuration while creating fresh session state; existing factory arguments remain supported.
 
 * Documentation now includes a concise introduction, eight task-oriented guides, evaluated statistical examples, and a redesigned pkgdown site.

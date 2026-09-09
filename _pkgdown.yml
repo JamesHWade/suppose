@@ -118,6 +118,7 @@ reference:
 - title: Start here
   contents:
   - suppose_example
+  - suppose_worked_example
   - suppose_app
   - suppose_agent
   - suppose_example_app
