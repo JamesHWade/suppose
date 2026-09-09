@@ -9,21 +9,30 @@ suppose_app(
   chat_factory = NULL,
   agent_factory = NULL,
   history_dir = getOption("suppose.history_dir", file.path(getwd(), ".suppose",
-    "conversations"))
+    "conversations")),
+  chat = NULL
 )
 }
 \arguments{
 \item{record}{Optional existing record or JSON path. Defaults to an empty conversation.}
 
-\item{chat_factory}{Optional ellmer Chat factory, wrapped in a Suppose Deputy Agent.
-Use \code{\link[=suppose_muse]{suppose_muse()}} after configuring OpenRouter credentials locally.}
+\item{chat_factory}{Compatibility argument for a Chat constructor. Prefer
+\code{chat = constructor}. Supply only one of \code{chat}, \code{chat_factory}, or
+\code{agent_factory}. Both Chat forms are wrapped in a Suppose Deputy Agent.}
 
-\item{agent_factory}{Optional function creating a fresh Deputy Agent per session.
-Use \code{\link[=suppose_agent]{suppose_agent()}} for the built-in setup.}
+\item{agent_factory}{Advanced: a function creating a fresh Deputy Agent per
+session. Use \code{\link[=suppose_agent]{suppose_agent()}} for the built-in setup.}
 
 \item{history_dir}{Directory for local conversation history, or \code{NULL} to disable.
 History is shared by sessions of this local app; use separate directories for
 separate users. Requires a connected agent.}
+
+\item{chat}{An ellmer Chat used as a provider/model configuration template, or
+a zero-argument function creating a fresh Chat per session. For example,
+\code{chat = ellmer::chat_openai()} or \code{chat = ellmer::chat_openai}.
+Object templates start with fresh history, tools, and callbacks; their system
+prompt is replaced by Suppose's. The supplied object is not modified.
+Use a constructor for custom Chat subclasses or session-specific resources.}
 }
 \value{
 A Shiny app object.
@@ -33,5 +42,5 @@ Start with any problem or belief. The conversation develops a reviewable
 interpretation with expectations, assumptions and unresolved questions.
 Numerical modeling is optional and limited to implemented methods. Use
 \code{\link[=suppose_example_app]{suppose_example_app()}} for the detailed temperature-model demonstration.
-Without a chat factory, a labeled local guide and record editor remain usable.
+Without a chat or agent, a labeled local guide and record editor remain usable.
 }

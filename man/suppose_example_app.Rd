@@ -4,21 +4,24 @@
 \alias{suppose_example_app}
 \title{Open the worked temperature example}
 \usage{
-suppose_example_app(record = NULL, chat_factory = NULL)
+suppose_example_app(record = NULL, chat_factory = NULL, chat = NULL)
 }
 \arguments{
 \item{record}{Optional record or bundle path. Defaults to the invented example.}
 
-\item{chat_factory}{Optional function returning a fresh ellmer Chat.
-Use \code{suppose_muse} to connect Muse Spark Contributor through OpenRouter.}
+\item{chat_factory}{Compatibility argument for a Chat constructor. Prefer
+\code{chat = constructor}; do not supply both arguments.}
+
+\item{chat}{An ellmer Chat configuration template or a zero-argument Chat
+constructor. See \code{\link[=suppose_app]{suppose_app()}} for template and session-isolation semantics.}
 }
 \value{
 A Shiny app object; print it to run, or pass to \code{shiny::runApp()}.
 }
 \description{
 The manual workflow and local guidance need no credentials. Optionally supply
-a factory that creates a fresh ellmer chat per session, for example
-\code{function() ellmer::chat_openai(model = "your-model")}. The assistant gets
+a chat configuration or constructor, for example
+\code{chat = ellmer::chat_openai}. The assistant gets
 read-only access to the current formalization and can propose elicitation changes
 for review. It cannot accept records or execute arbitrary R code.
 }

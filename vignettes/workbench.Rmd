@@ -60,10 +60,43 @@ For a connected conversation, use an ellmer provider that you have configured
 locally. For example, with an OpenAI API key available to ellmer:
 
 ```{r provider, eval=FALSE}
+suppose_app(chat = ellmer::chat_openai())
+```
+
+You can also pass the constructor itself. It is called once per browser session:
+
+```{r constructor, eval=FALSE}
+suppose_app(chat = ellmer::chat_openai)
+```
+
+A supplied object is a configuration template. Suppose constructs a fresh chat
+from its provider and model settings for each session; it does not modify the
+original or import its messages, system prompt, tools, callbacks, or conversation
+identity. Use `record` or saved history to reopen an inquiry. A constructor is the
+right choice for custom Chat subclasses or resources that must be created per
+session; it must return a fresh Chat each time.
+
+### Customize agent execution
+
+Every connected workbench uses a Deputy agent. `chat` selects the model connection
+and uses Suppose's agent defaults. The advanced `agent_factory` argument lets you
+change execution settings, such as the working directory or usage limits:
+
+```{r custom-agent, eval=FALSE}
 suppose_app(agent_factory = function() {
-  suppose_agent(chat = ellmer::chat_openai())
+  suppose_agent(
+    chat = ellmer::chat_openai(),
+    usage_limits = deputy::UsageLimits(
+      max_requests = 4, max_tool_calls = 8, on_exceed = "error"
+    )
+  )
 })
 ```
+
+Supply `chat` or `agent_factory`, not both. The older `chat_factory` argument still
+works, but `chat = constructor` is the simpler spelling. For the built-in
+OpenRouter configuration, the convenience form is
+`suppose_app(agent_factory = suppose_agent)`.
 
 The built-in `suppose_agent()` default instead uses OpenRouter. Configure
 `OPENROUTER_API_KEY` locally before using it. The default Contributor model has

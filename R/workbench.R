@@ -1,18 +1,30 @@
 #' Open the worked temperature example
 #'
 #' The manual workflow and local guidance need no credentials. Optionally supply
-#' a factory that creates a fresh ellmer chat per session, for example
-#' `function() ellmer::chat_openai(model = "your-model")`. The assistant gets
+#' a chat configuration or constructor, for example
+#' `chat = ellmer::chat_openai`. The assistant gets
 #' read-only access to the current formalization and can propose elicitation changes
 #' for review. It cannot accept records or execute arbitrary R code.
 #' @param record Optional record or bundle path. Defaults to the invented example.
-#' @param chat_factory Optional function returning a fresh ellmer Chat.
-#'   Use `suppose_muse` to connect Muse Spark Contributor through OpenRouter.
+#' @param chat An ellmer Chat configuration template or a zero-argument Chat
+#'   constructor. See [suppose_app()] for template and session-isolation semantics.
+#' @param chat_factory Compatibility argument for a Chat constructor. Prefer
+#'   `chat = constructor`; do not supply both arguments.
 #' @return A Shiny app object; print it to run, or pass to `shiny::runApp()`.
 #' @export
 #' @examples
 #' if (interactive()) suppose_example_app()
-suppose_example_app <- function(record = NULL, chat_factory = NULL) {
+suppose_example_app <- function(
+  record = NULL,
+  chat_factory = NULL,
+  chat = NULL
+) {
+  if (!is.null(chat)) {
+    if (!is.null(chat_factory)) {
+      abort_suppose("Supply chat or chat_factory, not both.")
+    }
+    chat_factory <- inquiry_chat_factory(chat)
+  }
   rlang::check_installed(c("shiny", "bslib", "shinychat"))
   if (!is.null(chat_factory) && !is.function(chat_factory)) {
     abort_suppose("{.arg chat_factory} must be a function or NULL.")

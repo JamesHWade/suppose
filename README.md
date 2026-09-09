@@ -60,6 +60,13 @@ To open the manual workbench after installing those dependencies:
 suppose_app()
 ```
 
+With an ellmer provider configured, pass a chat object or its constructor:
+
+```r
+suppose_app(chat = ellmer::chat_openai())
+suppose_app(chat = ellmer::chat_openai)
+```
+
 ## What the results mean
 
 Suppose keeps a distinction between a stated belief, its modeled consequences,

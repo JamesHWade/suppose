@@ -1,5 +1,7 @@
 # suppose 0.0.0.9000
 
+* `suppose_app()` and `suppose_example_app()` accept an ellmer chat object or constructor through `chat`. Object templates preserve provider and model configuration while creating fresh session state; existing factory arguments remain supported.
+
 * Documentation now includes a concise introduction, eight task-oriented guides, evaluated statistical examples, and a redesigned pkgdown site.
 
 * The workbench adopts the hex sticker's plum, lavender and cream palette, bold typography and fox mark; prior plots use matching colors.
