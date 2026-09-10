@@ -171,6 +171,11 @@ inquiry_tools <- function(
             research_designs = research_design_inventory(state$request$base),
             regression_tests = regression_test_inventory(state$request$base),
             regression_sensitivities = state$request$base$regression_sensitivities,
+            model_worlds = lapply(
+              state$request$base$model_worlds,
+              world_inventory
+            ),
+            model_implications = plain(state$request$base$model_implications),
             workbench_forms = plain(state$request$form_state),
             summary = e$prediction$summary,
             assumptions = e$candidate$assumptions,

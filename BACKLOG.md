@@ -176,7 +176,8 @@ For the current research-design direction, SUP-029, [SUP-030](#sup-030),
 resume it, freeze and assess future measurements, and inspect sensitivity.
 [SUP-020](#sup-020) remains the separate campaign-dispatch integration.
 [SUP-031](#sup-031) adds scientifically motivated model alternatives; then
-SUP-017/SUP-032 enable richer reference models. Evaluate SUP-033 before committing
+The brms model-world slice in [SUP-038](#sup-038) starts SUP-017; its remaining
+adapters and SUP-032 enable richer reference models. Evaluate SUP-033 before committing
 to learned Action-BED policies (SUP-034). Equation search (SUP-035) depends on
 that validation and prospective loop. These are evidence gates, not calendar promises.
 
@@ -228,7 +229,7 @@ claim records, elicitation inputs, and numerical probe. That initial chunk is no
 | [SUP-014](#sup-014) | Commit to and assess a prospective test | P1 | done | [SUP-012](#sup-012), [SUP-013](#sup-013) |
 | [SUP-015](#sup-015) | Show sensitivity to prior and likelihood assumptions | P1 | done | [SUP-013](#sup-013) |
 | [SUP-016](#sup-016) | Review predictive changes when a model grows | P1 | implemented | [SUP-007](#sup-007), [SUP-013](#sup-013) |
-| [SUP-017](#sup-017) | Support a user-supplied model or simulator | P2 | needs-design | [SUP-008](#sup-008), [SUP-016](#sup-016) |
+| [SUP-017](#sup-017) | Support a user-supplied model or simulator | P2 | partial | [SUP-008](#sup-008), [SUP-016](#sup-016) |
 | [SUP-018](#sup-018) | Demonstrate the same workflow for a product forecast | P2 | needs-design | [SUP-014](#sup-014) |
 | [SUP-019](#sup-019) | Connect claims to a decision and its consequences | P2 | needs-design | [SUP-018](#sup-018), [SUP-015](#sup-015) |
 | [SUP-020](#sup-020) | Propose a useful next measurement through alloptr | P2 | needs-design | [SUP-014](#sup-014), [SUP-017](#sup-017) |
@@ -249,6 +250,7 @@ claim records, elicitation inputs, and numerical probe. That initial chunk is no
 | [SUP-035](#sup-035) | Evaluate Bayesian equation alternatives as experimental hypotheses | P3 | needs-design | SUP-030, SUP-031, SUP-032, SUP-033 |
 | [SUP-036](#sup-036) | Review sensitivity of regression and design choices | P1 | implemented | SUP-015, SUP-028, SUP-029 |
 | [SUP-037](#sup-037) | Continue a reviewed research plan without rebuilding its form | P1 | implemented | SUP-029 |
+| [SUP-038](#sup-038) | Explore the world implied by a model | P1 | in-progress | SUP-008, SUP-017 |
 
 ## Work items
 
@@ -622,16 +624,21 @@ Extended-model fitting, interactions and automatic prior adjustment are unsuppor
 
 **Outcome:** A scientist can reuse a model they already trust while preserving Suppose's claim and evidence semantics.
 
-**Priority:** P2 · **Milestone:** M3 — Choose what to investigate · **Type:** design · **Status:** needs-design
+**Priority:** P2 · **Milestone:** M3 — Choose what to investigate · **Type:** design · **Status:** partial
 
 **Depends on:** [SUP-008](#sup-008), [SUP-016](#sup-016)
 
 **Acceptance criteria**
 
-- [ ] Define a narrow adapter contract for conditions, units, unknown quantities, predictions, run provenance, and computation failures.
+- [x] Define a narrow adapter contract for conditions, units, unknown quantities, predictions, run provenance, and computation failures.
 - [ ] Demonstrate a simple external R model and an expensive-simulator fixture through that same contract.
-- [ ] Declare which uncertainty sources and elicitation operations the adapter supports; unsupported capabilities remain explicit.
-- [ ] Retain the distinction between a simulation run and observations of the external system it represents.
+- [x] Declare which uncertainty sources and elicitation operations the adapter supports; unsupported capabilities remain explicit.
+- [x] Retain the distinction between a simulation run and observations of the external system it represents.
+
+**Delivered slice:** SUP-038 implements a bounded brms prediction adapter and
+three bundled model-world examples, with portable simulation artifacts and
+reviewed implications. Generic R simulators, expensive-simulator execution,
+Stan and tidymodels adapters remain open.
 
 **Verification:** Two concrete adapters pass shared behavioral examples without a bespoke host runtime.
 
@@ -1178,3 +1185,47 @@ review remain unchanged. Exercise stale model and concurrent manual-edit cases.
 
 **Scope boundary:** Reuse and presentation of implemented BED, without widening
 its statistical family, utility contract or execution authority.
+
+
+<a id="sup-038"></a>
+
+### SUP-038 — Explore the world implied by a model
+
+**Outcome:** A user starts with a provided or user-supplied brms model, understands
+its conditional consequences, and retains a qualified interpretation and a
+concrete proposed challenge.
+
+**Priority:** P1 · **Milestone:** M3 · **Status:** implemented
+
+**Acceptance criteria**
+
+- [x] Provide a bounded brms adapter with explicit scenarios, units, scientific
+  context, supported likelihoods, computation failures and run provenance.
+- [x] Ship genuine brms prediction snapshots and reproducible fitting code for
+  straight-line and curved coating models and a positive, skewed waiting model;
+  exploration requires no provider, brms installation or Stan compilation.
+- [x] Link coherent parameter draws, simulated outcomes, conditional contrasts,
+  meaningful thresholds and comparisons on a compatible scenario grid.
+- [x] Distinguish structural restrictions, author-supplied scientific context,
+  computed implications, fitting-range extrapolation and actual evidence.
+- [x] Retain independently worded claims, reviewer positions and proposed
+  challenges with exact source snapshots and reviewed settings; changing the
+  model or wording invalidates review.
+- [x] Reopen portable and native-history records without losing models or
+  reviews, replaying actions or importing acceptance into a new draft.
+- [x] Keep examples and drafts isolated across sessions and verify desktop,
+  mobile, keyboard controls and accessible figure descriptions.
+
+**Implementation evidence:** [Model-world acceptance](artifacts/model-world-review.md)
+and the executable [model-world guide](vignettes/model-worlds.Rmd).
+
+**Verification:** Compare the snapshots directly with brms and independently
+reconstruct expected responses from coefficient draws; verify actual browser
+review/export/reopen records, focused tests, package checks and evaluated docs.
+
+**Scope boundary:** Initial univariate Gaussian and lognormal MCMC models with
+ordinary numeric terms, no group-level effects or special prediction contracts.
+Model snapshots are simulations. Retaining an interpretation neither adds
+observations nor freezes a prospective test. No automatic external-model refit,
+general sensitivity or experiment-design calculation; no Stan or tidymodels
+adapter yet. Intended-scientist acceptance in SUP-011 remains separate.

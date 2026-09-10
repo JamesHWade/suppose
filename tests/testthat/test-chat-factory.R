@@ -65,7 +65,8 @@ test_that("the public app wires chat objects and constructors into each session"
     initial,
     chat_factory,
     agent_factory,
-    history_dir
+    history_dir,
+    model = NULL
   ) {
     seen[[length(seen) + 1L]] <<- chat_factory()
   })

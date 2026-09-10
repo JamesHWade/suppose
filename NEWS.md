@@ -1,5 +1,12 @@
 # suppose 0.0.0.9000
 
+* The workbench's Model worlds walkthrough links coherent model draws, future outcomes, scenario comparisons and attributed interpretation reviews. Three synthetic examples open without brms or a model provider. Saved records support schema 14.
+* `inspect_model()` creates portable prediction snapshots from supported univariate brms fits, retaining formula, priors, scientific context, scenario settings and run provenance.
+* `plot_model_world()` draws coherent response curves, simulated outcomes and optional model comparisons from a saved snapshot.
+* `record_model_implication()` retains a separate claim, review, proposed challenge and exact scenario predictions without creating observations or numerical test commitments.
+* `record_model_world()` makes a snapshot available to the inquiry without an interpretation review. An explicit `suppose_app(model = world)` starting model is retained this way.
+* `suppose_model_example()` provides straight-line and curved coating models and a lognormal waiting-time model, with reproducible fitting code.
+
 * The workbench can resume reviewed research plans, freeze and assess regression predictions, and review regression/design sensitivity through chat-assisted forms. Saved records support schema 13 and preserve earlier reviews and measurement corrections.
 * `plan_regression_test()` and `commit_regression_test()` freeze exact future IDs, settings, collection assumptions and joint Student-t predictions. `record_regression_test_data()` retains future data and corrections; `assess_regression_test()` checks complete eligible cohorts without refitting.
 * `research_design_settings()` restores reviewed candidates, targets, costs, budgets and preferences for a new comparison linked to its original plan.

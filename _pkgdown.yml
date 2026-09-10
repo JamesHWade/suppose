@@ -29,6 +29,8 @@ navbar:
       menu:
       - text: Work in conversation
         href: articles/workbench.html
+      - text: Explore a model’s world
+        href: articles/model-worlds.html
       - text: Inspect prior consequences
         href: articles/prior-consequences.html
       - text: Learn from measurements
@@ -50,6 +52,7 @@ articles:
   - workbench
 - title: Work with a model
   contents:
+  - model-worlds
   - prior-consequences
   - measurements
   - regression
@@ -60,6 +63,13 @@ articles:
   - methods
   - terminal
 reference:
+- title: Explore an external model
+  contents:
+  - inspect_model
+  - plot_model_world
+  - suppose_model_example
+  - record_model_implication
+  - record_model_world
 - title: Express and revise
   desc: Preserve a belief, its wording, and the judgments that give it meaning.
   contents:

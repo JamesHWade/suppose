@@ -203,10 +203,10 @@ validate_record <- function(x) {
       !is.numeric(x$schema_version) ||
       length(x$schema_version) != 1L ||
       is.na(x$schema_version) ||
-      !x$schema_version %in% c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)
+      !x$schema_version %in% c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
   ) {
     abort_suppose(
-      "Unsupported bundle schema; this version reads schemas 1 through 13.",
+      "Unsupported bundle schema; this version reads schemas 1 through 14.",
       "schema"
     )
   }
@@ -230,7 +230,9 @@ validate_record <- function(x) {
           "regression_commitments",
           "regression_test_data",
           "regression_assessments",
-          "regression_sensitivities"
+          "regression_sensitivities",
+          "model_worlds",
+          "model_implications"
         )
       ),
       c("schema_version", "record_id", "revisions")
@@ -292,6 +294,7 @@ validate_record <- function(x) {
   validate_model_references(x)
   validate_regression_tests(x)
   validate_regression_sensitivities(x)
+  validate_model_worlds(x)
   invisible(x)
 }
 
@@ -396,6 +399,8 @@ restore_record_types <- function(z) {
         c(
           "suppose_claim",
           "suppose_model_reference",
+          "suppose_model_world",
+          "suppose_model_implication",
           "suppose_judgment",
           "suppose_prior",
           "suppose_prediction",

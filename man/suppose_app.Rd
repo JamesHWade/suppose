@@ -10,7 +10,8 @@ suppose_app(
   agent_factory = NULL,
   history_dir = getOption("suppose.history_dir", file.path(getwd(), ".suppose",
     "conversations")),
-  chat = NULL
+  chat = NULL,
+  model = NULL
 )
 }
 \arguments{
@@ -33,6 +34,9 @@ a zero-argument function creating a fresh Chat per session. For example,
 Object templates start with fresh history, tools, and callbacks; their system
 prompt is replaced by Suppose's. The supplied object is not modified.
 Use a constructor for custom Chat subclasses or session-specific resources.}
+
+\item{model}{Optional snapshot from \code{\link[=inspect_model]{inspect_model()}} or
+\code{\link[=suppose_model_example]{suppose_model_example()}}. Opens the model-world walkthrough on startup.}
 }
 \value{
 A Shiny app object.

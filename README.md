@@ -33,6 +33,19 @@ plot_prior(prior, view = "contrast")
 The plot separates uncertainty about the mean difference from variation between
 future measurements. Change an assumption and inspect how the consequences change.
 
+## Start with a model
+
+Explore three provided models without fitting anything or connecting a provider:
+
+```r
+suppose_app(model = suppose_model_example("linear"))
+```
+
+Compare straight-line and curved coating models, or explore positive, skewed
+waiting times. Inspect possible outcomes, challenge an implication, and save
+your reasoning. All three use synthetic data.
+[Explore model worlds or bring a brms fit](vignettes/model-worlds.Rmd).
+
 ## Choose your next step
 
 - **New to Suppose?** [Get started](vignettes/suppose.Rmd) with a belief,

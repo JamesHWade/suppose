@@ -5,6 +5,8 @@
 #' Numerical modeling is optional and limited to implemented methods. Use
 #' [suppose_example_app()] for the detailed temperature-model demonstration.
 #' Without a chat or agent, a labeled local guide and record editor remain usable.
+#' @param model Optional snapshot from [inspect_model()] or
+#'   [suppose_model_example()]. Opens the model-world walkthrough on startup.
 #' @param record Optional existing record or JSON path. Defaults to an empty conversation.
 #' @param chat An ellmer Chat used as a provider/model configuration template, or
 #'   a zero-argument function creating a fresh Chat per session. For example,
@@ -30,7 +32,8 @@ suppose_app <- function(
     "suppose.history_dir",
     file.path(getwd(), ".suppose", "conversations")
   ),
-  chat = NULL
+  chat = NULL,
+  model = NULL
 ) {
   rlang::check_installed(c(
     "shiny",
@@ -41,6 +44,9 @@ suppose_app <- function(
     "ggdist",
     "plotly"
   ))
+  if (!is.null(model)) {
+    validate_model_world(model)
+  }
   if (is.character(record)) {
     record <- read_record(record)
   }
@@ -68,6 +74,7 @@ suppose_app <- function(
     shiny::uiOutput("proposal_card"),
     shiny::uiOutput("record_card"),
     shiny::uiOutput("model_card"),
+    shiny::actionButton("open_world_record", "Explore a model\u2019s world"),
     shiny::tags$details(
       shiny::tags$summary("Edit the interpretation yourself"),
       shiny::textInput("author", "Your name", "You"),
@@ -202,6 +209,10 @@ suppose_app <- function(
         shiny::actionButton(
           "open_examples_welcome",
           "Learn with worked examples"
+        ),
+        shiny::actionButton(
+          "open_world_welcome",
+          "Explore a model\u2019s world"
         )
       )
     ),
@@ -227,6 +238,7 @@ suppose_app <- function(
         ),
         shiny::actionButton("open_tools", "Tools"),
         shiny::actionButton("open_examples", "Examples"),
+        shiny::actionButton("open_world", "Model worlds"),
         shiny::actionButton(
           "toggle_record",
           "Record",
@@ -266,7 +278,20 @@ suppose_app <- function(
       learning$record,
       chat_factory,
       agent_factory,
-      learning$history_dir
+      learning$history_dir,
+      model = {
+        query <- shiny::parseQueryString(shiny::isolate(
+          session$clientData$url_search
+        ))
+        if (
+          !is.null(query$suppose_world) &&
+            query$suppose_world %in% c("linear", "curved", "waiting")
+        ) {
+          suppose_model_example(query$suppose_world)
+        } else {
+          model
+        }
+      }
     )
   })
 }
@@ -350,13 +375,21 @@ inquiry_server <- function(
   initial = NULL,
   chat_factory = NULL,
   agent_factory = NULL,
-  history_dir = NULL
+  history_dir = NULL,
+  model = NULL
 ) {
+  if (!is.null(model)) {
+    initial <- record_model_world(
+      initial %||% model_world_inquiry(model),
+      model
+    )
+  }
   current <- shiny::reactiveVal(initial)
   proposal <- shiny::reactiveVal(NULL)
   forms <- shiny::reactiveVal(list())
   extension_controller <- sensitivity_controller <- regression_controller <- import_controller <- design_controller <- NULL
   regression_test_controller <- regression_sensitivity_controller <- NULL
+  world_controller <- NULL
   editing_proposal <- shiny::reactiveVal(NULL)
   status <- shiny::reactiveVal(
     "Your record takes shape as we talk."
@@ -854,6 +887,9 @@ inquiry_server <- function(
     model_version(model_version() + 1L)
   }
   reset_runtime <- function() {
+    if (!is.null(world_controller)) {
+      world_controller$reset()
+    }
     shiny::isolate({
       config <- inquiry_agent_config(client)
       if (!is.null(config)) {
@@ -1050,6 +1086,27 @@ inquiry_server <- function(
         )
       })
     })
+  }
+  show_world <- function() {
+    shiny::showModal(shiny::modalDialog(
+      world_controller$ui(),
+      title = "The world implied by a model",
+      size = "l",
+      easyClose = FALSE,
+      footer = shiny::modalButton("Back to my conversation")
+    ))
+  }
+  for (id in c("open_world", "open_world_welcome", "open_world_record")) {
+    local({
+      button <- id
+      shiny::observeEvent(input[[button]], show_world())
+    })
+  }
+  saved_query <- shiny::parseQueryString(
+    shiny::isolate(session$clientData$url_search) %||% ""
+  )
+  if (!is.null(model) && is.null(saved_query$shinychat_conversation_id)) {
+    session$onFlushed(show_world, once = TRUE)
   }
   show_examples <- function() {
     shiny::showModal(shiny::modalDialog(
@@ -1590,6 +1647,22 @@ inquiry_server <- function(
       )
     }
   }
+  world_controller <- model_world_server(
+    "world",
+    current,
+    research_guard,
+    model,
+    messages = function() assistant$messages,
+    followup = function(text) {
+      shiny::removeModal()
+      shinychat::update_chat_user_input(
+        "inquiry",
+        value = text,
+        focus = TRUE,
+        session = session
+      )
+    }
+  )
   regression_test_controller <- regression_review_server(
     "regression_test",
     current,

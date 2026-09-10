@@ -1,0 +1,208 @@
+---
+title: "Explore the world implied by a model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Explore the world implied by a model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse=TRUE, comment='#>', fig.width=8, fig.height=4.5)
+library(suppose)
+```
+
+A fitted model is a starting point for inquiry. Suppose helps you inspect its
+assumptions, explore possible outcomes, and retain your interpretation of what
+those consequences mean. A model implication remains conditional on the model
+and its scope; it is not a newly observed fact or automatically a causal effect.
+
+## Begin with a provided model
+
+You do not need a fitted model or a provider key. Three saved examples come with
+Suppose. They contain actual brms predictions from synthetic data, including
+coherent parameter draws and simulated future outcomes. Opening them requires
+neither brms nor a Stan compiler.
+
+```{r examples}
+linear <- suppose_model_example('linear')
+curved <- suppose_model_example('curved')
+waiting <- suppose_model_example('waiting')
+vapply(list(linear, curved, waiting), function(w) w$title, character(1))
+```
+
+- **Straight-line coating model:** a constant change in mean strength per degree.
+- **Curved coating model:** the same synthetic fitting data, with a quadratic
+  relationship that can turn downward. Compare it with the straight-line model.
+- **Waiting-time model:** positive, skewed service waits under a lognormal model.
+  It illustrates multiplicative changes and the distinction between an average
+  outcome and an individual wait.
+
+```{r open-app, eval=FALSE}
+suppose_app(model = linear)
+```
+
+Passing `model = world` retains that simulation artifact in the starting inquiry,
+without accepting an interpretation. **Explore this model in conversation** also
+makes the selected model available and prepares a question for the composer;
+it does not send a message automatically. A connected chat provider can then
+discuss the predictions and assumptions.
+
+You can also open **Model worlds** in an ordinary `suppose_app()` session, or
+choose the model-world example from **Examples**. Each example tab has its own
+copy of the developing inquiry.
+
+```{r example-plot, fig.alt="Coherent draw and simulated strength outcomes from the curved coating model, compared with the increasing median prediction of the straight-line model. The models diverge outside the 20 to 40 degree fitting range."}
+plot_model_world(curved, scenario = 36, comparison = linear)
+```
+
+## A short walkthrough
+
+1. Read the scientific interpretation. Expand the formula and likelihood details
+   to distinguish the author's interpretation from restrictions in the code.
+2. Move the temperature from 30 to 70 degrees C. The fitting range is 20–40;
+   the app identifies the move beyond that range as extrapolation.
+3. Step through simulated experiments. A purple curve uses one shared parameter
+   draw across all scenarios. Orange points add outcome variation under that
+   same draw. The shaded intervals are pointwise 90% intervals, not a joint
+   coverage guarantee for an entire curve or experiment.
+4. Compare the curved and straight-line models. Their behavior diverges well
+   beyond the data. The curved model can predict physically impossible negative
+   strength; a locally useful shape is not automatically a global model.
+5. Draft a statement, then edit it in your own words. Accept, qualify or challenge
+   the interpretation, explain your reasoning, and propose an observation that
+   would probe it. Retain the review and save the record before closing.
+
+The threshold control changes the question asked of the saved predictions. It
+neither refits the model nor changes a utility function. Probability estimates
+are fractions of a finite set of posterior draws and have Monte Carlo error.
+A zero count does not establish zero probability.
+
+## Retain an interpretation in R
+
+A review can relate an independently worded claim to a model without overwriting
+an existing inquiry's main claim. The exact model snapshots, scenario, threshold,
+shown realization and comparison summary are retained.
+
+```{r review}
+record <- elicitation_record(claim(
+  'Which strength predictions deserve a direct check?',
+  author = 'Example analyst'
+))
+implication <- claim(
+  'The straight-line extrapolation needs an explicit scope limit.',
+  author = 'Example analyst',
+  scope = linear$scope
+)
+record <- record_model_implication(
+  record, linear, implication,
+  position = 'qualify',
+  reason = 'The models disagree beyond the 20–40 degree fitting range.',
+  challenge = 'Collect independent preparations at 50 and 60 degrees under a fixed protocol.',
+  author = 'Example analyst',
+  reviewed = TRUE,
+  scenario = 36, # temperature 70 in this explicit grid
+  threshold = 60,
+  realization = 2,
+  comparison = curved
+)
+record$model_implications[[1]]$summary
+```
+
+```{r roundtrip}
+path <- tempfile(fileext = '.json')
+write_record(record, path)
+reopened <- read_record(path)
+stopifnot(isTRUE(all.equal(record, reopened)))
+unlink(path)
+```
+
+Use `record_model_world(record, world)` to retain a simulation artifact before
+forming an interpretation. It adds no observation or acceptance.
+
+The proposed challenge is a research question. It does not freeze a numerical
+prospective test, add observations, or authorize fitting an alternative model.
+External snapshots are not routed to Suppose's built-in regression-design
+methods. Those methods have a different, explicitly supported model contract.
+
+## Bring a brms model
+
+The first adapter accepts a bounded set of univariate MCMC fits: Gaussian models
+with identity or log links, and lognormal models with identity links. It supports
+numeric formula terms and arithmetic transformations, including a quadratic
+term. Supply all formula predictors in the scenario table and units for each;
+only the plotted predictor may vary. Scientific scope must be supplied by the author. The fitting range defaults to
+the observed span of the plotted predictor; an explicitly supplied range must
+match it. Other predictors are held fixed at the supplied scenario settings.
+
+```{r own-fit, eval=FALSE}
+library(brms)
+fit <- brm(strength ~ temperature, data = my_measurements, family = gaussian())
+world <- inspect_model(
+  fit,
+  scenarios = data.frame(temperature = seq(20, 60, by = 2)),
+  varying = 'temperature',
+  units = c(temperature = 'degC'),
+  outcome_units = 'MPa',
+  title = 'My coating model',
+  scope = 'Independent preparations under our stated protocol',
+  source = 'My measurements; collection protocol and dates recorded separately',
+  assumptions = 'The linear response and constant variability need checking.',
+  training_range = c(20, 40),
+  threshold = 60,
+  lower_bound = 0,
+  draws = 400,
+  seed = 47
+)
+suppose_app(model = world)
+```
+
+The adapter uses the same posterior draw IDs for
+[`posterior_epred()`](https://paulbuerkner.com/brms/reference/posterior_epred.brmsfit.html)
+and [`posterior_predict()`](https://paulbuerkner.com/brms/reference/posterior_predict.brmsfit.html).
+The first describes uncertainty about the expected response; the second also
+includes individual-outcome variation. In the lognormal example, the expected
+response includes the mean adjustment for lognormal variation, rather than
+simply exponentiating the linear predictor.
+
+The saved snapshot includes the formula, prior summary, supplied context,
+scenario grid, up to 1,000 numeric fitting-data points for single-predictor models, predictive draws,
+software version, seed, selected draw IDs and data/model fingerprints. It also
+reports limited computational diagnostics. Low R-hat and no divergences do not
+establish adequacy or scientific validity. For multiple predictors, the plot omits unadjusted fitting-data points and lists
+the other predictor settings held fixed. The caller's fitted model and RNG state
+are preserved. An incompatible prediction result fails without retaining a
+partial snapshot.
+
+These records contain fitting data and predictions. Treat a saved record as you
+would the underlying research data when sharing it. A fingerprint detects
+identity or changes; it is not an authenticity certificate.
+
+## Rebuild the examples
+
+The full data-generating and brms fitting script is shipped with the package and
+can be downloaded from **Model source and computation** in the walkthrough.
+It writes fitted models and snapshots to `model-world-examples` in your working
+directory. This optional step requires brms and a working Stan toolchain and can
+take several minutes.
+
+```{r rebuild, eval=FALSE}
+file.copy(
+  system.file('model-worlds', 'build-model-worlds.R', package = 'suppose'),
+  'build-model-worlds.R'
+)
+source('build-model-worlds.R')
+fit <- readRDS('model-world-examples/world-linear-fit.rds')
+```
+
+Use a fresh output directory if you modify the script's models or data. Across
+platforms or sampler versions, refitted draws can differ; the shipped predictions
+remain fixed and inspectable.
+
+## Boundaries of this first adapter
+
+Group-level effects, autocorrelation, missing predictors, response additions,
+smooths, distributional formulas, prior-only fits, custom Stan code, non-MCMC fits, and other likelihoods require
+additional contracts. Stan and tidymodels adapters are not implemented yet.
+Neither model refitting, generalized sensitivity analysis nor external-model
+experiment design is implied by being able to inspect a snapshot.

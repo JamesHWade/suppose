@@ -12,7 +12,7 @@
       read_record(path)
     Condition
       Error in `validate_record()`:
-      ! Unsupported bundle schema; this version reads schemas 1 through 13.
+      ! Unsupported bundle schema; this version reads schemas 1 through 14.
 
 ---
 

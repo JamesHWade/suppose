@@ -69,8 +69,8 @@ test_that("example navigation starts a separate unsaved copy and never mutates t
   expect_length(lesson$record$revisions, 3)
   expect_identical(json_data(original), before)
   html <- as.character(worked_examples_ui())
-  expect_equal(length(gregexpr('target="_blank"', html, fixed = TRUE)[[1]]), 4)
-  expect_equal(length(gregexpr('rel="noopener"', html, fixed = TRUE)[[1]]), 4)
+  expect_equal(length(gregexpr('target="_blank"', html, fixed = TRUE)[[1]]), 5)
+  expect_equal(length(gregexpr('rel="noopener"', html, fixed = TRUE)[[1]]), 5)
 })
 
 test_that("browsing the gallery preserves the active record and walkthrough", {

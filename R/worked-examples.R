@@ -285,6 +285,20 @@ worked_examples_ui <- function() {
     shiny::p(
       "Choose a worked record with a guided walkthrough. Each opens in a new tab, leaving this conversation in place. No model provider is required."
     ),
+    shiny::tags$section(
+      class = "worked-example-card",
+      shiny::tags$h3("Start with a model: what world does it describe?"),
+      shiny::p(
+        "Compare straight-line and curved brms models of the same synthetic coating data. Explore simulated outcomes and challenge an implication. No fitting or model provider needed."
+      ),
+      shiny::tags$a(
+        class = "btn btn-outline-primary",
+        href = "?suppose_world=linear",
+        target = "_blank",
+        rel = "noopener",
+        "Explore model worlds in new tab"
+      )
+    ),
     lapply(names(worked_examples()), function(id) {
       lesson <- worked_examples()[[id]]
       shiny::tags$section(

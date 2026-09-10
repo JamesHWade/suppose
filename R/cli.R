@@ -32,6 +32,8 @@ cli_record_summary <- function(x) {
     research_designs = plain(x$research_designs),
     regression_tests = plain(regression_test_inventory(x)),
     regression_test_data = plain(x$regression_test_data),
-    regression_sensitivities = plain(x$regression_sensitivities)
+    regression_sensitivities = plain(x$regression_sensitivities),
+    model_worlds = lapply(x$model_worlds, world_inventory),
+    model_implications = plain(x$model_implications)
   )
 }

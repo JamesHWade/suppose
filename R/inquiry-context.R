@@ -94,6 +94,17 @@ inquiry_context_summary <- function(request) {
       x$regression_sensitivities,
       1
     )),
+    model_worlds = lapply(x$model_worlds, function(w) {
+      list(
+        id = w$id,
+        title = w$title,
+        scope = w$scope,
+        structure = w$structure,
+        capabilities = w$capabilities,
+        limitations = w$limitations
+      )
+    }),
+    model_implications = compact(x$model_implications),
     workbench_forms = lapply(request$form_state, function(f) {
       if (is.null(f)) {
         return(NULL)
@@ -105,6 +116,8 @@ inquiry_context_summary <- function(request) {
       compact(list(values = values, version = f$version))
     }),
     methods = c(
+      "For external-model summaries, expected/future/change triplets are 5th percentile, median, 95th percentile. Explain them as pointwise central 90% intervals in outcome units, distinguishing an average from an individual future observation; use ordinary language rather than internal field names.",
+      "Model worlds are external brms simulation snapshots. Model implications are human-reviewed interpretations, not evidence or numerical test commitments. Use read_inquiry for scenario predictions. External-model refitting and experiment design are not available; do not route these snapshots to built-in regression tools.",
       "Unknown-noise regression supports one or two numeric predictors; no known batch SD is required.",
       "draft_measurements prepares pasted CSV outcomes and predictors for one human-reviewed import.",
       "draft_regression prepares priors only; the human fits and retains in Fit and compare models.",
