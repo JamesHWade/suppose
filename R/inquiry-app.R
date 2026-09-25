@@ -602,6 +602,7 @@ inquiry_server <- function(
         }
         client$set_tools(c(
           assistant$tools(id),
+          question_cards$tool(id),
           extras
         ))
         client$set_system_prompt(inquiry_context_prompt(
@@ -656,6 +657,22 @@ inquiry_server <- function(
     },
     act = function(action, request_id) change_proposal(action, request_id)
   )
+  question_cards <- inquiry_question_cards(
+    input,
+    output,
+    session,
+    message_count = function() {
+      transcript()
+      length(assistant$messages)
+    },
+    running = function() {
+      transcript()
+      assistant$phase == "running"
+    },
+    submit = function(message) {
+      chat$update_user_input(value = message, submit = TRUE, focus = TRUE)
+    }
+  )
   bind_chat <- function() {
     chat <<- shinychat::chat_server(
       "inquiry",
@@ -670,7 +687,8 @@ inquiry_server <- function(
           assistant$messages,
           shiny::isolate(runtime_activity()),
           shiny::isolate(decision_cards$entries()),
-          shiny::isolate(forms())
+          shiny::isolate(forms()),
+          shiny::isolate(question_cards$entries())
         )
         values
       })
@@ -688,6 +706,7 @@ inquiry_server <- function(
             inquiry_saved_activity(state$record, state$proposal)
         )
         decision_cards$restore(state$cards)
+        question_cards$restore(state$questions)
         # Restore after record-lineage observers clear the previous form state.
         session$onFlushed(
           function() {
@@ -761,6 +780,7 @@ inquiry_server <- function(
             transcript(list())
             runtime_activity(NULL)
             decision_cards$restore(NULL)
+            question_cards$restore(NULL)
             reset_runtime()
             status("Your record takes shape as we talk.")
           }
@@ -775,6 +795,7 @@ inquiry_server <- function(
           transcript()
           runtime_activity()
           decision_cards$entries()
+          question_cards$entries()
           forms()
           if (
             assistant$phase != "running" &&
@@ -815,7 +836,9 @@ inquiry_server <- function(
         )
         transcript(assistant$messages)
         status(
-          if (length(assistant$request$form_drafts)) {
+          if (question_cards$waiting(assistant$request$id)) {
+            "Answer the questions in the chat to continue, or reply in your own words."
+          } else if (length(assistant$request$form_drafts)) {
             "Chat prepared form values and a preview. Review the suggested assumptions in the open Record panel."
           } else if (is.null(proposal())) {
             "No record suggestion was created for this response. Your retained interpretation is unchanged."
@@ -1785,6 +1808,7 @@ inquiry_server <- function(
     activity = runtime_activity,
     tools = tools_panel,
     cards = decision_cards,
+    questions = question_cards,
     proposal = proposal,
     status = status,
     transcript = transcript,

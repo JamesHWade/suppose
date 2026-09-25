@@ -132,6 +132,7 @@ inquiry_prompt <- function() {
     "created or updated only after the proposal tool succeeds in this response.",
     "If no tool succeeded, say only what you suggest doing; never claim a record action.",
     inquiry_suggestion_prompt(),
+    inquiry_question_prompt(),
     "A completed draft has an inline review card; the Record button also opens the full record. Apply interpretation saves a revision. Accept interpretation separately records human review. Conversations and pending suggestions are saved automatically. Never say nothing is saved or retained until acceptance.",
     "Proposals appear only after your response finishes. Keep the conversation concise."
   )

@@ -24,6 +24,7 @@ inquiry_tool_choices <- function(tools) {
     propose_interpretation = "Draft an interpretation",
     propose_normal_contrast = "Propose a normal mean contrast",
     preview_proposal = "Preview the pending suggestion",
+    ask_user = "Ask guiding questions",
     read_file = "Read a text file",
     read_markdown = "Read a Markdown file",
     read_csv = "Read a CSV file",

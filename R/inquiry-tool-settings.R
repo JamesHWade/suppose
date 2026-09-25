@@ -64,6 +64,7 @@ inquiry_permissions <- function(bundles, working_dir) {
     "draft_research_design",
     "draft_regression_test",
     "draft_regression_sensitivity",
+    "ask_user",
     "deputy_read_tool_result"
   )
   extra <- vapply(

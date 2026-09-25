@@ -116,6 +116,17 @@ Applying creates a revision. Accepting its interpretation is a separate review.
 Assistant ideas stay under **Ideas to consider** until you choose to adopt them.
 Corrections preserve the suggestion and the reviewer's changes separately.
 
+### Answer guiding questions
+
+When a question is broad, the assistant may reply with a short card of one to
+three multiple-choice questions, such as what would count as "stronger" or
+which conditions matter. Choose the options that fit, write your own answer
+instead, or skip the card and keep typing. **Send answers** posts your choices
+as your next message, so the assistant can quote them as your words. The
+options are possible framings to choose from. The assistant should not use them
+to suggest facts or numbers you have not stated. A card stops waiting once the
+conversation moves on.
+
 ## Bring the next task into the conversation
 
 | You want to… | Open… | What you review |

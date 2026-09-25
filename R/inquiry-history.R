@@ -18,7 +18,8 @@ encode_inquiry_history <- function(
   messages,
   activity = NULL,
   cards = NULL,
-  forms = NULL
+  forms = NULL,
+  questions = NULL
 ) {
   as.character(json_data(list(
     version = 1L,
@@ -27,7 +28,8 @@ encode_inquiry_history <- function(
     messages = messages,
     activity = activity,
     cards = cards,
-    forms = forms
+    forms = forms,
+    questions = questions
   )))
 }
 
