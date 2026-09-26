@@ -67,17 +67,24 @@ inquiry_question_answer_text <- function(questions, answers) {
   paste(c("My answers to your questions:", lines), collapse = "\n")
 }
 
-# A card waits while the only message after its request is the reply that asked
-# it. Message counts persist with the conversation, so this survives a restore.
+# A card waits while the only message after its request is the completed reply
+# that asked it. Messages persist with the conversation, so this survives a
+# restore; a cancelled or failed reply discards its questions.
 inquiry_question_card_state <- function(card, messages, running) {
+  reply <- card$messages + 1L
   switch(
     card$status %||% "open",
     answered = "answered",
     skipped = "Skipped. Reply in your own words whenever you like.",
-    if (messages > card$messages + 1L) {
+    if (length(messages) > reply) {
       "The conversation moved on; these questions are no longer waiting."
     } else if (running) {
       "Available after the response finishes."
+    } else if (
+      length(messages) < reply ||
+        !identical(messages[[reply]]$status %||% "complete", "complete")
+    ) {
+      "The response was cancelled or failed, so these questions are no longer waiting."
     } else {
       "ready"
     }
@@ -165,7 +172,7 @@ inquiry_question_cards <- function(
   input,
   output,
   session,
-  message_count,
+  messages,
   running,
   submit
 ) {
@@ -182,7 +189,7 @@ inquiry_question_cards <- function(
     if (is.null(entry)) {
       return("missing")
     }
-    inquiry_question_card_state(entry, message_count(), running())
+    inquiry_question_card_state(entry, messages(), running())
   }
   register <- function(key) {
     if (exists(key, registered, inherits = FALSE)) {
@@ -196,7 +203,7 @@ inquiry_question_cards <- function(
       inquiry_question_card_ui(
         key,
         entry,
-        inquiry_question_card_state(entry, message_count(), running())
+        inquiry_question_card_state(entry, messages(), running())
       )
     })
     send <- shiny::observeEvent(
@@ -265,7 +272,7 @@ inquiry_question_cards <- function(
     )
     entries[[key]] <- list(
       request_id = request_id,
-      messages = shiny::isolate(message_count()),
+      messages = length(shiny::isolate(messages())),
       questions = questions,
       status = "open"
     )

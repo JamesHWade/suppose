@@ -661,9 +661,9 @@ inquiry_server <- function(
     input,
     output,
     session,
-    message_count = function() {
+    messages = function() {
       transcript()
-      length(assistant$messages)
+      assistant$messages
     },
     running = function() {
       transcript()

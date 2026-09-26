@@ -76,14 +76,37 @@ test_that("guided answers keep only offered labels and skip blank questions", {
 })
 
 test_that("a guided question card waits only for the reply that asked it", {
+  ask <- list(role = "user", text = "Q", status = "complete")
+  reply <- list(role = "assistant", text = "A", status = "complete")
   card <- list(messages = 1L, status = "open")
-  expect_identical(inquiry_question_card_state(card, 2L, FALSE), "ready")
-  expect_match(inquiry_question_card_state(card, 2L, TRUE), "finishes")
-  expect_match(inquiry_question_card_state(card, 3L, FALSE), "moved on")
+  expect_match(inquiry_question_card_state(card, list(ask), TRUE), "finishes")
+  expect_identical(
+    inquiry_question_card_state(card, list(ask, reply), FALSE),
+    "ready"
+  )
+  expect_match(
+    inquiry_question_card_state(card, list(ask, reply, ask), FALSE),
+    "moved on"
+  )
+  cancelled <- modifyList(reply, list(status = "cancelled"))
+  expect_match(
+    inquiry_question_card_state(card, list(ask, cancelled), FALSE),
+    "cancelled or failed"
+  )
+  expect_match(
+    inquiry_question_card_state(card, list(ask), FALSE),
+    "cancelled or failed"
+  )
   card$status <- "answered"
-  expect_identical(inquiry_question_card_state(card, 2L, FALSE), "answered")
+  expect_identical(
+    inquiry_question_card_state(card, list(ask, reply), FALSE),
+    "answered"
+  )
   card$status <- "skipped"
-  expect_match(inquiry_question_card_state(card, 2L, FALSE), "Skipped")
+  expect_match(
+    inquiry_question_card_state(card, list(ask, reply), FALSE),
+    "Skipped"
+  )
 })
 
 test_that("the question card escapes model-written text", {
@@ -110,7 +133,7 @@ test_that("guided questions render in chat and send answers as the next message"
         input,
         output,
         session,
-        message_count = function() length(state$assistant$messages),
+        messages = function() state$assistant$messages,
         running = function() state$assistant$phase == "running",
         submit = function(message) sent <<- c(sent, message)
       )
