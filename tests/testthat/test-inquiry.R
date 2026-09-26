@@ -183,12 +183,20 @@ test_that("shinychat spliced messages enter the Deputy streaming method", {
   parent <- R6::R6Class(
     "StreamingParent",
     public = list(
-      stream_async = function(..., tool_mode, stream, controller, run_context) {
+      stream_async = function(
+        ...,
+        tool_mode = "concurrent",
+        stream = "text",
+        controller = NULL,
+        run_context = list(),
+        type = NULL
+      ) {
         list(
           messages = list(...),
           controller = controller,
           context = run_context,
-          stream = stream
+          stream = stream,
+          type = type
         )
       }
     )
@@ -207,6 +215,10 @@ test_that("shinychat spliced messages enter the Deputy streaming method", {
   expect_identical(out$controller, controller)
   expect_identical(out$context, list(stage = "inquiry"))
   expect_identical(out$stream, "content")
+  expect_null(out$type)
+  typed <- a$stream_async("A question", type = "structured-type")
+  expect_identical(typed$messages, list("A question"))
+  expect_identical(typed$type, "structured-type")
 })
 
 test_that("tool transport uses explicit JSON while receipts retain structured results", {

@@ -103,7 +103,8 @@ deputy_run_receipt <- function(agent) {
 
 # shinychat splices input with !!!. Deputy versions using list(...) rather
 # than list2(...) need dynamic-dots handling at this interface. This subclass
-# changes only argument collection; execution still enters Agent$stream_async.
+# changes only argument collection and the controller reset below; execution
+# still enters Agent$stream_async with every argument the caller supplied.
 inquiry_agent_class <- function(
   rebuild = NULL,
   config = NULL,
@@ -155,21 +156,14 @@ inquiry_agent_class <- function(
         }
         rebuild(settings)
       },
-      stream_async = function(
-        ...,
-        tool_mode = c("concurrent", "sequential"),
-        stream = c("text", "content"),
-        controller = NULL,
-        run_context = list()
-      ) {
-        messages <- rlang::list2(...)
+      stream_async = function(..., controller = NULL) {
+        # Messages and Deputy's own options (tool_mode, stream, run_context,
+        # type, ...) pass through unchanged, so new upstream options are kept.
+        args <- rlang::list2(...)
         result <- rlang::exec(
           super$stream_async,
-          !!!messages,
-          tool_mode = match.arg(tool_mode),
-          stream = match.arg(stream),
-          controller = controller,
-          run_context = run_context
+          !!!args,
+          controller = controller
         )
         # shinychat reuses its controller. Deputy returns a lazy stream and can
         # stop before ellmer reaches its usual controller reset. Reset only after
