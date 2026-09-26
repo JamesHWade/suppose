@@ -67,23 +67,20 @@ inquiry_question_answer_text <- function(questions, answers) {
   paste(c("My answers to your questions:", lines), collapse = "\n")
 }
 
-# A card waits while the only message after its request is the completed reply
-# that asked it. Messages persist with the conversation, so this survives a
-# restore; a cancelled or failed reply discards its questions.
+# A card waits until the person sends another message. Its reply must have
+# completed: a cancelled or failed run discards the questions, and a reply may
+# have no text of its own. Cards persist with the conversation.
 inquiry_question_card_state <- function(card, messages, running) {
-  reply <- card$messages + 1L
+  later <- utils::tail(messages, max(0L, length(messages) - card$messages))
   switch(
     card$status %||% "open",
     answered = "answered",
     skipped = "Skipped. Reply in your own words whenever you like.",
-    if (length(messages) > reply) {
+    if (any(vapply(later, function(m) identical(m$role, "user"), logical(1)))) {
       "The conversation moved on; these questions are no longer waiting."
     } else if (running) {
       "Available after the response finishes."
-    } else if (
-      length(messages) < reply ||
-        !identical(messages[[reply]]$status %||% "complete", "complete")
-    ) {
+    } else if (!isTRUE(card$completed)) {
       "The response was cancelled or failed, so these questions are no longer waiting."
     } else {
       "ready"
@@ -301,6 +298,16 @@ inquiry_question_cards <- function(
       context = list(suppose_request = request_id)
     )
   }
+  complete <- function(request_id) {
+    entries <- shiny::isolate(cards())
+    for (key in names(entries)) {
+      if (identical(entries[[key]]$request_id, request_id)) {
+        entries[[key]]$completed <- TRUE
+      }
+    }
+    cards(entries)
+    invisible(NULL)
+  }
   waiting <- function(request_id) {
     any(vapply(
       shiny::isolate(cards()),
@@ -323,6 +330,7 @@ inquiry_question_cards <- function(
   }
   list(
     tool = tool,
+    complete = complete,
     waiting = waiting,
     entries = cards,
     restore = restore

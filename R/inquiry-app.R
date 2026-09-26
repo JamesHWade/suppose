@@ -834,6 +834,7 @@ inquiry_server <- function(
             stop(e)
           }
         )
+        question_cards$complete(assistant$request$id)
         transcript(assistant$messages)
         status(
           if (question_cards$waiting(assistant$request$id)) {

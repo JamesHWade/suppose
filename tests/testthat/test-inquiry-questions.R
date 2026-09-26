@@ -80,22 +80,25 @@ test_that("a guided question card waits only for the reply that asked it", {
   reply <- list(role = "assistant", text = "A", status = "complete")
   card <- list(messages = 1L, status = "open")
   expect_match(inquiry_question_card_state(card, list(ask), TRUE), "finishes")
-  expect_identical(
-    inquiry_question_card_state(card, list(ask, reply), FALSE),
-    "ready"
-  )
-  expect_match(
-    inquiry_question_card_state(card, list(ask, reply, ask), FALSE),
-    "moved on"
-  )
   cancelled <- modifyList(reply, list(status = "cancelled"))
   expect_match(
     inquiry_question_card_state(card, list(ask, cancelled), FALSE),
     "cancelled or failed"
   )
+  card$completed <- TRUE
+  expect_identical(
+    inquiry_question_card_state(card, list(ask, reply), FALSE),
+    "ready"
+  )
+  # A successful reply may consist only of the ask_user call.
+  expect_identical(inquiry_question_card_state(card, list(ask), FALSE), "ready")
   expect_match(
-    inquiry_question_card_state(card, list(ask), FALSE),
-    "cancelled or failed"
+    inquiry_question_card_state(card, list(ask, ask), FALSE),
+    "moved on"
+  )
+  expect_match(
+    inquiry_question_card_state(card, list(ask, reply, ask), FALSE),
+    "moved on"
   )
   card$status <- "answered"
   expect_identical(
@@ -147,6 +150,7 @@ test_that("guided questions render in chat and send answers as the next message"
       expect_error(ask(guided_questions()), "already displayed")
       expect_true(state$questions$waiting(id))
       state$assistant$finish(id, "A few questions first.")
+      state$questions$complete(id)
       session$flushReact()
       key <- names(state$questions$entries())
       expect_match(output[[key]]$html, "Send answers", fixed = TRUE)
@@ -193,6 +197,7 @@ test_that("reopening a saved record clears earlier question cards", {
       id <- state$assistant$begin("Longer cure helps")
       state$questions$tool(id)[[1]](guided_questions())
       state$assistant$finish(id, "A few questions first.")
+      state$questions$complete(id)
       session$flushReact()
       key <- names(state$questions$entries())
       expect_length(key, 1)
