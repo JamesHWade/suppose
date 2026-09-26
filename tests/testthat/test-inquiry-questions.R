@@ -156,3 +156,28 @@ test_that("guided questions render in chat and send answers as the next message"
     }
   )
 })
+
+test_that("reopening a saved record clears earlier question cards", {
+  skip_if_not_installed("shinychat")
+  skip_if_not(inquiry_questions_available())
+  x <- elicitation_record(claim("Longer cure helps", "You"), "Coating")
+  shiny::testServer(
+    function(input, output, session) {
+      state <- inquiry_server(input, output, session, initial = x)
+    },
+    {
+      path <- output$save
+      id <- state$assistant$begin("Longer cure helps")
+      state$questions$tool(id)[[1]](guided_questions())
+      state$assistant$finish(id, "A few questions first.")
+      session$flushReact()
+      key <- names(state$questions$entries())
+      expect_length(key, 1)
+      expect_match(output[[key]]$html, "Send answers", fixed = TRUE)
+
+      session$setInputs(reopen = list(datapath = path))
+      expect_match(state$status(), "reopened")
+      expect_length(state$questions$entries(), 0)
+    }
+  )
+})

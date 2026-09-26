@@ -1786,6 +1786,7 @@ inquiry_server <- function(
         assistant$messages <- out$conversation %||% latest_initial_messages(out)
         current(out)
         decision_cards$restore(NULL)
+        question_cards$restore(NULL)
         runtime_activity(inquiry_saved_activity(out))
         transcript(assistant$messages)
         reset_runtime()
