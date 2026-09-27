@@ -153,14 +153,22 @@ test_that("Deputy is the chat client and grants only inquiry tools", {
   expect_s3_class(agent, "Agent")
   expect_s3_class(agent, "Chat")
   expect_identical(agent$get_model(), "fixture")
+  tools <- form_session(suppose_example())$session$tools(NULL)
+  names(tools) <- vapply(tools, function(tool) tool@name, character(1))
   for (name in c(
     "read_inquiry",
     "propose_interpretation",
     "propose_normal_contrast",
     "preview_proposal"
   )) {
+    # Deputy checks each call against the tool's own annotations.
     expect_s7_class(
-      deputy::permissions_check(agent$permissions, name, list()),
+      deputy::permissions_check(
+        agent$permissions,
+        name,
+        list(),
+        context = list(tool_annotations = tools[[name]]@annotations)
+      ),
       deputy::PermissionResultAllow
     )
   }
@@ -176,6 +184,36 @@ test_that("Deputy is the chat client and grants only inquiry tools", {
       deputy::PermissionResultDeny
     )
   }
+})
+
+test_that("a Deputy turn stages an interpretation through the inquiry tools", {
+  skip_if_not_installed("deputy")
+  skip_on_cran()
+  words <- "I think fewer meetings would help our team finish work sooner."
+  wording <- "Fewer recurring meetings may reduce the time our team takes to finish work."
+  url <- local_scripted_provider(
+    "propose_interpretation",
+    list(wording = wording, source_quote = words, reason = "Scripted review")
+  )
+  record <- elicitation_record(claim(words, "Researcher"), "Meetings")
+  proposal <- NULL
+  session <- new_proposal_session(
+    function() record,
+    function(p) proposal <<- p,
+    general = TRUE
+  )
+  agent <- suppose_agent(ellmer::chat_openai_compatible(
+    base_url = url,
+    model = "fixture",
+    credentials = function() "fixture",
+    echo = "none"
+  ))
+  id <- session$begin(words)
+  agent$set_tools(c(session$tools(id), agent$inquiry_extra_tools()))
+  agent$run_sync(words)
+  session$finish(id, "Scripted reply.")
+  expect_s3_class(proposal, "suppose_proposal")
+  expect_identical(proposal$claim$wording, wording)
 })
 
 test_that("shinychat spliced messages enter the Deputy streaming method", {

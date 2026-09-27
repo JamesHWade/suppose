@@ -117,7 +117,8 @@ research_design_tool <- function(id, guard, state, receipt) {
         required = FALSE
       )
     ),
-    name = "draft_research_design"
+    name = "draft_research_design",
+    annotations = inquiry_draft_annotations()
   )
 }
 

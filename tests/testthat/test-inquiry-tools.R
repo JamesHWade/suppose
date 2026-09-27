@@ -208,9 +208,30 @@ test_that("every advertised core inquiry tool is permitted", {
   permissions <- inquiry_permissions(character(), tempdir())
   session <- form_session(suppose_example())$session
   for (tool in session$tools(NULL)) {
+    # Deputy checks each call against the tool's own annotations.
     expect_s7_class(
-      deputy::permissions_check(permissions, tool@name, list()),
+      deputy::permissions_check(
+        permissions,
+        tool@name,
+        list(),
+        context = list(tool_annotations = tool@annotations)
+      ),
       deputy::PermissionResultAllow
+    )
+  }
+})
+
+test_that("inquiry tools declare that they stay inside the session", {
+  session <- form_session(suppose_example())$session
+  reads <- c("read_inquiry", "preview_proposal")
+  for (tool in session$tools(NULL)) {
+    annotations <- tool@annotations
+    expect_identical(annotations$open_world_hint, FALSE, info = tool@name)
+    expect_false(isTRUE(annotations$destructive_hint), info = tool@name)
+    expect_identical(
+      isTRUE(annotations$read_only_hint),
+      tool@name %in% reads,
+      info = tool@name
     )
   }
 })

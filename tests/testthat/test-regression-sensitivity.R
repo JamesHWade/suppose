@@ -51,6 +51,7 @@ test_that("powered posteriors match the original fit and the full joint log dens
 })
 
 test_that("sensitivity holds designs fixed and separates utility from model assumptions", {
+  skip_if_not_installed("alloptr")
   f <- research_design_fixture()
   d <- research_design_test_preview(
     f,
@@ -106,6 +107,7 @@ test_that("sensitivity holds designs fixed and separates utility from model assu
 })
 
 test_that("a small prior-sensitive case changes rankings while an informed case stays stable", {
+  skip_if_not_installed("alloptr")
   small <- regression_fixture(6)
   spec <- regression_prior(
     small$record,

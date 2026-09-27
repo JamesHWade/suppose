@@ -25,6 +25,7 @@ Suggests:
     evaluate,
     later,
     httr2,
+    httpuv,
     promises,
     bslib,
     ellmer (>= 0.5.0),
@@ -49,6 +50,6 @@ Imports:
 Depends: 
     R (>= 4.1.0)
 Config/suppose/verified-shinychat-revision: eb024589465f5227405d567854b96cc87e5bb9ac
-Config/suppose/verified-deputy-revision: d9a88f76e08a31301dd30788e446c1672f009c7b
+Config/suppose/verified-deputy-revision: 502871f9908bbef798a4cd33fce6552094e9086e
 URL: https://github.com/JamesHWade/suppose
 BugReports: https://github.com/JamesHWade/suppose/issues

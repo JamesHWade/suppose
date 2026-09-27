@@ -260,6 +260,7 @@ test_that("missing outcomes need explicit completion and mismatched declarations
 })
 
 test_that("a linked commitment must match an accepted planning choice", {
+  skip_if_not_installed("alloptr")
   f <- regression_research_fixture()
   d <- research_design_test_preview(f$design)
   x <- record_research_design(

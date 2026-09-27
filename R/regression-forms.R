@@ -97,6 +97,7 @@ regression_form_tool <- function(id, guard, state, receipt) {
         required = FALSE
       )
     ),
-    name = "draft_regression"
+    name = "draft_regression",
+    annotations = inquiry_draft_annotations()
   )
 }

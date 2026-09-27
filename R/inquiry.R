@@ -193,7 +193,8 @@ inquiry_tools <- function(
         )
       },
       "Read the current inquiry, retained results, and supported method boundary.",
-      name = "read_inquiry"
+      name = "read_inquiry",
+      annotations = inquiry_read_annotations()
     ),
     ellmer::tool(
       function(
@@ -299,7 +300,8 @@ inquiry_tools <- function(
           required = FALSE
         )
       ),
-      name = "propose_interpretation"
+      name = "propose_interpretation",
+      annotations = inquiry_draft_annotations()
     ),
     ellmer::tool(
       function(
@@ -445,7 +447,8 @@ inquiry_tools <- function(
         source_quote = ellmer::type_string(),
         reason = ellmer::type_string()
       ),
-      name = "propose_normal_contrast"
+      name = "propose_normal_contrast",
+      annotations = inquiry_draft_annotations()
     ),
     ellmer::tool(
       function() {
@@ -469,7 +472,8 @@ inquiry_tools <- function(
         )
       },
       "Preview the interpretation and compute any explicitly proposed supported model. No model is a valid outcome.",
-      name = "preview_proposal"
+      name = "preview_proposal",
+      annotations = inquiry_read_annotations()
     )
   )
 }
