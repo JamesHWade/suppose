@@ -41,7 +41,7 @@ pak::pak(c(
   "ggplot2",
   "posit-dev/shinychat/pkg-r@dde163ea6b27099304a658f3649dd1fac98208bd",
   "tidyverse/ellmer@92cfa7f48270048105ea1bfb44d23a2e59c2df6e",
-  "JamesHWade/deputy@d9a88f76e08a31301dd30788e446c1672f009c7b"
+  "JamesHWade/deputy@502871f9908bbef798a4cd33fce6552094e9086e"
 ))
 ```
 
