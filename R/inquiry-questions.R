@@ -112,7 +112,7 @@ inquiry_question_card_ui <- function(key, card, state) {
       shiny::tags$span(
         shiny::tags$strong(o$label),
         if (nzchar(o$description %||% "")) {
-          shiny::tags$span(class = "hint", paste0(" — ", o$description))
+          shiny::tags$span(class = "hint", paste0(" \u2014 ", o$description))
         }
       )
     })
