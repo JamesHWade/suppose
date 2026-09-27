@@ -51,6 +51,29 @@ inquiry_extra_tools <- function(bundles) {
   Filter(function(tool) tool@name %in% names, deputy::tools_all())
 }
 
+# Deputy decides from a tool's annotations whether a policy allows it, and
+# treats a tool without them as destructive and open-world. The inquiry tools
+# read the record or stage a suggestion for the person to review: none of them
+# changes the record, and none reaches beyond this R process.
+inquiry_read_annotations <- function() {
+  ellmer::tool_annotations(
+    read_only_hint = TRUE,
+    open_world_hint = FALSE,
+    idempotent_hint = TRUE
+  )
+}
+
+inquiry_draft_annotations <- function() {
+  ellmer::tool_annotations(
+    read_only_hint = FALSE,
+    destructive_hint = FALSE,
+    open_world_hint = FALSE
+  )
+}
+
+# The inquiry tools are allowed by their own annotations. There is no
+# permission callback: Deputy lets one narrow what the capabilities allow,
+# never widen it.
 inquiry_permissions <- function(bundles, working_dir) {
   core <- c(
     "read_inquiry",
@@ -72,7 +95,7 @@ inquiry_permissions <- function(bundles, working_dir) {
     function(tool) tool@name,
     character(1)
   )
-  args <- list(
+  deputy::Permissions(
     mode = "standard",
     file_read = "files" %in% bundles,
     file_write = if ("write" %in% bundles) working_dir else FALSE,
@@ -82,14 +105,6 @@ inquiry_permissions <- function(bundles, working_dir) {
     install_packages = FALSE,
     tool_allowlist = c(core, extra)
   )
-  native <- do.call(deputy::Permissions, args)
-  args$can_use_tool <- function(tool_name, tool_input, context) {
-    if (tool_name %in% core) {
-      return(deputy::PermissionResultAllow())
-    }
-    deputy::permissions_check(native, tool_name, tool_input, context)
-  }
-  do.call(deputy::Permissions, args)
 }
 
 inquiry_agent_config <- function(agent) {

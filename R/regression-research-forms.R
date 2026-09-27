@@ -158,7 +158,8 @@ regression_research_tools <- function(id, guard, state, receipt) {
           required = FALSE
         )
       ),
-      name = "draft_regression_test"
+      name = "draft_regression_test",
+      annotations = inquiry_draft_annotations()
     ),
     ellmer::tool(
       function(
@@ -234,7 +235,8 @@ regression_research_tools <- function(id, guard, state, receipt) {
         draws = ellmer::type_number(required = FALSE),
         seed = ellmer::type_number(required = FALSE)
       ),
-      name = "draft_regression_sensitivity"
+      name = "draft_regression_sensitivity",
+      annotations = inquiry_draft_annotations()
     )
   )
 }

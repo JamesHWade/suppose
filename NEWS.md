@@ -1,5 +1,7 @@
 # suppose 0.0.0.9000
 
+* The workbench's assistant can use its inquiry tools with current Deputy again. Deputy now lets a permission callback only narrow what a policy allows, and it treats a tool without annotations as destructive and open-world, so every inquiry tool was refused. The tools now declare their effects: reading the record and previewing a suggestion change nothing, and drafting stages a suggestion in the session without changing the record or reaching outside R.
+
 * With a Deputy revision that provides `AskUserDeferred()`, the workbench agent can ask one to three guiding multiple-choice questions through Deputy's `ask_user` tool. They appear as an inline chat card. Selected options and the person's own words are sent as their next message, so proposals can quote them. Cards persist with conversation history and stop waiting once the conversation moves on. Without that Deputy revision the tool and its prompt guidance are omitted.
 
 * The workbench's Model worlds walkthrough links coherent model draws, future outcomes, scenario comparisons and attributed interpretation reviews. Three synthetic examples open without brms or a model provider. Saved records support schema 14.

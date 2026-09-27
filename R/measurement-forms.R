@@ -293,6 +293,7 @@ measurement_form_tools <- function(id, guard, state, receipt) {
         required = FALSE
       )
     ),
-    name = "draft_measurements"
+    name = "draft_measurements",
+    annotations = inquiry_draft_annotations()
   ))
 }

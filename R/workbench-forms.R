@@ -223,7 +223,8 @@ workbench_form_tools <- function(id, guard, state, receipt) {
         plausible_lower = ellmer::type_number(required = FALSE),
         plausible_upper = ellmer::type_number(required = FALSE)
       ),
-      name = "draft_model_extension"
+      name = "draft_model_extension",
+      annotations = inquiry_draft_annotations()
     ),
     ellmer::tool(
       function(
@@ -281,7 +282,8 @@ workbench_form_tools <- function(id, guard, state, receipt) {
           required = FALSE
         )
       ),
-      name = "draft_sensitivity"
+      name = "draft_sensitivity",
+      annotations = inquiry_draft_annotations()
     ),
     regression_form_tool(id, guard, state, receipt)
   )

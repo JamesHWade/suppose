@@ -146,6 +146,7 @@ test_that("resuming a reviewed plan restores actual settings and retains ancestr
 })
 
 test_that("a cost-only chat revision preserves the resumed plan and concurrent edits", {
+  skip_if_not_installed("alloptr")
   f <- research_design_fixture()
   x <- record_research_design(
     f$record,
@@ -231,6 +232,7 @@ test_that("a cost-only chat revision preserves the resumed plan and concurrent e
 })
 
 test_that("resuming protects populated forms and rejects a revised scientific claim", {
+  skip_if_not_installed("alloptr")
   f <- research_design_fixture()
   x <- record_research_design(
     f$record,

@@ -173,6 +173,7 @@ compact_inquiry_tool <- function(tool) {
     tool@description,
     arguments = tool@arguments@properties,
     name = tool@name,
-    convert = tool@convert
+    convert = tool@convert,
+    annotations = tool@annotations
   )
 }
