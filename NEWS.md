@@ -1,5 +1,7 @@
 # suppose 0.0.0.9000
 
+* Inline interpretation decision cards now re-render only when their own state changes, instead of every card re-rendering whenever any card, the suggestion or the record changed. Reopening a conversation or starting a new one removes the cards it no longer shows, including their buttons and prior plots.
+
 * A cancelled, failed or stopped response is no longer replayed to the model as its own reply. The placeholder stays in the visible transcript, but the agent's history now skips it when the workbench starts, reopens a saved record or conversation, or rebuilds the agent.
 
 * The workbench's assistant can use its inquiry tools with current Deputy again. Deputy now lets a permission callback only narrow what a policy allows, and it treats a tool without annotations as destructive and open-world, so every inquiry tool was refused. The tools now declare their effects: reading the record and previewing a suggestion change nothing, and drafting stages a suggestion in the session without changing the record or reaching outside R.

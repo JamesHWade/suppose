@@ -84,6 +84,63 @@ test_that("inline decisions apply only their own completed draft and survive his
   )
 })
 
+test_that("a card re-renders only for its own changes and restore drops cards", {
+  skip_if_not_installed("shinychat")
+  renders <- list()
+  render_card <- inquiry_card_ui
+  local_mocked_bindings(inquiry_card_ui = function(key, view) {
+    renders[[key]] <<- (renders[[key]] %||% 0L) + 1L
+    render_card(key, view)
+  })
+  x <- elicitation_record(claim("The coating may help", "You"), "Coating")
+  shiny::testServer(
+    function(input, output, session) {
+      state <- inquiry_server(input, output, session, initial = x)
+    },
+    {
+      session$setInputs(wording = "The coating may help")
+      session$flushReact()
+      make_draft <- function(wording) {
+        id <- state$assistant$begin("The coating may help")
+        state$assistant$tools(id)[[2]](
+          wording,
+          "The coating may help",
+          "Clarify",
+          target = "Coating performance"
+        )
+        state$assistant$finish(id, "Please review this draft.")
+        session$flushReact()
+        tail(names(state$cards$entries()), 1)
+      }
+      first <- make_draft("The coating may help")
+      second <- make_draft("The coating could improve performance")
+      expect_match(output[[first]]$html, "no longer awaiting", fixed = TRUE)
+      expect_match(output[[second]]$html, "Apply interpretation", fixed = TRUE)
+
+      before <- renders
+      do.call(session$setInputs, setNames(list(1), paste0(second, "_decline")))
+      expect_match(output[[second]]$html, "Declined", fixed = TRUE)
+      expect_gt(renders[[second]], before[[second]])
+      expect_identical(renders[[first]], before[[first]])
+
+      state$cards$restore(state$cards$entries()[second])
+      session$flushReact()
+      expect_identical(state$cards$registered(), second)
+      expect_error(output[[first]], class = "shiny.silent.error")
+      expect_error(
+        output[[paste0(first, "_prior")]],
+        class = "shiny.silent.error"
+      )
+      expect_match(output[[second]]$html, "Declined", fixed = TRUE)
+
+      state$cards$restore(NULL)
+      session$flushReact()
+      expect_identical(state$cards$registered(), character())
+      expect_error(output[[second]], class = "shiny.silent.error")
+    }
+  )
+})
+
 test_that("native suggestion markup is included in the model instructions", {
   expect_match(
     inquiry_prompt(),

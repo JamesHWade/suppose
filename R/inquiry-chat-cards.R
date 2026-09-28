@@ -47,6 +47,85 @@ inquiry_card_state <- function(card, proposal, record) {
   "This draft is no longer awaiting a decision."
 }
 
+# What one card shows. Only the ready, newest draft of a request carries the
+# proposal, so other cards don't change when the suggestion does.
+inquiry_card_view <- function(key, entries, proposal, record, running) {
+  entry <- entries[[key]]
+  if (is.null(entry)) {
+    return(NULL)
+  }
+  state <- inquiry_card_state(entry, proposal, record)
+  same_request <- Filter(
+    function(x) identical(x$request_id, entry$request_id),
+    entries
+  )
+  newest <- identical(utils::tail(names(same_request), 1), key)
+  ready <- identical(state, "ready") && !running && newest
+  list(
+    wording = if (ready) proposal$claim$wording else entry$wording,
+    visual = !is.null(entry$visual),
+    proposal = if (ready) proposal,
+    note = if (ready) {
+      NULL
+    } else if (running) {
+      "Available after the response finishes."
+    } else if (!newest) {
+      "Updated by a later draft in this response."
+    } else {
+      state
+    }
+  )
+}
+
+inquiry_card_ui <- function(key, view) {
+  if (is.null(view)) {
+    return(NULL)
+  }
+  p <- view$proposal
+  shiny::tags$section(
+    class = "inquiry-chat-decision",
+    `aria-label` = "Interpretation decision",
+    shiny::tags$p(class = "hint", "Proposed interpretation"),
+    shiny::tags$p(view$wording),
+    if (view$visual) {
+      shiny::tagList(
+        inquiry_prior_output(paste0(key, "_prior")),
+        shiny::tags$p(
+          class = "hint",
+          "Elicited beliefs, before new observations. The wider prediction also includes variation between measurements."
+        )
+      )
+    },
+    if (!is.null(p)) {
+      shiny::tagList(
+        shiny::tags$details(
+          shiny::tags$summary("Review details"),
+          inquiry_fields(p$claim),
+          inquiry_field("Ideas to consider; not adopted", p$changes$ideas),
+          inquiry_prediction(p),
+          inquiry_source_details(p)
+        ),
+        shiny::tags$p(
+          class = "hint",
+          "Apply adds a revision. It does not accept the interpretation as reviewed or adopt the suggested ideas."
+        ),
+        shiny::tags$div(
+          class = "inquiry-chat-actions",
+          shiny::actionButton(
+            paste0(key, "_apply"),
+            "Apply interpretation",
+            class = "btn-primary"
+          ),
+          shiny::actionButton(paste0(key, "_edit"), "Correct"),
+          shiny::actionButton(paste0(key, "_decline"), "Decline")
+        )
+      )
+    } else {
+      shiny::tags$p(role = "status", class = "hint", view$note)
+    }
+  )
+}
+
 inquiry_chat_cards <- function(
   input,
   output,
@@ -57,138 +136,108 @@ inquiry_chat_cards <- function(
   act
 ) {
   cards <- shiny::reactiveVal(list())
+  # Per card: its view, prior visual, observers and output IDs. A card's
+  # outputs read only its own view and visual, which ignore identical values,
+  # so a change re-renders only the cards it affects. Restore and reset
+  # destroy the cards they drop.
   registered <- new.env(parent = emptyenv())
-  register <- function(card) {
-    key <- card$key
+  inputs <- function() {
+    list(
+      entries = cards(),
+      proposal = proposal(),
+      record = record(),
+      running = running()
+    )
+  }
+  view_of <- function(key, x) {
+    inquiry_card_view(key, x$entries, x$proposal, x$record, x$running)
+  }
+  # Read every input first, so this observer depends on them even while no
+  # cards are registered.
+  shiny::observe({
+    x <- inputs()
+    for (key in ls(registered)) {
+      registered[[key]]$view(view_of(key, x))
+      registered[[key]]$visual(x$entries[[key]]$visual)
+    }
+  })
+  register <- function(key) {
     if (exists(key, registered, inherits = FALSE)) {
       return(invisible(NULL))
     }
-    registered[[key]] <- TRUE
-    output[[key]] <- shiny::renderUI({
-      entries <- cards()
-      entry <- entries[[key]]
-      if (is.null(entry)) {
-        return(NULL)
-      }
-      p <- proposal()
-      state <- inquiry_card_state(entry, p, record())
-      active <- identical(state, "ready") && !running()
-      same_request <- Filter(
-        function(x) identical(x$request_id, entry$request_id),
-        entries
-      )
-      newest <- identical(utils::tail(names(same_request), 1), key)
-      shiny::tags$section(
-        class = "inquiry-chat-decision",
-        `aria-label` = "Interpretation decision",
-        shiny::tags$p(class = "hint", "Proposed interpretation"),
-        shiny::tags$p(if (active && newest) p$claim$wording else entry$wording),
-        if (!is.null(entry$visual)) {
-          shiny::tagList(
-            inquiry_prior_output(paste0(key, "_prior")),
-            shiny::tags$p(
-              class = "hint",
-              "Elicited beliefs, before new observations. The wider prediction also includes variation between measurements."
-            )
-          )
-        },
-        if (active && newest) {
-          shiny::tagList(
-            shiny::tags$details(
-              shiny::tags$summary("Review details"),
-              inquiry_fields(p$claim),
-              inquiry_field("Ideas to consider; not adopted", p$changes$ideas),
-              inquiry_prediction(p),
-              inquiry_source_details(p)
-            ),
-            shiny::tags$p(
-              class = "hint",
-              "Apply adds a revision. It does not accept the interpretation as reviewed or adopt the suggested ideas."
-            ),
-            shiny::tags$div(
-              class = "inquiry-chat-actions",
-              shiny::actionButton(
-                paste0(key, "_apply"),
-                "Apply interpretation",
-                class = "btn-primary"
-              ),
-              shiny::actionButton(paste0(key, "_edit"), "Correct"),
-              shiny::actionButton(paste0(key, "_decline"), "Decline")
-            )
-          )
-        } else {
-          shiny::tags$p(
-            role = "status",
-            class = "hint",
-            if (running()) {
-              "Available after the response finishes."
-            } else if (!newest) {
-              "Updated by a later draft in this response."
-            } else {
-              state
-            }
-          )
-        }
-      )
-    })
-    bind_inquiry_prior(
-      output,
-      paste0(key, "_prior"),
-      shiny::reactive(cards()[[key]]$visual)
-    )
-    for (action in c("apply", "edit", "decline")) {
-      local({
-        selected_action <- action
-        shiny::observeEvent(
-          input[[paste0(key, "_", selected_action)]],
-          {
-            if (!isTRUE(input[[paste0(key, "_", selected_action)]] > 0)) {
-              return()
-            }
-            tryCatch(
-              {
-                entries <- shiny::isolate(cards())
-                entry <- entries[[key]]
-                if (
-                  is.null(entry) ||
-                    !identical(
-                      inquiry_card_state(
-                        entry,
-                        shiny::isolate(proposal()),
-                        shiny::isolate(record())
-                      ),
-                      "ready"
-                    )
-                ) {
-                  abort_suppose(
-                    "This draft is no longer available. Review the current suggestion.",
-                    "stale"
+    x <- shiny::isolate(inputs())
+    view <- shiny::reactiveVal(view_of(key, x))
+    visual <- shiny::reactiveVal(x$entries[[key]]$visual)
+    output[[key]] <- shiny::renderUI(inquiry_card_ui(key, view()))
+    prior <- bind_inquiry_prior(output, paste0(key, "_prior"), visual)
+    actions <- lapply(c("apply", "edit", "decline"), function(selected_action) {
+      button <- paste0(key, "_", selected_action)
+      shiny::observeEvent(
+        input[[button]],
+        {
+          if (!isTRUE(input[[button]] > 0)) {
+            return()
+          }
+          tryCatch(
+            {
+              entries <- shiny::isolate(cards())
+              entry <- entries[[key]]
+              if (
+                is.null(entry) ||
+                  !identical(
+                    inquiry_card_state(
+                      entry,
+                      shiny::isolate(proposal()),
+                      shiny::isolate(record())
+                    ),
+                    "ready"
                   )
-                }
-                same_request <- Filter(
-                  function(x) identical(x$request_id, entry$request_id),
-                  entries
-                )
-                if (!identical(utils::tail(names(same_request), 1), key)) {
-                  abort_suppose(
-                    "Review the latest draft in this response.",
-                    "stale"
-                  )
-                }
-                act(selected_action, entry$request_id)
-              },
-              error = function(e) {
-                shiny::showNotification(
-                  cli::ansi_strip(conditionMessage(e)),
-                  type = "error"
+              ) {
+                abort_suppose(
+                  "This draft is no longer available. Review the current suggestion.",
+                  "stale"
                 )
               }
-            )
-          },
-          ignoreInit = TRUE
-        )
-      })
+              same_request <- Filter(
+                function(x) identical(x$request_id, entry$request_id),
+                entries
+              )
+              if (!identical(utils::tail(names(same_request), 1), key)) {
+                abort_suppose(
+                  "Review the latest draft in this response.",
+                  "stale"
+                )
+              }
+              act(selected_action, entry$request_id)
+            },
+            error = function(e) {
+              shiny::showNotification(
+                cli::ansi_strip(conditionMessage(e)),
+                type = "error"
+              )
+            }
+          )
+        },
+        ignoreInit = TRUE
+      )
+    })
+    registered[[key]] <- list(
+      view = view,
+      visual = visual,
+      observers = c(actions, prior$observers),
+      outputs = c(key, prior$outputs)
+    )
+    invisible(NULL)
+  }
+  unregister <- function(key) {
+    card <- registered[[key]]
+    for (observer in card$observers) {
+      observer$destroy()
     }
+    for (id in card$outputs) {
+      output[[id]] <- NULL
+    }
+    rm(list = key, envir = registered)
     invisible(NULL)
   }
   decorate <- function(name, args, result, request_id, value) {
@@ -228,7 +277,7 @@ inquiry_chat_cards <- function(
     entries <- shiny::isolate(cards())
     entries[[key]] <- card
     cards(entries)
-    register(card)
+    register(key)
     ellmer::ContentToolResult(
       value = value,
       extra = list(
@@ -243,8 +292,11 @@ inquiry_chat_cards <- function(
   }
   restore <- function(entries) {
     entries <- entries %||% list()
+    for (key in setdiff(ls(registered), names(entries))) {
+      unregister(key)
+    }
     cards(entries)
-    lapply(entries, register)
+    lapply(names(entries), register)
     invisible(NULL)
   }
   decline <- function(request_id) {
@@ -273,6 +325,7 @@ inquiry_chat_cards <- function(
     decorate = decorate,
     entries = cards,
     restore = restore,
-    decline = decline
+    decline = decline,
+    registered = function() ls(registered)
   )
 }

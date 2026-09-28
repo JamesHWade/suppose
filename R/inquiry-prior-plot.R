@@ -87,7 +87,7 @@ bind_inquiry_prior <- function(
   visual,
   session = shiny::getDefaultReactiveDomain()
 ) {
-  bind_prior_draws(output, id, visual, session)
+  draws <- bind_prior_draws(output, id, visual, session)
   output[[id]] <- shiny::renderPlot(
     {
       x <- visual()
@@ -134,5 +134,12 @@ bind_inquiry_prior <- function(
     shiny::req(x)
     prior_plotly(x, "contrast")
   })
-  invisible(NULL)
+  # Handles let a caller remove the explorer, as decision cards do on restore.
+  invisible(list(
+    outputs = c(
+      paste0(id, c("", "_intervals", "_summary", "_interactive")),
+      draws$outputs
+    ),
+    observers = draws$observers
+  ))
 }
