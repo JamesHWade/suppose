@@ -1,4 +1,5 @@
 test_that("regression form drafts survive native history without fitting", {
+  skip_if_not_installed("ellmer")
   f <- regression_fixture(12)
   chat <- form_session(f$record)
   request <- "Prepare a temperature regression with duration added."
@@ -28,6 +29,7 @@ test_that("regression form drafts survive native history without fitting", {
 })
 
 test_that("regression drafting clearly requests missing predictor measurements", {
+  skip_if_not_installed("ellmer")
   chat <- form_session(suppose_example())
   id <- chat$session$begin("Prepare a regression.")
   expect_snapshot(

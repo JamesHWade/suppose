@@ -104,7 +104,7 @@ test_that("observations retain their revision and survive conversation and accep
   expect_equal(changed$observations[[1]]$claim_id, c$id)
   expect_equal(changed$observations[[1]]$revision, 1L)
   expect_equal(
-    cli_record_summary(changed)$observations[[1]]$data$missing_ids,
+    record_summary(changed)$observations[[1]]$data$missing_ids,
     "m3"
   )
   expect_snapshot(error = TRUE, record_observations(changed, d, "Another copy"))

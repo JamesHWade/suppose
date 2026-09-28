@@ -171,6 +171,7 @@ test_that("a correction editor cannot apply a replaced or declined suggestion", 
 })
 
 test_that("the inquiry host binds expectation projections and model relationships", {
+  skip_if_no_app()
   x <- suppose_example(accept = TRUE)
   shiny::testServer(
     function(input, output, session) {
@@ -200,6 +201,7 @@ test_that("the inquiry host binds expectation projections and model relationship
 })
 
 test_that("failed uploads explain recovery beside the upload without losing the record", {
+  skip_if_no_app()
   x <- elicitation_record(claim("A draft", "You"))
   bad <- withr::local_tempfile(fileext = ".json")
   writeLines("not JSON", bad)

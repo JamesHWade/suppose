@@ -49,6 +49,7 @@ test_that("worked examples are complete, portable records with honest provenance
 })
 
 test_that("example navigation starts a separate unsaved copy and never mutates the supplied record", {
+  skip_if_not_installed("shiny")
   original <- suppose_worked_example("meetings")
   before <- json_data(original)
   normal <- worked_example_session("", original, "my-history")
@@ -74,6 +75,7 @@ test_that("example navigation starts a separate unsaved copy and never mutates t
 })
 
 test_that("browsing the gallery preserves the active record and walkthrough", {
+  skip_if_no_app()
   x <- suppose_worked_example("meetings")
   shiny::testServer(
     function(input, output, session) {

@@ -1,4 +1,5 @@
 test_that("sensitivity plots retain the selected quantities and baseline", {
+  skip_if_not_installed("ggplot2")
   f <- sensitivity_fixture()
   s <- sensitivity_analysis(f$record, f$update$id)
   for (quantity in c("estimate", "probability")) {

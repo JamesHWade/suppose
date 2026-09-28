@@ -1,4 +1,5 @@
 test_that("agent tools stage actual form values only after successful completion", {
+  skip_if_not_installed("ellmer")
   x <- suppose_example()
   f <- form_session(x)
   s <- f$session
@@ -50,6 +51,7 @@ test_that("agent tools stage actual form values only after successful completion
 })
 
 test_that("form tools preserve existing inputs instead of resetting omitted fields", {
+  skip_if_not_installed("ellmer")
   x <- suppose_example()
   values <- workbench_form_values(
     x,
@@ -82,6 +84,7 @@ test_that("form tools preserve existing inputs instead of resetting omitted fiel
 })
 
 test_that("cancelled and stale tool requests cannot publish form changes", {
+  skip_if_not_installed("ellmer")
   x <- suppose_example()
   published <- list()
   s <- new_proposal_session(
@@ -106,6 +109,7 @@ test_that("cancelled and stale tool requests cannot publish form changes", {
 })
 
 test_that("sensitivity can be drafted without a questionnaire and retained with provenance", {
+  skip_if_not_installed("ellmer")
   x <- sensitivity_fixture()$record
   f <- form_session(x)
   id <- f$session$begin("Check whether the conclusion depends on my prior.")

@@ -36,6 +36,7 @@ table_fixture <- function() {
 }
 
 test_that("chat stages one exact table with linked outcomes and predictors", {
+  skip_if_not_installed("ellmer")
   f <- table_fixture()
   s <- form_session(f$record)
   id <- s$session$begin(paste("Here is my fictional pilot.", f$csv, sep = "\n"))
@@ -84,6 +85,7 @@ test_that("chat stages one exact table with linked outcomes and predictors", {
 })
 
 test_that("prior change previews expose excessive shrinkage and exclude observation noise", {
+  skip_if_not_installed("shiny")
   f <- table_fixture()
   p <- measurement_form_preview(f$record, f$values)
   spec <- regression_prior(
@@ -149,6 +151,8 @@ test_that("table import rejects invented data and unusable column mappings", {
 })
 
 test_that("cancelled import drafts cannot publish and edited previews cannot attach", {
+  skip_if_no_app()
+  skip_if_not_installed("ellmer")
   f <- table_fixture()
   s <- form_session(f$record)
   id <- s$session$begin(f$csv)
@@ -190,6 +194,8 @@ test_that("cancelled import drafts cannot publish and edited previews cannot att
 })
 
 test_that("native history preserves table drafts and concurrent edits need review", {
+  skip_if_no_app()
+  skip_if_not_installed("ellmer")
   f <- table_fixture()
   s <- form_session(
     f$record,

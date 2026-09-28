@@ -1,3 +1,14 @@
+# Suggested packages the workbench needs beyond Suppose's imports.
+suppose_app_packages <- c(
+  "shiny",
+  "bslib",
+  "shinychat",
+  "ggplot2",
+  "patchwork",
+  "ggdist",
+  "plotly"
+)
+
 #' Open the conversation-first inquiry workbench
 #'
 #' Start with any problem or belief. The conversation develops a reviewable
@@ -34,15 +45,7 @@ suppose_app <- function(
   chat = NULL,
   model = NULL
 ) {
-  rlang::check_installed(c(
-    "shiny",
-    "bslib",
-    "shinychat",
-    "ggplot2",
-    "patchwork",
-    "ggdist",
-    "plotly"
-  ))
+  rlang::check_installed(suppose_app_packages)
   if (!is.null(model)) {
     validate_model_world(model)
   }

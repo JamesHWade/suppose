@@ -135,6 +135,7 @@ reference:
   - accept_interpretation
   - accept_revision
   - write_record
+  - record_summary
 - title: Start here
   contents:
   - suppose_example

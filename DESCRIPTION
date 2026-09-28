@@ -17,12 +17,7 @@ Suggests:
     patchwork,
     ggdist,
     plotly,
-    leaflet,
-    gt,
-    htmlwidgets,
-    svglite,
     callr,
-    evaluate,
     later,
     httr2,
     httpuv,
@@ -31,11 +26,8 @@ Suggests:
     ellmer (>= 0.5.0),
     deputy,
     R6,
-    pkgdown,
-    knitr,
-    rmarkdown,
     shiny (>= 1.10.0),
-    shinychat (>= 0.4.0.9000),
+    shinychat (>= 0.5.0),
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Imports: 
@@ -49,7 +41,9 @@ Imports:
     withr
 Depends: 
     R (>= 4.1.0)
-Config/suppose/verified-shinychat-revision: eb024589465f5227405d567854b96cc87e5bb9ac
 Config/suppose/verified-deputy-revision: 502871f9908bbef798a4cd33fce6552094e9086e
+Config/Needs/website: pkgdown, knitr, rmarkdown
+Remotes:
+    JamesHWade/deputy
 URL: https://github.com/JamesHWade/suppose
 BugReports: https://github.com/JamesHWade/suppose/issues

@@ -21,7 +21,7 @@ switch(
     json <- FALSE
     x <- suppose::read_record(input)
     if (json) {
-      cat(jsonlite::toJSON(suppose:::cli_record_summary(x), auto_unbox = TRUE, digits = NA), "\n")
+      cat(jsonlite::toJSON(suppose::record_summary(x), auto_unbox = TRUE, digits = NA), "\n")
     } else {
       print(x)
     }
@@ -71,7 +71,11 @@ switch(
     x <- suppose::read_record(input)
     p <- utils::tail(x$revisions, 1)[[1]]$candidate
     if (is.null(p)) {
-      suppose:::abort_suppose("This record has no numerical candidate. Use inspect to read its qualitative interpretation.", "unsupported")
+      cli::cli_abort(
+        "This record has no numerical candidate. Use inspect to read its qualitative interpretation.",
+        class = c("suppose_unsupported", "suppose_error"),
+        call = NULL
+      )
     }
     result <- suppose::predict_prior(p, n = n, seed = seed)
     cat(jsonlite::toJSON(unclass(result), auto_unbox = TRUE, digits = NA), "\n")

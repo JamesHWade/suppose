@@ -1,4 +1,6 @@
 test_that("a chat tool fills controls, prepares a preview, and preserves later manual edits", {
+  skip_if_no_app()
+  skip_if_not_installed("ellmer")
   x <- suppose_example()
   shiny::testServer(
     function(input, output, session) {
@@ -62,6 +64,8 @@ test_that("a chat tool fills controls, prepares a preview, and preserves later m
 })
 
 test_that("newer form edits require an explicit choice before chat replaces them", {
+  skip_if_no_app()
+  skip_if_not_installed("ellmer")
   x <- suppose_example()
   shiny::testServer(
     function(input, output, session) {

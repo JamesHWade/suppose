@@ -23,6 +23,7 @@ test_that("current state is supplied without accumulating stale summaries", {
 })
 
 test_that("validation errors retain useful classes without serializing closure graphs", {
+  skip_if_not_installed("ellmer")
   x <- suppose_example()
   s <- new_proposal_session(function() x, general = TRUE)
   id <- s$begin("A complete sentence.")
@@ -40,6 +41,8 @@ test_that("validation errors retain useful classes without serializing closure g
 })
 
 test_that("agent reconfiguration transfers archived results without transferring tools", {
+  skip_if_not_installed("ellmer")
+  skip_if_not_installed("deputy")
   archive <- withr::local_tempdir()
   from <- suppose_agent(
     ellmer::chat_openai_compatible(

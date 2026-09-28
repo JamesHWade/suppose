@@ -113,6 +113,7 @@ test_that("a guided question card waits only for the reply that asked it", {
 })
 
 test_that("the question card escapes model-written text", {
+  skip_if_not_installed("shiny")
   questions <- guided_questions()
   questions[[1]]$options[[1]]$label <- "<script>alert(1)</script>"
   html <- as.character(inquiry_question_card_ui(

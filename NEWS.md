@@ -1,4 +1,8 @@
-# suppose 0.0.0.9000
+# suppose (development version)
+
+* `record_summary()` returns the plain-data summary of a record that `suppose inspect --json` prints. The command-line app no longer calls internal functions.
+
+* The workbench needs shinychat 0.5.0 or later, now on CRAN, instead of a development snapshot. Deputy is declared as a GitHub remote so a full install can resolve it. Tests skip, rather than fail, when a suggested package is missing.
 
 * `suppose_app()` no longer keeps conversation history unless you choose a folder with `history_dir` or the `suppose.history_dir` option. It used to default to `.suppose/conversations` in the working directory, where every session of the app, including other people's sessions in a deployed app, could list and reopen every saved conversation and record.
 

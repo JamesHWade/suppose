@@ -1,4 +1,7 @@
 test_that("prior charts use recorded analytic summaries and preserve RNG state", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("ggdist")
+  skip_if_not_installed("patchwork")
   x <- suppose_example()
   # Use the package's existing fitted example, without running a model provider.
   p <- utils::tail(x$revisions, 1)[[1]]

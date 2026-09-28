@@ -1,4 +1,5 @@
 test_that("history retains a sealed record and pending suggestion", {
+  skip_if_not_installed("ellmer")
   x <- elicitation_record(claim("The coating may cure faster", "Scientist"))
   state <- new_proposal_session(function() x, general = TRUE)
   id <- state$begin("Help clarify the coating comparison")
@@ -26,6 +27,7 @@ test_that("history retains a sealed record and pending suggestion", {
 })
 
 test_that("tool failures persist their message without R execution internals", {
+  skip_if_not_installed("shinychat")
   error <- rlang::error_cnd(
     "suppose_source",
     message = "Quote the outcome exactly."

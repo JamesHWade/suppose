@@ -1,4 +1,5 @@
 test_that('the walkthrough retains exact scenario reviews without changing the main claim', {
+  skip_if_no_app()
   w <- suppose_model_example()
   original <- elicitation_record(claim('My existing inquiry', 'A'))
   current <- shiny::reactiveVal(original)
@@ -37,6 +38,7 @@ test_that('the walkthrough retains exact scenario reviews without changing the m
 })
 
 test_that('a model review can start a fresh inquiry and cannot bypass the guard', {
+  skip_if_no_app()
   w <- suppose_model_example()
   current <- shiny::reactiveVal(NULL)
   blocked <- FALSE
