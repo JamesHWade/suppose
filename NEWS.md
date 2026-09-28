@@ -1,5 +1,7 @@
 # suppose 0.0.0.9000
 
+* `suppose_app()` no longer keeps conversation history unless you choose a folder with `history_dir` or the `suppose.history_dir` option. It used to default to `.suppose/conversations` in the working directory, where every session of the app, including other people's sessions in a deployed app, could list and reopen every saved conversation and record.
+
 * Inline interpretation decision cards now re-render only when their own state changes, instead of every card re-rendering whenever any card, the suggestion or the record changed. Reopening a conversation or starting a new one removes the cards it no longer shows, including their buttons and prior plots.
 
 * A cancelled, failed or stopped response is no longer replayed to the model as its own reply. The placeholder stays in the visible transcript, but the agent's history now skips it when the workbench starts, reopens a saved record or conversation, or rebuilds the agent.

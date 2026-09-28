@@ -156,3 +156,26 @@ test_that("cancelled and failed placeholders are not replayed to the agent", {
     }
   )
 })
+
+test_that("conversation history is off unless a folder is chosen", {
+  skip_if_not_installed("shinychat")
+  seen <- list()
+  local_mocked_bindings(inquiry_server = function(
+    input,
+    output,
+    session,
+    initial,
+    chat_factory,
+    agent_factory,
+    history_dir,
+    model = NULL
+  ) {
+    seen <<- c(seen, list(history_dir))
+  })
+  withr::local_options(suppose.history_dir = NULL)
+  shiny::testServer(suppose_app(), {})
+  shiny::testServer(suppose_app(history_dir = "explicit-history"), {})
+  withr::local_options(suppose.history_dir = "chosen-history")
+  shiny::testServer(suppose_app(), {})
+  expect_identical(seen, list(NULL, "explicit-history", "chosen-history"))
+})

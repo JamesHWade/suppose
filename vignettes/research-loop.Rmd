@@ -205,7 +205,8 @@ stopifnot(identical(reopened$regression_commitments[[1]]$id, commitment$id))
 length(reopened$regression_assessments)
 ```
 
-The app's native history retains the conversation, reviewed plans, frozen tests,
-measurement versions, assessments and sensitivity reviews. Downloaded records
-are portable copies. Pending chat drafts reopen as suggestions, with no restored
-review confirmation or execution authority.
+With [history turned on](workbench.html#return-to-your-work), the app's native
+history retains the conversation, reviewed plans, frozen tests, measurement
+versions, assessments and sensitivity reviews. Downloaded records are portable
+copies. Pending chat drafts reopen as suggestions, with no restored review
+confirmation or execution authority.
