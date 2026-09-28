@@ -205,6 +205,10 @@ check_quote <- function(quote, messages, numbers = numeric()) {
   invisible(quote)
 }
 
+# A cancelled, failed or stopped response leaves a placeholder message with
+# one of these statuses. The model never wrote that text.
+interrupted_response_statuses <- c("cancelled", "failed", "stopped")
+
 proposal_changes <- function() {
   list(
     claim = list(),
@@ -441,6 +445,7 @@ new_proposal_session <- function(
     invisible(state$pending)
   }
   state$cancel <- function(reason = "cancelled") {
+    reason <- rlang::arg_match0(reason, interrupted_response_statuses)
     if (state$phase != "running") {
       return(invisible(NULL))
     }

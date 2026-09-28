@@ -564,9 +564,7 @@ inquiry_server <- function(
   if (!is.null(client)) {
     client$set_system_prompt(inquiry_prompt())
     if (length(assistant$messages)) {
-      client$set_turns(lapply(assistant$messages, function(m) {
-        ellmer::Turn(m$role, m$text)
-      }))
+      client$set_turns(inquiry_turns(assistant$messages))
     }
   }
   shiny::observeEvent(
@@ -881,9 +879,7 @@ inquiry_server <- function(
       transfer_inquiry_session(client, new_agent)
     } else {
       new_agent$set_system_prompt(inquiry_prompt())
-      new_agent$set_turns(lapply(assistant$messages, function(m) {
-        ellmer::Turn(m$role, m$text)
-      }))
+      new_agent$set_turns(inquiry_turns(assistant$messages))
     }
     if (!is.null(chat)) {
       # Rebinding native history must not replay the last new/select/edit event.
@@ -1074,9 +1070,7 @@ inquiry_server <- function(
       shinychat::chat_append("inquiry", m$text, role = m$role)
     }
     if (!is.null(client)) {
-      client$set_turns(lapply(assistant$messages, function(m) {
-        ellmer::Turn(m$role, m$text)
-      }))
+      client$set_turns(inquiry_turns(assistant$messages))
     }
   }
   shiny::observeEvent(

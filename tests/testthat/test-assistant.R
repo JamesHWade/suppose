@@ -109,3 +109,36 @@ test_that("fabrications, stale requests and cancelled tools cannot produce propo
   expect_error(t[[1]](), class = "suppose_stale")
   expect_error(s$finish(id, "Late result"), class = "suppose_stale")
 })
+
+test_that("interrupted responses stay visible but are not replayed as turns", {
+  skip_if_not_installed("ellmer")
+  s <- assistant_fixture()$session
+  for (reason in c("cancelled", "failed", "stopped")) {
+    s$begin(paste("Question before a response was", reason))
+    s$cancel(reason)
+  }
+  id <- s$begin("A question that gets an answer")
+  s$finish(id, "A completed reply.")
+
+  expect_length(s$messages, 8)
+  expect_identical(
+    vapply(s$messages[c(2, 4, 6)], `[[`, character(1), "status"),
+    c("cancelled", "failed", "stopped")
+  )
+  turns <- inquiry_turns(s$messages)
+  expect_identical(
+    vapply(turns, ellmer::contents_text, character(1)),
+    c(
+      "Question before a response was cancelled",
+      "Question before a response was failed",
+      "Question before a response was stopped",
+      "A question that gets an answer",
+      "A completed reply."
+    )
+  )
+  expect_identical(
+    vapply(turns, function(turn) turn@role, character(1)),
+    c("user", "user", "user", "user", "assistant")
+  )
+  expect_error(s$cancel("interrupted"), "must be one of")
+})

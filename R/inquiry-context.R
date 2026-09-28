@@ -1,3 +1,14 @@
+# Rebuild an agent's history from the visible transcript. Placeholders left by
+# cancelled, failed or stopped responses stay visible to the person, but the
+# model never wrote them, so they are not replayed as its replies.
+inquiry_turns <- function(messages) {
+  replies <- Filter(
+    function(m) !isTRUE(m[["status"]] %in% interrupted_response_statuses),
+    messages
+  )
+  lapply(replies, function(m) ellmer::Turn(m[["role"]], m[["text"]]))
+}
+
 # Runtime tools belong to the receiving agent. Deputy transfers conversational
 # state and integrity-checked result archives through its public session API.
 transfer_inquiry_session <- function(from, to) {

@@ -95,3 +95,64 @@ test_that("initial portable conversations open with persistent history enabled",
     }
   )
 })
+
+test_that("cancelled and failed placeholders are not replayed to the agent", {
+  skip_if_not_installed("deputy")
+  skip_if_not_installed("shinychat")
+  entry <- function(role, text, status = "complete") {
+    list(role = role, text = text, status = status, created_at = now_utc())
+  }
+  messages <- list(
+    entry("user", "A coating may help"),
+    entry("assistant", "Response cancelled", "cancelled"),
+    entry("user", "Does it cure faster?"),
+    entry("assistant", "Response failed", "failed"),
+    entry("user", "Compare the cure times"),
+    entry("assistant", "Let us compare the cure times.")
+  )
+  x <- record_conversation(
+    elicitation_record(claim("A coating may help", "You")),
+    messages
+  )
+  path <- withr::local_tempfile(fileext = ".json")
+  write_record(x, path)
+  replayed <- function(agent) {
+    vapply(agent$get_turns(), ellmer::contents_text, character(1))
+  }
+  expected <- c(
+    "A coating may help",
+    "Does it cure faster?",
+    "Compare the cure times",
+    "Let us compare the cure times."
+  )
+  shiny::testServer(
+    function(input, output, session) {
+      state <- inquiry_server(
+        input,
+        output,
+        session,
+        initial = x,
+        agent_factory = function() {
+          suppose_agent(ellmer::chat_openai_compatible(
+            base_url = "http://127.0.0.1:1/v1",
+            model = "fixture-model",
+            credentials = function() "fixture",
+            echo = "none"
+          ))
+        }
+      )
+    },
+    {
+      session$flushReact()
+      # The person still sees what happened to each response.
+      expect_identical(state$transcript(), messages)
+      expect_identical(replayed(state$client()), expected)
+      # A history restore resets the runtime, which rebuilds the agent.
+      state$reset_runtime()
+      expect_identical(replayed(state$client()), expected)
+      session$setInputs(reopen = list(datapath = path))
+      expect_match(state$status(), "reopened")
+      expect_identical(replayed(state$client()), expected)
+    }
+  )
+})
