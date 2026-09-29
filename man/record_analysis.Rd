@@ -9,7 +9,8 @@ record_analysis(x, execution, source_prompt, model, request_id)
 \arguments{
 \item{x}{An elicitation record.}
 
-\item{execution}{Deputy's version 1 \code{extra$deputy_r} execution record.}
+\item{execution}{Deputy's version 1 \code{extra$deputy_r} execution record.
+Fields that version does not define are not stored.}
 
 \item{source_prompt}{User message that initiated the response.}
 

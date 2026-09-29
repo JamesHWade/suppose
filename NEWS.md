@@ -1,5 +1,7 @@
 # suppose (development version)
 
+* `record_analysis()` accepts a Deputy execution record with fields beyond those its version 1 format defines, and stores only the version 1 fields, so every retained analysis keeps the same shape. Before, any field Deputy added to that format would have made every analysis fail to record. A record missing a version 1 field, or with another schema version, is still refused; the error now names the missing fields.
+
 * `record_summary()` returns the plain-data summary of a record that `suppose inspect --json` prints. The command-line app no longer calls internal functions.
 
 * The workbench needs shinychat 0.5.0 or later, now on CRAN, instead of a development snapshot. Deputy is declared as a GitHub remote so a full install can resolve it. Tests skip, rather than fail, when a suggested package is missing.

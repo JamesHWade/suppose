@@ -144,3 +144,33 @@ test_that("an analysis arriving during a proposal preserves reviewability", {
     class = "suppose_stale"
   )
 })
+
+test_that("an analysis keeps Deputy's version 1 fields and drops later additions", {
+  skip_if_not_installed("deputy")
+  local_mocked_bindings(now_utc = function() "2026-01-01T12:00:00Z")
+  x <- suppose_example()
+  execution <- list(
+    schema_version = 1L,
+    code = "1 + 1",
+    session_id = "r1",
+    execution_id = "e1",
+    generation = 1L,
+    fresh = TRUE,
+    reset_reason = NULL,
+    outcome = "complete",
+    segments = list(list(type = "text", text = "2"))
+  )
+  analyze <- function(e) record_analysis(x, e, "Add", "fixture", "request1")
+  added <- analyze(c(list(duration = 0.25), execution))
+  expect_identical(added$analyses, analyze(execution)$analyses)
+  expect_named(added$analyses[[1]]$execution, names(execution))
+  for (field in names(execution)) {
+    expect_error(
+      analyze(execution[setdiff(names(execution), field)]),
+      class = "suppose_analysis"
+    )
+  }
+  expect_snapshot(error = TRUE, analyze(execution[-2]))
+  execution$schema_version <- 2L
+  expect_error(analyze(execution), class = "suppose_analysis")
+})
