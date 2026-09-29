@@ -1,5 +1,5 @@
 test_that("bundle grants leave unrelated capabilities denied", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   folder <- withr::local_tempdir()
   permissions <- inquiry_permissions(c("files", "write", "web"), folder)
   expect_s7_class(
@@ -54,7 +54,7 @@ test_that("bundle grants leave unrelated capabilities denied", {
 })
 
 test_that("tool forms preserve typed arguments and exact source words", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   skip_if_not_installed("shiny")
   skip_if_not_installed("ellmer")
   s <- new_proposal_session(function() NULL, general = TRUE)
@@ -102,7 +102,7 @@ test_that("tool forms preserve typed arguments and exact source words", {
 })
 
 test_that("Tools reconfiguration retains the model, record and pending proposal", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   skip_if_not_installed("shinychat")
   x <- elicitation_record(claim("The coating may help", "You"))
   shiny::testServer(
@@ -206,7 +206,7 @@ test_that("activity receipts round trip and older proposal receipts are labeled"
 
 
 test_that("every advertised core inquiry tool is permitted", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   permissions <- inquiry_permissions(character(), tempdir())
   session <- form_session(suppose_example())$session
   for (tool in session$tools(NULL)) {

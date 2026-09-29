@@ -143,7 +143,7 @@ test_that("interpretation acceptance is distinct from numerical acceptance", {
 })
 
 test_that("Deputy is the chat client and grants only inquiry tools", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   client <- ellmer::chat_openai_compatible(
     base_url = "http://127.0.0.1:3893/v1",
     model = "fixture",
@@ -187,7 +187,7 @@ test_that("Deputy is the chat client and grants only inquiry tools", {
 })
 
 test_that("a Deputy turn stages an interpretation through the inquiry tools", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   skip_on_cran()
   words <- "I think fewer meetings would help our team finish work sooner."
   wording <- "Fewer recurring meetings may reduce the time our team takes to finish work."
@@ -217,7 +217,7 @@ test_that("a Deputy turn stages an interpretation through the inquiry tools", {
 })
 
 test_that("shinychat spliced messages enter the Deputy streaming method", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   parent <- R6::R6Class(
     "StreamingParent",
     public = list(
@@ -276,7 +276,7 @@ test_that("tool transport uses explicit JSON while receipts retain structured re
 })
 
 test_that("a reused cancelled shinychat controller starts a fresh accepted run", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   parent <- R6::R6Class(
     "LazyStreamingParent",
     public = list(
@@ -296,7 +296,7 @@ test_that("a reused cancelled shinychat controller starts a fresh accepted run",
 })
 
 test_that("a rejected concurrent run does not clear another run's cancellation", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   parent <- R6::R6Class(
     "ActiveStreamingParent",
     public = list(
