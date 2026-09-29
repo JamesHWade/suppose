@@ -1,0 +1,62 @@
+# Check Suppose against Deputy's main branch. Pull requests and pushes check
+# the revision in DESCRIPTION's Config/suppose/verified-deputy-revision
+# instead (R-CMD-check.yaml), so a failure here is Deputy drift: a change on
+# main that Suppose must follow before that revision is raised.
+on:
+  schedule:
+    # Weekly, early on Monday (UTC).
+    - cron: "37 4 * * 1"
+  workflow_dispatch:
+
+name: deputy-main.yaml
+
+permissions: read-all
+
+jobs:
+  deputy-main:
+    name: ubuntu-latest (release, Deputy main)
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      # alloptr has no public source. The tests that need it skip.
+      _R_CHECK_FORCE_SUGGESTS_: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Follow main even if Remotes names a ref.
+      - name: Use Deputy's main branch
+        shell: bash
+        run: |
+          sed -i -E 's/^(Remotes:[[:space:]]*|[[:space:]]+)JamesHWade\/deputy([@#][^[:space:],]*)?(,?)[[:space:]]*$/\1JamesHWade\/deputy@main\3/' DESCRIPTION
+          if ! grep -Eq '^(Remotes:[[:space:]]*|[[:space:]]+)JamesHWade/deputy@main,?$' DESCRIPTION; then
+            echo "::error file=DESCRIPTION::Remotes must list JamesHWade/deputy so it can follow main."
+            exit 1
+          fi
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck, alloptr=?ignore
+          needs: check
+
+      - name: Record the Deputy revision
+        shell: Rscript {0}
+        run: |
+          cat(
+            "Deputy main: JamesHWade/deputy@",
+            utils::packageDescription("deputy")$RemoteSha, "\n",
+            sep = "",
+            file = Sys.getenv("GITHUB_STEP_SUMMARY"),
+            append = TRUE
+          )
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual")'
