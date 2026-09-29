@@ -268,7 +268,7 @@ This adds live quality evidence; it does not close domain-user acceptance.
 
 ### First-session quality increment
 
-[QUALITY-REVIEW.md](QUALITY-REVIEW.md) records the fixes, adversarial findings,
+[QUALITY-REVIEW.md](dev/notes/QUALITY-REVIEW.md) records the fixes, adversarial findings,
 failed first live pass, successful replay, and remaining limits. The increment
 adds source-preserving expectations, separate assistant ideas, direct reviewer
 correction with retained provenance, guarded acceptance, stable pending proposals,
@@ -285,7 +285,7 @@ open.
 
 ### Observation import increment
 
-[OBSERVATIONS-REVIEW.md](OBSERVATIONS-REVIEW.md) records SUP-012 implementation,
+[OBSERVATIONS-REVIEW.md](dev/notes/OBSERVATIONS-REVIEW.md) records SUP-012 implementation,
 critical review, and validation. The actual browser upload/preview/attachment and
 download path retained a synthetic three-row CSV with missingness and repeated
 measurement flags; duplicate import was refused. A fresh R process reopened the

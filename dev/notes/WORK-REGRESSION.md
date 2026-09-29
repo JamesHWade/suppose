@@ -43,4 +43,4 @@ outside this increment. No remote repository or publication is requested.
 
 ## Completion
 
-Completed and verified. See [verification and limits](artifacts/regression-review.md).
+Completed and verified. See [verification and limits](../../artifacts/regression-review.md).

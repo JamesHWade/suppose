@@ -1,6 +1,6 @@
 # First-session quality: implementation and adversarial review
 
-September 7, 2026. This increment follows the failures in [WALKTHROUGH.md](WALKTHROUGH.md).
+September 7, 2026. This increment follows the failures in [WALKTHROUGH.md](../../WALKTHROUGH.md).
 The updated app is available at http://127.0.0.1:3896/. Existing conversations on
 ports 3891 and 3895 were preserved. No repository, PR, or deployment was created.
 

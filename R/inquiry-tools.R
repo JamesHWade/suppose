@@ -275,10 +275,7 @@ inquiry_tools_server <- function(
           ),
           if (is.null(config)) {
             shiny::tags$p("Choose a conversation model to change tool access.")
-          },
-          shiny::tags$style(shiny::HTML(
-            ".tool-capability {padding: .85rem 0; border-bottom: 1px solid var(--bs-border-color);} .tool-capability:last-child {border-bottom: 0;} .tool-capability .shiny-input-container {width: 100%; margin-bottom: .25rem;} .tool-capability .form-check {display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: center; padding-left: 0; gap: 1rem;} .tool-capability .form-check-input {float: none; margin: 0; flex-shrink: 0;} .tool-capability .form-check-label {font-weight: 600;} .tool-capability p {margin: 0; max-width: 56ch;} .tool-capabilities {margin-bottom: 1rem;}"
-          ))
+          }
         ),
         bslib::nav_panel(
           "Request",

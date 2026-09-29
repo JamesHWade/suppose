@@ -39,16 +39,6 @@ suppose_example_app <- function(
   ui <- bslib::page_fluid(
     title = "Suppose | Inspect a belief",
     theme = suppose_theme(),
-    shiny::tags$head(shiny::tags$style(shiny::HTML(
-      ".container-fluid {max-width:1440px;padding:28px 32px} h1{font-size:3rem}
-       .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.75rem;color:#6c735e}
-       .lead{max-width:780px} .card{border:1px solid #dfd3ec;box-shadow:none}
-       .card-header{font-weight:600;background:transparent} .hint{color:#695775;font-size:.9rem}
-       .metric{font:700 2.1rem var(--bs-font-sans-serif);margin:.3rem 0}.status{padding:12px;background:#eee5f8;border-radius:8px}
-       textarea{min-height:72px}.btn{margin:3px 4px 3px 0} table{font-size:.85rem}
-       :focus-visible{outline:3px solid #b74d08!important;outline-offset:3px}
-       @media(max-width:600px){.container-fluid{padding:16px}h1{font-size:2.3rem}}"
-    ))),
     shiny::tags$div(class = "eyebrow", "SUPPOSE / A WORKBENCH FOR INQUIRY"),
     shiny::tags$h1("What follows from your belief?"),
     shiny::tags$p(
@@ -267,6 +257,11 @@ suppose_example_app <- function(
         )
       )
     )
+  )
+  # Listed after the page so these styles follow the theme's.
+  ui <- shiny::tagList(
+    ui,
+    suppose_dependency("workbench", stylesheet = "workbench.css")
   )
   shiny::shinyApp(ui, function(input, output, session) {
     workbench_server(input, output, session, record, chat_factory)

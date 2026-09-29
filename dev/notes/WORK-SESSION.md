@@ -39,7 +39,7 @@ review and critique. Preserve open user conversations. Local development only.
 ## 2026-09-08: persistent execution and learning from measurements
 
 All four requested increments are implemented. See
-[the acceptance report](artifacts/all-four-review.md) for exact evidence and limits.
+[the acceptance report](../../artifacts/all-four-review.md) for exact evidence and limits.
 Deputy is pinned to d9a88f76e08a31301dd30788e446c1672f009c7b in the isolated runtime
 library. The completed suite has 515 passing expectations; pkgdown and R CMD check
 pass (0/0/0). A real Meta/PlantGrowth conversation verifies native plots, fresh
@@ -55,7 +55,7 @@ later revisions. Support an explicitly selected prior or retained update as the
 prediction basis. Add reviewable UI, saved records, CLI inspection and lifecycle
 verification. Sensitivity analysis remains the next separate backlog item.
 
-SUP-014 verification and limits: [prospective review](artifacts/prospective-review.md).
+SUP-014 verification and limits: [prospective review](../../artifacts/prospective-review.md).
 
 ## 2026-09-08: sensitivity to model assumptions (SUP-015)
 
@@ -63,7 +63,7 @@ Completed prior-strength and likelihood-weight comparisons using the exact norma
 method, after evaluating a priorsense 1.2.0 adapter against current APIs. Preserve
 original updates and prospective assessments; retain comparison failures and
 follow-up questions. Browser save/reopen and follow-up drafting verified; full package check passes
-with 0 errors, 0 warnings and 0 notes. See [verification](artifacts/sensitivity-review.md).
+with 0 errors, 0 warnings and 0 notes. See [verification](../../artifacts/sensitivity-review.md).
 
 ## 2026-09-08: model growth and chat-filled forms (SUP-016)
 
@@ -74,7 +74,7 @@ values and labeled defaults. Live chat, partial updates, pending-draft restorati
 human retention, portable provenance and installed CLI inspection verified.
 Fixed two browser-discovered regressions with focused coverage. Final R CMD check
 passes with 0 errors, 0 warnings and 0 notes; main app 3899 refreshed.
-See [verification and limits](artifacts/extension-review.md).
+See [verification and limits](../../artifacts/extension-review.md).
 
 ## 2026-09-08: fitted Bayesian model revision (SUP-028)
 
@@ -84,7 +84,7 @@ Actual chat tools populate the form; native restoration preserves pending drafts
 and reviewed settings. Live synthetic acceptance verifies both saved reviews,
 unchanged original history and the unresolved Monte Carlo tail check.
 Final R CMD check passes with 0 errors, 0 warnings and 0 notes. Main app 3899
-refreshed and HTTP 200 verified. See [verification and limits](artifacts/regression-review.md).
+refreshed and HTTP 200 verified. See [verification and limits](../../artifacts/regression-review.md).
 
 ## 2026-09-08: realistic chat workflow repair
 
@@ -94,8 +94,8 @@ and scientific/persistence guidance. Regression priors now expose implied
 predictor-range mean changes before fitting. Repeated the fictional coating
 conversation through R plot, exact source import, model criticism, adding time,
 review retention and native reopening. Both saved models and R results survive.
-See [walkthrough evidence](artifacts/chat-walkthrough/review.md) and
-[model-guided research recommendations](artifacts/bayesian-research-design.md).
+See [walkthrough evidence](../../artifacts/chat-walkthrough/review.md) and
+[model-guided research recommendations](../../artifacts/bayesian-research-design.md).
 Regression-specific prospective commitments and automated sensitivity remain
 unimplemented; the final prompt correction makes this explicit.
 
@@ -113,4 +113,4 @@ Both packages pass R CMD check with 0 errors/warnings/notes; optional alloptr
 providers remain skipped when absent. Actual fictional coating chat, pending-draft
 restoration, retained choice and native reopening verified with exact score replay.
 SUP-030–SUP-036 and expanded SUP-019/SUP-020 define evidence gates for further work.
-See [BED verification](artifacts/bed-review.md).
+See [BED verification](../../artifacts/bed-review.md).
