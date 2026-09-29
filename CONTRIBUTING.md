@@ -36,6 +36,14 @@ scripts are files in `inst/www/`, attached with `suppose_dependency()`.
 Working notes, backlogs and reviews live in `dev/notes/`; written evidence
 reports stay in `artifacts/` beside the ignored outputs of the `dev/` scripts.
 
+## Versioning
+
+Suppose stays on a `0.0.0.9xxx` development version until it goes to CRAN,
+which will be 0.1.0. Don't raise the major, minor or patch version to mark a
+milestone, and don't add a release heading to `NEWS.md`: new entries go under
+`# suppose (development version)`. Until then, R CMD check's "No news entries
+found" NOTE for `NEWS.md` is expected.
+
 ## Documentation
 
 The README is a short package introduction. `pkgdown/index.md` is the site landing
