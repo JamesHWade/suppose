@@ -90,3 +90,56 @@ test_that("agent reconfiguration transfers archived results without transferring
     "2"
   )
 })
+
+test_that("a rebuilt agent reads archived results under the inquiry allowlist", {
+  skip_if_not_installed("ellmer")
+  skip_if_not_installed("deputy")
+  skip_on_cran()
+  policy <- deputy::ContextPolicy(
+    max_tool_result_bytes = 100,
+    offload_dir = withr::local_tempdir()
+  )
+  evidence <- paste(rep("evidence", 100), collapse = " ")
+  from <- suppose_agent(
+    ellmer::chat_openai_compatible(
+      base_url = "http://127.0.0.1:1/v1",
+      model = "fixture",
+      credentials = function() "fixture"
+    ),
+    context_policy = policy
+  )
+  from$register_tool(ellmer::tool(
+    function() evidence,
+    "Fixture",
+    name = "large"
+  ))
+  offloaded <- from$get_tools()[["large"]]()
+  reference <- regmatches(
+    offloaded,
+    regexpr("deputy://tool-result/[^[:space:]]+", offloaded)
+  )
+  url <- local_scripted_provider(
+    "deputy_read_tool_result",
+    list(reference = reference)
+  )
+  to <- suppose_agent(
+    ellmer::chat_openai_compatible(
+      base_url = url,
+      model = "fixture",
+      credentials = function() "fixture",
+      echo = "none"
+    ),
+    context_policy = policy
+  )
+  transfer_inquiry_session(from, to)
+  # Each response replaces the agent's tools; Deputy keeps its own reader.
+  session <- new_proposal_session(function() suppose_example(), general = TRUE)
+  id <- session$begin("Read the archived result")
+  to$set_tools(c(session$tools(id), to$inquiry_extra_tools()))
+  expect_false("deputy_read_tool_result" %in% to$permissions@tool_allowlist)
+  read <- deputy::result_tool_results(to$run_sync("Read the archived result"))
+  expect_length(read, 1)
+  expect_identical(read[[1]]$tool_name, "deputy_read_tool_result")
+  expect_null(read[[1]]$tool_error)
+  expect_match(read[[1]]$tool_result, evidence, fixed = TRUE)
+})

@@ -37,8 +37,7 @@ inquiry_tool_choices <- function(tools) {
     run_r_code = "Run R code",
     run_bash = "Run a shell command",
     web_fetch = "Read a web page",
-    web_search = "Search the web",
-    deputy_read_tool_result = "Retrieve a large tool result"
+    web_search = "Search the web"
   )
   choices <- names(tools)
   display <- unname(labels[choices])
@@ -477,10 +476,7 @@ inquiry_tools_server <- function(
     metadata <- if ("tool_metadata" %in% getNamespaceExports("deputy")) {
       getExportedValue("deputy", "tool_metadata")(tool)
     } else {
-      extra_names <- c(
-        unlist(lapply(inquiry_tool_bundles(), `[[`, "tools")),
-        "deputy_read_tool_result"
-      )
+      extra_names <- unlist(lapply(inquiry_tool_bundles(), `[[`, "tools"))
       list(
         source = list(
           package = if (tool@name %in% extra_names) "Deputy" else "Suppose"

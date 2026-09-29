@@ -2,6 +2,8 @@
 
 * `record_analysis()` accepts a Deputy execution record with fields beyond those its version 1 format defines, and stores only the version 1 fields, so every retained analysis keeps the same shape. Before, any field Deputy added to that format would have made every analysis fail to record. A record missing a version 1 field, or with another schema version, is still refused; the error now names the missing fields.
 
+* The workbench no longer lists Deputy's result reader in the agent's tool allowlist or on the Tools dialog's Request tab. Deputy allows its own reader whatever the allowlist says and keeps it when the tools change, so the assistant can still read large tool results that Deputy saved outside the conversation, including after the agent is rebuilt.
+
 * `record_summary()` returns the plain-data summary of a record that `suppose inspect --json` prints. The command-line app no longer calls internal functions.
 
 * The workbench needs shinychat 0.5.0 or later, now on CRAN, instead of a development snapshot. Deputy is declared as a GitHub remote so a full install can resolve it. Tests skip, rather than fail, when a suggested package is missing.
