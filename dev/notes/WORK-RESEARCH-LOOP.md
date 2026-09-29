@@ -12,5 +12,5 @@ Boundaries: the existing one/two-predictor Gaussian regression, independent futu
 units and explicit source/protocol declarations. No alloptr campaign dispatch,
 automatic execution, causal certification, or universal robustness claim.
 
-Evidence: [research-loop acceptance](artifacts/research-loop-review.md).
+Evidence: [research-loop acceptance](../../artifacts/research-loop-review.md).
 The intended-user walkthrough remains SUP-011; no campaign dispatch or model-family expansion is included.

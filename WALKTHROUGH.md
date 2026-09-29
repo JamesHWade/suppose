@@ -1,6 +1,6 @@
 # Live conversational walkthrough
 
-Follow-up implementation and adversarial review: [QUALITY-REVIEW.md](QUALITY-REVIEW.md).
+Follow-up implementation and adversarial review: [QUALITY-REVIEW.md](dev/notes/QUALITY-REVIEW.md).
 The observations below describe the earlier version and are retained as replay cases.
 
 September 7, 2026 (America/Detroit). Five completed live Muse responses across

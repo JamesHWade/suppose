@@ -1,7 +1,7 @@
 # Suppose backlog
 
 Created September 7, 2026. This is the implementation backlog for the direction in
-[CONCEPT.md](CONCEPT.md), using the vocabulary in [CONTEXT.md](CONTEXT.md).
+[CONCEPT.md](../../CONCEPT.md), using the vocabulary in [CONTEXT.md](../../CONTEXT.md).
 
 The first milestone delivers a complete local experience: state a claim, elicit
 expectations, inspect implied outcomes, correct the formalization, accept it,
@@ -15,7 +15,7 @@ and reproducible browser/API evidence. The workbench retains broader expectation
 relates independent claims to retained priors, and inspects explicitly assumed
 behavior beyond the elicited anchors. Keyboard and 390px checks, native file
 reopening, and cancellation/retry recovery are covered in the
-[P0 acceptance report](artifacts/p0-review.md).
+[P0 acceptance report](../../artifacts/p0-review.md).
 
 SUP-011 remains **partial**: an intended scientist or engineer still needs to
 recognize the formalization, name an assumption, and propose a challenge. Agent
@@ -30,19 +30,19 @@ prospective checks for the original normal model, sensitivity, prior model-growt
 review, and fitted regression comparison with unknown measurement variance.
 Actual chat tools prepare review forms. SUP-028 preserves both original and
 revised fits, predictive diagnostics and model-choice reasons; see
-[regression verification](artifacts/regression-review.md).
+[regression verification](../../artifacts/regression-review.md).
 
 The realistic coating walkthrough also prompted a unified, chat-prepared table
 import, current-record context, compact validation errors and a repaired Deputy
 session transfer for tool reconfiguration. Outcomes and predictors now share a
 reviewed import without requiring two manually prepared CSV files.
 
-The [model-guided research note](artifacts/bayesian-research-design.md) develops
+The [model-guided research note](../../artifacts/bayesian-research-design.md) develops
 SUP-019/SUP-020 and future feature proposals against current alloptr capabilities
 and primary Bayesian literature. SUP-029 now implements an exact bounded BED
 engine in alloptr and a reviewed-model adapter in Suppose. Campaign dispatch,
 regression prospective tests, broader losses and learned Action-BED policies remain
-separate work. [Implementation evidence](artifacts/bed-implementation-evidence.md).
+separate work. [Implementation evidence](../../artifacts/bed-implementation-evidence.md).
 
 
 External-model adapters (SUP-017), broader model families, regression-specific
@@ -52,7 +52,7 @@ open. The earlier checkpoints below describe historical increments.
 ## Implementation checkpoint — September 7, 2026
 
 A working local prototype is now available through `suppose_app()`, the shared R
-APIs, and the installed Rapp/ir CLI. See [ACCEPTANCE.md](ACCEPTANCE.md) for the
+APIs, and the installed Rapp/ir CLI. See [ACCEPTANCE.md](../../ACCEPTANCE.md) for the
 scenario, numerical reference checks, browser evidence, and remaining validation.
 
 The implementation covers the bounded two-condition normal method, attributed
@@ -83,7 +83,7 @@ execution to Deputy. No generic agent runtime is implemented in Suppose.
 Validation covers cross-domain interpretations, numerical method eligibility,
 no inheritance of unrelated models, user corrections and semantic acceptance.
 Live Muse integration is verified, including a saved-record round trip. The
-five-response [live walkthrough](WALKTHROUGH.md) found a conditional scenario
+five-response [live walkthrough](../../WALKTHROUGH.md) found a conditional scenario
 promoted into an expectation, overly mechanical questioning, and missing units
 displayed as `null`. These motivated the SUP-009/SUP-010 fixes and SUP-011 replay
 below. An agent-driven walkthrough does not close domain-user acceptance.
@@ -169,7 +169,7 @@ needs them; their listed dependencies still apply.
 
 Close the remaining intended-user walkthrough in [SUP-011](#sup-011). The
 locally verifiable P0 implementation and acceptance checks are complete; the
-[P0 report](artifacts/p0-review.md) records the tested boundaries.
+[P0 report](../../artifacts/p0-review.md) records the tested boundaries.
 
 For the current research-design direction, SUP-029, [SUP-030](#sup-030),
 [SUP-036](#sup-036), and [SUP-037](#sup-037) are implemented: review a plan,
@@ -317,7 +317,7 @@ claim records, elicitation inputs, and numerical probe. That initial chunk is no
 
 **Scope boundary:** Use a small domain representation; defer a generic event store, pooling, and collaboration services.
 
-**Delivered:** `record_model_reference()` retains attributed many-to-many references between independent claim objects and candidate priors already retained in a record. References express implications, not fitting or acceptance. Rich external-model adapters remain SUP-017/SUP-032. See [P0 verification](artifacts/p0-review.md).
+**Delivered:** `record_model_reference()` retains attributed many-to-many references between independent claim objects and candidate priors already retained in a record. References express implications, not fitting or acceptance. Rich external-model adapters remain SUP-017/SUP-032. See [P0 verification](../../artifacts/p0-review.md).
 
 <a id="sup-004"></a>
 
@@ -340,7 +340,7 @@ claim records, elicitation inputs, and numerical probe. That initial chunk is no
 
 **Scope boundary:** No automatic pooling of experts or LLM-generated numerical confidence.
 
-**Delivered:** **Record an expectation** reviews ranges, explicit quantiles, two-condition comparisons and scoped shape answers. `record_judgment()` retains additional answers alongside candidate fitting inputs, without refitting or carrying acceptance onto a new entry. See [P0 verification](artifacts/p0-review.md).
+**Delivered:** **Record an expectation** reviews ranges, explicit quantiles, two-condition comparisons and scoped shape answers. `record_judgment()` retains additional answers alongside candidate fitting inputs, without refitting or carrying acceptance onto a new entry. See [P0 verification](../../artifacts/p0-review.md).
 
 <a id="sup-005"></a>
 
@@ -408,7 +408,7 @@ claim records, elicitation inputs, and numerical probe. That initial chunk is no
 **Delivered:** `check_expectations()` and **Inspect expectations beyond the anchors**
 show explicit straight-line projections, elicited-versus-implied quantiles, and
 qualitative limitations alongside the original answers. The added projection is
-not attributed to the original two judgments. See [P0 verification](artifacts/p0-review.md).
+not attributed to the original two judgments. See [P0 verification](../../artifacts/p0-review.md).
 
 <a id="sup-008"></a>
 
@@ -452,7 +452,7 @@ not attributed to the original two judgments. See [P0 verification](artifacts/p0
 
 **Scope boundary:** One coherent user journey; no multi-user hosting or general dashboard builder.
 
-**Delivered:** Keyboard review/acceptance, labeled native correlation input, nonvisual prediction summaries, 390px layouts, and browser download/upload were exercised. Upload feedback appears beside the control in the narrow drawer. This is not a claim of full WCAG or screen-reader certification. See [P0 verification](artifacts/p0-review.md).
+**Delivered:** Keyboard review/acceptance, labeled native correlation input, nonvisual prediction summaries, 390px layouts, and browser download/upload were exercised. Upload feedback appears beside the control in the narrow drawer. This is not a claim of full WCAG or screen-reader certification. See [P0 verification](../../artifacts/p0-review.md).
 
 <a id="sup-010"></a>
 
@@ -475,7 +475,7 @@ not attributed to the original two judgments. See [P0 verification](artifacts/p0
 
 **Scope boundary:** No arbitrary code execution, silent model expansion, or new generic agent runtime.
 
-**Delivered:** The current scripted Deputy/shinychat browser path covers streaming, decline, cancellation, retry, correction and unavailable-model manual recovery. The adapter resets a reused cancelled controller only after Deputy accepts a fresh stream. Saved artifacts prove cancellation preserves revisions and retry applies once. See [P0 verification](artifacts/p0-review.md).
+**Delivered:** The current scripted Deputy/shinychat browser path covers streaming, decline, cancellation, retry, correction and unavailable-model manual recovery. The adapter resets a reused cancelled controller only after Deputy accepts a fresh stream. Saved artifacts prove cancellation preserves revisions and retry applies once. See [P0 verification](../../artifacts/p0-review.md).
 
 <a id="sup-011"></a>
 
@@ -563,7 +563,7 @@ See [OBSERVATIONS-REVIEW.md](OBSERVATIONS-REVIEW.md) for evidence and limits.
 
 **Verification:** A lifecycle example commits, ingests later outcomes, assesses, and revises without changing the earlier commitment; include horizon and missing-data cases.
 
-**Delivered:** `/test` and **Record → A future test**, portable commitments and assessments, exact planned-cohort rules, CSV templates, frozen prediction plots, and a synthetic lifecycle. See [verification report](artifacts/prospective-review.md).
+**Delivered:** `/test` and **Record → A future test**, portable commitments and assessments, exact planned-cohort rules, CSV templates, frozen prediction plots, and a synthetic lifecycle. See [verification report](../../artifacts/prospective-review.md).
 
 **Scope boundary:** No blanket claim that preregistration alone establishes validity or controls error rates.
 
@@ -586,7 +586,7 @@ See [OBSERVATIONS-REVIEW.md](OBSERVATIONS-REVIEW.md) for evidence and limits.
 
 **Verification:** Known sensitive and insensitive examples produce the expected changes; supported numerical calculations agree with a reference implementation.
 
-**Delivered:** `/sensitivity` and **Record → Check sensitivity**, exact normal power scaling, saved comparisons and follow-up drafting, with a priorsense adapter evaluation. See [verification report](artifacts/sensitivity-review.md).
+**Delivered:** `/sensitivity` and **Record → Check sensitivity**, exact normal power scaling, saved comparisons and follow-up drafting, with a priorsense adapter evaluation. See [verification report](../../artifacts/sensitivity-review.md).
 
 **Scope boundary:** No global robustness certificate from a local power-scaling check.
 
@@ -613,7 +613,7 @@ Implemented one shared additive predictor, raw-unit versus meaningful-change
 coefficient scaling, aligned outcomes and matched contrasts, visible projection
 assumptions, and saved reviewed alternatives. Real chat tools populate extension
 and sensitivity forms, preserve omitted values, protect concurrent edits and
-restore pending previews. See [acceptance evidence](artifacts/extension-review.md).
+restore pending previews. See [acceptance evidence](../../artifacts/extension-review.md).
 Extended-model fitting, interactions and automatic prior adjustment are unsupported.
 
 **Scope boundary:** Predictive consistency does not establish equivalence of mechanisms or eliminate scientific model comparison.
@@ -900,7 +900,7 @@ fit the revision and retain a reasoned comparison without rewriting earlier work
 predictor, improves held-out prediction after revision, and retains a borderline
 tail check as unresolved. Independent marginal-likelihood ratios verify every
 LOO score. Saved records reconstruct both original scientific bases and preserve
-shared priors and baseline fit results. See [report](artifacts/regression-review.md).
+shared priors and baseline fit results. See [report](../../artifacts/regression-review.md).
 
 **Scope boundary:** One or two numeric predictors, independent Gaussian outcomes,
 normal/inverse-gamma prior and exact inference. No interactions, hierarchical
@@ -928,11 +928,11 @@ contrast or a choice between two protocols, and retain a reasoned planning choic
 - [x] Chat prepares a reviewable form; preserve edited controls, model checks, source model identity, and a separate human planning choice.
 - [x] Verify actual chat preparation, human review, saved records and native reopening in the fictional coating example.
 
-**Evidence and verification:** [Derivation and primary-source review](artifacts/bed-implementation-evidence.md).
+**Evidence and verification:** [Derivation and primary-source review](../../artifacts/bed-implementation-evidence.md).
 Independent Student-t quadrature and matrix precision updates verify alloptr's
 scores. Tests cover costs, budget, no-information designs, replication, stale
 reviews, provenance and JSON round trips. Live chat, pending-draft restoration, human retention and native reopening passed;
-see [acceptance evidence](artifacts/bed-review.md).
+see [acceptance evidence](../../artifacts/bed-review.md).
 
 **Scope boundary:** One-step, single-setting replicate alternatives, one mean
 contrast and two linear-utility actions. No policy training, multi-setting batch
@@ -958,12 +958,12 @@ immutable predictions, collection rules and later assessment.
 - [x] Keep design utility, predictive adequacy and causal claims distinct; declining a plan never creates a commitment.
 - [x] Expose review/freeze/assessment in chat-assisted forms and saved records.
 
-**Implementation evidence:** [Research-loop acceptance](artifacts/research-loop-review.md)
-and the executable [continue, test and sensitivity guide](vignettes/research-loop.Rmd).
+**Implementation evidence:** [Research-loop acceptance](../../artifacts/research-loop-review.md)
+and the executable [continue, test and sensitivity guide](../../vignettes/research-loop.Rmd).
 
 **Original motivating evidence:** The coating walkthrough exposed incorrect routing to fixed-noise
-`/test`; current BED proposals explicitly remain uncommitted. [Walkthrough](artifacts/chat-walkthrough/review.md),
-[Bayesian workflow](artifacts/bayesian-research-design.md).
+`/test`; current BED proposals explicitly remain uncommitted. [Walkthrough](../../artifacts/chat-walkthrough/review.md),
+[Bayesian workflow](../../artifacts/bayesian-research-design.md).
 
 **Verification:** Commit, collect, assess and reopen a randomized fixed-time
 coating comparison. Changing the model later cannot change the frozen prediction;
@@ -992,7 +992,7 @@ then expose its implications and assumptions for review.
 - [ ] Show where competing models disagree over feasible settings and retain model-check failures; do not label an improved LOO score a discovered mechanism.
 - [ ] Keep search history and require validation matching the intended generalization; fitting transformations on outcomes belongs inside selection/validation.
 
-**Evidence:** [Scientific feature workflow and 2025 projection predictive review](artifacts/bayesian-research-design.md).
+**Evidence:** [Scientific feature workflow and 2025 projection predictive review](../../artifacts/bayesian-research-design.md).
 The current coating data motivate an interaction question, not evidence that an
 interaction is present. Current regression supports only two raw numeric predictors.
 
@@ -1051,7 +1051,7 @@ that the exact two-action, single-setting design cannot represent.
 - [ ] Include a no-experiment action; account for replication, batching, setup costs and nonexchangeable unit structure where supported.
 - [ ] Compare approximations with SUP-029's exact oracle on its supported special case.
 
-**Evidence:** [BED derivation and Action-BED assessment](artifacts/bed-implementation-evidence.md).
+**Evidence:** [BED derivation and Action-BED assessment](../../artifacts/bed-implementation-evidence.md).
 Fixed-target zero-cost exact criteria can share the same candidate ordering;
 changing the purpose is not guaranteed to change the best setting.
 
@@ -1084,7 +1084,7 @@ repeated or sequential research enough to justify their training and complexity.
 
 **Evidence:** [Action-BED, June 2026 preprint](https://arxiv.org/abs/2606.23662),
 [UAI 2026 score-matching BED](https://proceedings.mlr.press/v337/phillips26a.html),
-[local tractability assessment](artifacts/bed-implementation-evidence.md).
+[local tractability assessment](../../artifacts/bed-implementation-evidence.md).
 A public implementation was not located during this assessment; do not label
 our exact method a paper reproduction.
 
@@ -1114,7 +1114,7 @@ preserving uncertainty over expressions and the history of the search.
 
 **Evidence:** [ERRLESS, UAI 2026](https://proceedings.mlr.press/v337/boussif26a.html),
 [Bayesian SISSO, June 2026 preprint](https://arxiv.org/html/2606.04042v2),
-[source-specific limitations](artifacts/bayesian-research-design.md).
+[source-specific limitations](../../artifacts/bayesian-research-design.md).
 
 **Verification:** Synthetic recoverable and nonidentifiable mechanisms, noisy
 small-data benchmarks, untouched prospective measurements, and comparison with
@@ -1141,12 +1141,12 @@ scientific conclusion or recommended next experiment.
 - [x] Distinguish utility sensitivity from model sensitivity; show when rankings are effectively tied or a recommendation changes.
 - [x] Retain variants separately without changing original model reviews or frozen tests; expose a regression-specific chat-assisted review flow.
 
-**Implementation evidence:** [Research-loop acceptance](artifacts/research-loop-review.md)
-and the executable [continue, test and sensitivity guide](vignettes/research-loop.Rmd).
+**Implementation evidence:** [Research-loop acceptance](../../artifacts/research-loop-review.md)
+and the executable [continue, test and sensitivity guide](../../vignettes/research-loop.Rmd).
 
 **Original motivating evidence:** The live coating walkthrough initially proposed a slope prior too
 tight for plausible useful gains; its final model check remained borderline.
-[Walkthrough](artifacts/chat-walkthrough/review.md), [BED evidence](artifacts/bed-implementation-evidence.md).
+[Walkthrough](../../artifacts/chat-walkthrough/review.md), [BED evidence](../../artifacts/bed-implementation-evidence.md).
 
 **Verification:** A deliberately prior-sensitive small dataset changes the design
 recommendation under a specified perturbation; a well-informed case remains
@@ -1172,10 +1172,10 @@ reuse of the older fixed-noise sensitivity form for unsupported regressions.
 - [x] Keep the candidate comparison and model limitations prominent; place CSV editing and numerical details behind optional controls.
 - [x] Allow chat to revise one assumption without re-entering the others, while preserving concurrent manual edits and identifying stale source models.
 
-**Implementation evidence:** [Research-loop acceptance](artifacts/research-loop-review.md)
-and the executable [continue, test and sensitivity guide](vignettes/research-loop.Rmd).
+**Implementation evidence:** [Research-loop acceptance](../../artifacts/research-loop-review.md)
+and the executable [continue, test and sensitivity guide](../../vignettes/research-loop.Rmd).
 
-**Original motivating evidence:** Native reopening in the [BED acceptance](artifacts/bed-review.md)
+**Original motivating evidence:** Native reopening in the [BED acceptance](../../artifacts/bed-review.md)
 preserved the reviewed plan exactly, but a new form still starts blank. The saved
 review is inspectable; continuing it is more work than it should be.
 
@@ -1216,8 +1216,8 @@ concrete proposed challenge.
 - [x] Keep examples and drafts isolated across sessions and verify desktop,
   mobile, keyboard controls and accessible figure descriptions.
 
-**Implementation evidence:** [Model-world acceptance](artifacts/model-world-review.md)
-and the executable [model-world guide](vignettes/model-worlds.Rmd).
+**Implementation evidence:** [Model-world acceptance](../../artifacts/model-world-review.md)
+and the executable [model-world guide](../../vignettes/model-worlds.Rmd).
 
 **Verification:** Compare the snapshots directly with brms and independently
 reconstruct expected responses from coefficient draws; verify actual browser

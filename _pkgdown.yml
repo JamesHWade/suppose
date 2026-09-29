@@ -148,17 +148,6 @@ reference:
 search:
   exclude:
   - CONCEPT.html
-  - WORK-REGRESSION.html
-  - WORK-RESEARCH-LOOP.html
-  - QUALITY-REVIEW.html
   - CONTEXT.html
-  - OBSERVATIONS-REVIEW.html
-  - WORK-CHAT-WORKFLOW.html
-  - WORK-P0.html
-  - WORK-BED.html
-  - WORK-OBSERVATIONS.html
-  - WORK-SESSION.html
   - WALKTHROUGH.html
-  - BACKLOG.html
-  - NAME-CHECK.html
   - ACCEPTANCE.html

@@ -45,7 +45,7 @@ suggestion and correction reason. A separate app pointed at an unavailable local
 endpoint demonstrated manual clarification and download after model failure.
 These fixtures test integration and recovery; they do not assess an LLM's
 scientific judgment. Earlier live-model semantic evidence remains in
-`QUALITY-REVIEW.md`.
+`dev/notes/QUALITY-REVIEW.md`.
 
 ## Defects found and repaired
 

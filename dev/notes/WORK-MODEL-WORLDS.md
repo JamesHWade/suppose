@@ -21,4 +21,4 @@ Stan and tidymodels adapters, automatic refitting and experimental-design
 computation for arbitrary external models remain subsequent work. A challenge
 from this walkthrough is a reviewed question, not a frozen numerical test.
 
-Validation: [Model-world acceptance](artifacts/model-world-review.md).
+Validation: [Model-world acceptance](../../artifacts/model-world-review.md).
