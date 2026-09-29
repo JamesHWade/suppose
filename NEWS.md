@@ -1,4 +1,14 @@
-# suppose 0.0.0.9000
+# suppose (development version)
+
+* `record_summary()` returns the plain-data summary of a record that `suppose inspect --json` prints. The command-line app no longer calls internal functions.
+
+* The workbench needs shinychat 0.5.0 or later, now on CRAN, instead of a development snapshot. Deputy is declared as a GitHub remote so a full install can resolve it. Tests skip, rather than fail, when a suggested package is missing.
+
+* `suppose_app()` no longer keeps conversation history unless you choose a folder with `history_dir` or the `suppose.history_dir` option. It used to default to `.suppose/conversations` in the working directory, where every session of the app, including other people's sessions in a deployed app, could list and reopen every saved conversation and record.
+
+* Inline interpretation decision cards now re-render only when their own state changes, instead of every card re-rendering whenever any card, the suggestion or the record changed. Reopening a conversation or starting a new one removes the cards it no longer shows, including their buttons and prior plots.
+
+* A cancelled, failed or stopped response is no longer replayed to the model as its own reply. The placeholder stays in the visible transcript, but the agent's history now skips it when the workbench starts, reopens a saved record or conversation, or rebuilds the agent.
 
 * The workbench's assistant can use its inquiry tools with current Deputy again. Deputy now lets a permission callback only narrow what a policy allows, and it treats a tool without annotations as destructive and open-world, so every inquiry tool was refused. The tools now declare their effects: reading the record and previewing a suggestion change nothing, and drafting stages a suggestion in the session without changing the record or reaching outside R.
 

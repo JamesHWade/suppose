@@ -1,4 +1,5 @@
 test_that("updates require preview, reject changed inputs, and preserve the prior", {
+  skip_if_no_app()
   f <- update_fixture()
   record <- record_observations(f$record, f$obs, reason = "Test observations")
   shiny::testServer(

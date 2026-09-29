@@ -46,6 +46,7 @@ test_that("shape regions and unknown comparisons retain their limitations", {
 })
 
 test_that("manual expectation review rejects edits and duplicate clicks", {
+  skip_if_no_app()
   x <- shiny::reactiveVal(suppose_example())
   shiny::testServer(
     judgment_server,

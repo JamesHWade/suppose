@@ -79,7 +79,7 @@ test_that('reviewed implications preserve models, scenarios and independent clai
   expect_equal(changed$model_implications[[1]], r)
   expect_equal(changed$model_worlds, x$model_worlds)
   expect_length(changed$model_implications, 2)
-  expect_equal(cli_record_summary(x)$model_worlds[[1]]$id, other$id)
+  expect_equal(record_summary(x)$model_worlds[[1]]$id, other$id)
 })
 
 test_that('reviews require valid predictions and explicit human review', {
@@ -150,6 +150,7 @@ test_that('tampered review summaries and broken model links are rejected', {
 })
 
 test_that('model-world app validates supplied starting snapshots', {
+  skip_if_no_app()
   expect_snapshot(error = TRUE, suppose_app(model = list()))
   expect_snapshot(
     error = TRUE,
@@ -159,6 +160,7 @@ test_that('model-world app validates supplied starting snapshots', {
 
 
 test_that('the waiting-time example has positive, skewed outcomes', {
+  skip_if_not_installed('ggplot2')
   w <- suppose_model_example('waiting')
   expect_equal(w$family, 'lognormal')
   expect_equal(length(w$expected), 400)

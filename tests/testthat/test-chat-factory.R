@@ -86,6 +86,8 @@ test_that("the public app wires chat objects and constructors into each session"
 })
 
 test_that("chat input errors explain valid choices without invoking a provider", {
+  skip_if_no_app()
+  skip_if_not_installed("ellmer")
   expect_snapshot(error = TRUE, inquiry_chat_factory("model-name"))
   expect_snapshot(error = TRUE, inquiry_chat_factory(function() NULL)())
   expect_snapshot(

@@ -196,7 +196,7 @@ test_that("retention round trips exact references and rejects stale or changed r
   reopened <- read_record(path)
   expect_identical(json_data(reopened), json_data(x))
   expect_s3_class(reopened$sensitivities[[1]]$result, "suppose_sensitivity")
-  expect_identical(cli_record_summary(x)$sensitivities, plain(x$sensitivities))
+  expect_identical(record_summary(x)$sensitivities, plain(x$sensitivities))
   expect_snapshot(error = TRUE, record_sensitivity(x, s, "Stale"))
   tampered <- x
   tampered$sensitivities[[1]]$result$rows[[1]]$power <- 2

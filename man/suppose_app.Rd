@@ -8,8 +8,7 @@ suppose_app(
   record = NULL,
   chat_factory = NULL,
   agent_factory = NULL,
-  history_dir = getOption("suppose.history_dir", file.path(getwd(), ".suppose",
-    "conversations")),
+  history_dir = getOption("suppose.history_dir"),
   chat = NULL,
   model = NULL
 )
@@ -24,9 +23,11 @@ suppose_app(
 \item{agent_factory}{Advanced: a function creating a fresh Deputy Agent per
 session. Use \code{\link[=suppose_agent]{suppose_agent()}} for the built-in setup.}
 
-\item{history_dir}{Directory for local conversation history, or \code{NULL} to disable.
-History is shared by sessions of this local app; use separate directories for
-separate users. Requires a connected agent.}
+\item{history_dir}{Directory for saved conversation history, or \code{NULL} (the
+default, unless the \code{suppose.history_dir} option is set) to keep no
+history. Every session of the app can list, reopen and delete every
+conversation in this folder, so use it only for a local, single-user app,
+never for an app deployed for several people. Requires a connected agent.}
 
 \item{chat}{An ellmer Chat used as a provider/model configuration template, or
 a zero-argument function creating a fresh Chat per session. For example,

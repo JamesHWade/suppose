@@ -1,4 +1,5 @@
 test_that("extension plots distinguish three alternatives under aligned scenarios", {
+  skip_if_not_installed("ggplot2")
   c <- compare_extension(suppose_example(), "Duration", "minutes", 60, 10)
   for (quantity in c("outcome", "mean")) {
     p <- plot_extension(c, quantity)

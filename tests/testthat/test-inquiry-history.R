@@ -1,4 +1,5 @@
 test_that("history retains a sealed record and pending suggestion", {
+  skip_if_not_installed("ellmer")
   x <- elicitation_record(claim("The coating may cure faster", "Scientist"))
   state <- new_proposal_session(function() x, general = TRUE)
   id <- state$begin("Help clarify the coating comparison")
@@ -26,6 +27,7 @@ test_that("history retains a sealed record and pending suggestion", {
 })
 
 test_that("tool failures persist their message without R execution internals", {
+  skip_if_not_installed("shinychat")
   error <- rlang::error_cnd(
     "suppose_source",
     message = "Quote the outcome exactly."
@@ -94,4 +96,88 @@ test_that("initial portable conversations open with persistent history enabled",
       expect_length(state$client()$get_turns(), 2)
     }
   )
+})
+
+test_that("cancelled and failed placeholders are not replayed to the agent", {
+  skip_if_not_installed("deputy")
+  skip_if_not_installed("shinychat")
+  entry <- function(role, text, status = "complete") {
+    list(role = role, text = text, status = status, created_at = now_utc())
+  }
+  messages <- list(
+    entry("user", "A coating may help"),
+    entry("assistant", "Response cancelled", "cancelled"),
+    entry("user", "Does it cure faster?"),
+    entry("assistant", "Response failed", "failed"),
+    entry("user", "Compare the cure times"),
+    entry("assistant", "Let us compare the cure times.")
+  )
+  x <- record_conversation(
+    elicitation_record(claim("A coating may help", "You")),
+    messages
+  )
+  path <- withr::local_tempfile(fileext = ".json")
+  write_record(x, path)
+  replayed <- function(agent) {
+    vapply(agent$get_turns(), ellmer::contents_text, character(1))
+  }
+  expected <- c(
+    "A coating may help",
+    "Does it cure faster?",
+    "Compare the cure times",
+    "Let us compare the cure times."
+  )
+  shiny::testServer(
+    function(input, output, session) {
+      state <- inquiry_server(
+        input,
+        output,
+        session,
+        initial = x,
+        agent_factory = function() {
+          suppose_agent(ellmer::chat_openai_compatible(
+            base_url = "http://127.0.0.1:1/v1",
+            model = "fixture-model",
+            credentials = function() "fixture",
+            echo = "none"
+          ))
+        }
+      )
+    },
+    {
+      session$flushReact()
+      # The person still sees what happened to each response.
+      expect_identical(state$transcript(), messages)
+      expect_identical(replayed(state$client()), expected)
+      # A history restore resets the runtime, which rebuilds the agent.
+      state$reset_runtime()
+      expect_identical(replayed(state$client()), expected)
+      session$setInputs(reopen = list(datapath = path))
+      expect_match(state$status(), "reopened")
+      expect_identical(replayed(state$client()), expected)
+    }
+  )
+})
+
+test_that("conversation history is off unless a folder is chosen", {
+  skip_if_not_installed("shinychat")
+  seen <- list()
+  local_mocked_bindings(inquiry_server = function(
+    input,
+    output,
+    session,
+    initial,
+    chat_factory,
+    agent_factory,
+    history_dir,
+    model = NULL
+  ) {
+    seen <<- c(seen, list(history_dir))
+  })
+  withr::local_options(suppose.history_dir = NULL)
+  shiny::testServer(suppose_app(), {})
+  shiny::testServer(suppose_app(history_dir = "explicit-history"), {})
+  withr::local_options(suppose.history_dir = "chosen-history")
+  shiny::testServer(suppose_app(), {})
+  expect_identical(seen, list(NULL, "explicit-history", "chosen-history"))
 })

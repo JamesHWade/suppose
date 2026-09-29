@@ -1,3 +1,14 @@
+# Suggested packages the workbench needs beyond Suppose's imports.
+suppose_app_packages <- c(
+  "shiny",
+  "bslib",
+  "shinychat",
+  "ggplot2",
+  "patchwork",
+  "ggdist",
+  "plotly"
+)
+
 #' Open the conversation-first inquiry workbench
 #'
 #' Start with any problem or belief. The conversation develops a reviewable
@@ -19,31 +30,22 @@
 #' @param chat_factory Compatibility argument for a Chat constructor. Prefer
 #'   `chat = constructor`. Supply only one of `chat`, `chat_factory`, or
 #'   `agent_factory`. Both Chat forms are wrapped in a Suppose Deputy Agent.
-#' @param history_dir Directory for local conversation history, or `NULL` to disable.
-#'   History is shared by sessions of this local app; use separate directories for
-#'   separate users. Requires a connected agent.
+#' @param history_dir Directory for saved conversation history, or `NULL` (the
+#'   default, unless the `suppose.history_dir` option is set) to keep no
+#'   history. Every session of the app can list, reopen and delete every
+#'   conversation in this folder, so use it only for a local, single-user app,
+#'   never for an app deployed for several people. Requires a connected agent.
 #' @return A Shiny app object.
 #' @export
 suppose_app <- function(
   record = NULL,
   chat_factory = NULL,
   agent_factory = NULL,
-  history_dir = getOption(
-    "suppose.history_dir",
-    file.path(getwd(), ".suppose", "conversations")
-  ),
+  history_dir = getOption("suppose.history_dir"),
   chat = NULL,
   model = NULL
 ) {
-  rlang::check_installed(c(
-    "shiny",
-    "bslib",
-    "shinychat",
-    "ggplot2",
-    "patchwork",
-    "ggdist",
-    "plotly"
-  ))
+  rlang::check_installed(suppose_app_packages)
   if (!is.null(model)) {
     validate_model_world(model)
   }
@@ -564,9 +566,7 @@ inquiry_server <- function(
   if (!is.null(client)) {
     client$set_system_prompt(inquiry_prompt())
     if (length(assistant$messages)) {
-      client$set_turns(lapply(assistant$messages, function(m) {
-        ellmer::Turn(m$role, m$text)
-      }))
+      client$set_turns(inquiry_turns(assistant$messages))
     }
   }
   shiny::observeEvent(
@@ -881,9 +881,7 @@ inquiry_server <- function(
       transfer_inquiry_session(client, new_agent)
     } else {
       new_agent$set_system_prompt(inquiry_prompt())
-      new_agent$set_turns(lapply(assistant$messages, function(m) {
-        ellmer::Turn(m$role, m$text)
-      }))
+      new_agent$set_turns(inquiry_turns(assistant$messages))
     }
     if (!is.null(chat)) {
       # Rebinding native history must not replay the last new/select/edit event.
@@ -1074,9 +1072,7 @@ inquiry_server <- function(
       shinychat::chat_append("inquiry", m$text, role = m$role)
     }
     if (!is.null(client)) {
-      client$set_turns(lapply(assistant$messages, function(m) {
-        ellmer::Turn(m$role, m$text)
-      }))
+      client$set_turns(inquiry_turns(assistant$messages))
     }
   }
   shiny::observeEvent(

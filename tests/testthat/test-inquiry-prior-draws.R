@@ -22,6 +22,7 @@ test_that("realizations preserve joint draws and quantile dots represent analyti
 })
 
 test_that("draw plots have fixed limits and do not resample", {
+  skip_if_not_installed("ggplot2")
   p <- utils::tail(suppose_example()$revisions, 1)[[1]]
   x <- inquiry_prior_visual(p)
   withr::local_seed(17)
@@ -40,6 +41,7 @@ test_that("draw plots have fixed limits and do not resample", {
 })
 
 test_that("the explorer binds selected realizations independently for each panel", {
+  skip_if_no_app()
   server <- function(input, output, session) {
     visual <- shiny::reactiveVal(inquiry_prior_visual(utils::tail(
       suppose_example()$revisions,

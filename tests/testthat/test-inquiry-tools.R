@@ -54,6 +54,8 @@ test_that("bundle grants leave unrelated capabilities denied", {
 })
 
 test_that("tool forms preserve typed arguments and exact source words", {
+  skip_if_not_installed("deputy")
+  skip_if_not_installed("shiny")
   skip_if_not_installed("ellmer")
   s <- new_proposal_session(function() NULL, general = TRUE)
   tool <- s$tools(NULL)[[2]]
@@ -222,6 +224,7 @@ test_that("every advertised core inquiry tool is permitted", {
 })
 
 test_that("inquiry tools declare that they stay inside the session", {
+  skip_if_not_installed("ellmer")
   session <- form_session(suppose_example())$session
   reads <- c("read_inquiry", "preview_proposal")
   for (tool in session$tools(NULL)) {

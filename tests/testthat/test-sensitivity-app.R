@@ -1,4 +1,6 @@
 test_that("chat fills sensitivity controls and retains its reviewed provenance", {
+  skip_if_no_app()
+  skip_if_not_installed("ellmer")
   f <- sensitivity_fixture()
   shiny::testServer(
     function(input, output, session) {
@@ -49,6 +51,7 @@ test_that("chat fills sensitivity controls and retains its reviewed provenance",
 })
 
 test_that("sensitivity preview guards changes and retained findings draft follow-up", {
+  skip_if_no_app()
   f <- sensitivity_fixture()
   shiny::testServer(
     function(input, output, session) {
@@ -99,6 +102,7 @@ test_that("sensitivity preview guards changes and retained findings draft follow
 })
 
 test_that("sensitivity UI rejects malformed powers and stale record previews", {
+  skip_if_no_app()
   f <- sensitivity_fixture()
   shiny::testServer(
     function(input, output, session) {

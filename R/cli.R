@@ -9,7 +9,16 @@ install_suppose_cli <- function(destdir = NULL) {
   invisible(Rapp::install_pkg_cli_apps("suppose", destdir = destdir))
 }
 
-cli_record_summary <- function(x) {
+#' Summarize a record as plain data
+#'
+#' Collects a record's identity, its latest interpretation, judgments and
+#' computed prediction summary, and every retained collection, as plain lists
+#' ready for [jsonlite::toJSON()]. `suppose inspect --json` prints this summary.
+#' @param x An elicitation record.
+#' @return A named list of plain data. Collections the record doesn't contain
+#'   are `NULL` or empty.
+#' @export
+record_summary <- function(x) {
   validate_record(x)
   e <- utils::tail(x$revisions, 1)[[1]]
   list(

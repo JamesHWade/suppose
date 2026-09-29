@@ -36,6 +36,8 @@ r_text <- function(x) {
 }
 
 fixture_r_agent <- function() {
+  skip_if_not_installed("deputy")
+  skip_if_not_installed("ellmer")
   suppose_agent(
     ellmer::chat_openai_compatible(
       base_url = "http://127.0.0.1:3893/v1",

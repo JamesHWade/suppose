@@ -1,4 +1,6 @@
 test_that("chat prepares prior controls, human fits and retains a reviewed comparison", {
+  skip_if_no_app()
+  skip_if_not_installed("ellmer")
   f <- regression_fixture(12)
   shiny::testServer(
     function(input, output, session) {
@@ -62,6 +64,8 @@ test_that("chat prepares prior controls, human fits and retains a reviewed compa
 })
 
 test_that("regression drafts protect concurrent edits and restore without fitting", {
+  skip_if_no_app()
+  skip_if_not_installed("ellmer")
   f <- regression_fixture(12)
   shiny::testServer(
     function(input, output, session) {

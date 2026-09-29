@@ -20,6 +20,7 @@ research_test_values <- function(f) {
 }
 
 test_that("new regression tools stage portable drafts without committing", {
+  skip_if_not_installed("ellmer")
   f <- regression_research_fixture()
   for (form in c("regression_test", "regression_sensitivity")) {
     values <- if (form == "regression_test") {
@@ -57,6 +58,7 @@ test_that("new regression tools stage portable drafts without committing", {
 })
 
 test_that("regression test form protects edits and requires fresh human review", {
+  skip_if_no_app()
   f <- regression_research_fixture()
   v <- research_test_values(f)
   shiny::testServer(
@@ -128,6 +130,7 @@ test_that("regression test form protects edits and requires fresh human review",
 })
 
 test_that("regression sensitivity restoration previews without retaining", {
+  skip_if_no_app()
   f <- research_design_fixture()
   v <- regression_sensitivity_form_defaults(f$record)
   v$contrast_csv <- "temperature,duration\n140,60\n160,60"

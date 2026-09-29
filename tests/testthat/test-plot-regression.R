@@ -1,4 +1,5 @@
 test_that("all regression plot views render including omitted-predictor residuals", {
+  skip_if_not_installed("ggplot2")
   f <- regression_fixture(12)
   for (predictors in list("temperature", c("temperature", "duration"))) {
     spec <- regression_test_prior(f, predictors)

@@ -1,4 +1,5 @@
 test_that("plots show the original prediction and only eligible observed statistics", {
+  skip_if_not_installed("ggplot2")
   f <- prospective_fixture()
   x <- record_observations(f$record, prospective_observations(f), "Outcomes")
   a <- assess_test(x, f$c$id, "Reviewer", "Compare", TRUE)$assessments[[1]]

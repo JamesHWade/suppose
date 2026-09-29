@@ -47,7 +47,7 @@ stopifnot(identical(
   json_data(read_record("artifacts/plantgrowth/browser-record.json"))
 ))
 writeLines(
-  json_data(cli_record_summary(x), pretty = TRUE),
+  json_data(record_summary(x), pretty = TRUE),
   "artifacts/plantgrowth/cli-summary.json"
 )
 cat("Verified saved conversation", history$id, "\n")

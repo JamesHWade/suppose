@@ -1,4 +1,5 @@
 test_that("commitment previews cannot backdate or retain changed plans", {
+  skip_if_no_app()
   f <- prospective_fixture()
   f$clock$now <- "2026-01-01T13:00:00Z"
   shiny::testServer(
@@ -46,6 +47,7 @@ test_that("commitment previews cannot backdate or retain changed plans", {
 })
 
 test_that("assessment review rejects changed inputs and a crossed deadline", {
+  skip_if_no_app()
   f <- prospective_fixture()
   shiny::testServer(
     function(input, output, session) {
@@ -82,6 +84,7 @@ test_that("assessment review rejects changed inputs and a crossed deadline", {
 })
 
 test_that("conversation changes clear previews but ordinary record changes do not", {
+  skip_if_no_app()
   f <- prospective_fixture()
   shiny::testServer(
     function(input, output, session) {

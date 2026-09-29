@@ -174,21 +174,19 @@ bind_prior_draws <- function(output, id, visual, session) {
       shiny::actionButton(paste0(id, "_draw_next"), "Next realization")
     )
   })
-  for (direction in c("previous", "next")) {
-    local({
-      event_id <- paste0(id, "_draw_", direction)
-      step <- if (direction == "next") 1L else -1L
-      shiny::observeEvent(input[[event_id]], {
-        x <- visual()
-        shiny::req(x)
-        shiny::updateSliderInput(
-          session,
-          paste0(id, "_draw_index"),
-          value = prior_draw_index(x, selected() + step)
-        )
-      })
+  observers <- lapply(c("previous", "next"), function(direction) {
+    event_id <- paste0(id, "_draw_", direction)
+    step <- if (direction == "next") 1L else -1L
+    shiny::observeEvent(input[[event_id]], {
+      x <- visual()
+      shiny::req(x)
+      shiny::updateSliderInput(
+        session,
+        paste0(id, "_draw_index"),
+        value = prior_draw_index(x, selected() + step)
+      )
     })
-  }
+  })
   output[[paste0(id, "_draw_summary")]] <- shiny::renderText(prior_draw_summary(
     shiny::req(visual()),
     selected()
@@ -207,5 +205,17 @@ bind_prior_draws <- function(output, id, visual, session) {
     res = 110,
     alt = shiny::reactive(prior_draw_probability(shiny::req(visual())))
   )
-  invisible(NULL)
+  invisible(list(
+    outputs = paste0(
+      id,
+      c(
+        "_draw_controls",
+        "_draw_summary",
+        "_draw_probability",
+        "_draw_pair",
+        "_draw_dots"
+      )
+    ),
+    observers = observers
+  ))
 }

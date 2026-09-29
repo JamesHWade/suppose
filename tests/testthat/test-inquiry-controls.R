@@ -104,6 +104,7 @@ test_that("switching Deputy models preserves conversation and record", {
 })
 
 test_that("model changes keep prior proposals and attribute later corrections", {
+  skip_if_not_installed("ellmer")
   x <- elicitation_record(claim("Fewer meetings may help", "You"))
   s <- new_proposal_session(
     function() x,

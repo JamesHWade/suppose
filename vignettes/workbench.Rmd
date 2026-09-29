@@ -27,11 +27,11 @@ The core package is available to people with access to the private repository:
 pak::pak("JamesHWade/suppose", dependencies = NA)
 ```
 
-The UI depends on Shiny, bslib, and a compatible development shinychat. AI
-conversations also use Deputy and ellmer. The ellmer and shinychat revisions below passed focused workbench checks on
-9 September 2026. The Deputy revision is the package's recorded compatibility
-reference. These are development snapshots; the complete installation recipe
-has not been revalidated in a fresh environment.
+The UI depends on Shiny, bslib, and shinychat 0.5.0 or later. AI conversations
+also use Deputy and ellmer. The ellmer revision below passed focused workbench
+checks on 9 September 2026. The Deputy revision is the package's recorded
+compatibility reference. These are development snapshots; the complete
+installation recipe has not been revalidated in a fresh environment.
 
 ```{r app-install, eval=FALSE}
 pak::pak(c(
@@ -39,7 +39,7 @@ pak::pak(c(
   "bslib",
   "R6",
   "ggplot2",
-  "posit-dev/shinychat/pkg-r@dde163ea6b27099304a658f3649dd1fac98208bd",
+  "shinychat",
   "tidyverse/ellmer@92cfa7f48270048105ea1bfb44d23a2e59c2df6e",
   "JamesHWade/deputy@502871f9908bbef798a4cd33fce6552094e9086e"
 ))
@@ -167,9 +167,17 @@ history. Use the sidebar to search, rename, delete, or reopen them. Apply manual
 editor changes before switching conversations; unsubmitted editor text is not
 autosaved. Import a portable JSON bundle into a new conversation.
 
-History defaults to `.suppose/conversations`. Set `history_dir` to another folder
-or `NULL` to disable it. This is a local, single-user arrangement; shared sessions
-using the same folder do not acquire separate authenticated storage.
+History is off unless you choose a folder for it:
+
+```{r history, eval=FALSE}
+suppose_app(chat = ellmer::chat_openai(), history_dir = ".suppose/conversations")
+```
+
+To turn it on for every session, set
+`options(suppose.history_dir = ".suppose/conversations")`, for example in your
+`.Rprofile`. History is for a local, single-user app. Every session of the app
+can list, reopen and delete every conversation in the folder, so don't turn it
+on in an app you deploy for other people.
 
 Saved history does not restore broader tool permissions. A restored record is
 data, and does not execute its saved analysis code.
