@@ -25,6 +25,17 @@ Conditions inherit `suppose_error` and a more specific class such as
 `suppose_integrity`; contextual fields remain available to callers. Use cli
 markup and strip ANSI styling when displaying a condition in the browser.
 
+## Layout
+
+`inquiry_server()` composes the conversation workbench from controllers that
+share one set of reactive values: `R/inquiry-agent-lifecycle.R` (switching,
+rebuilding and closing the agent), `R/inquiry-history-binding.R` (the chat,
+saved conversations, download and reopen), `R/inquiry-editor.R` (the record
+editor) and `R/inquiry-forms.R` (the forms in the drawer). Stylesheets and
+scripts are files in `inst/www/`, attached with `suppose_dependency()`.
+Working notes, backlogs and reviews live in `dev/notes/`; written evidence
+reports stay in `artifacts/` beside the ignored outputs of the `dev/` scripts.
+
 ## Documentation
 
 The README is a short package introduction. `pkgdown/index.md` is the site landing

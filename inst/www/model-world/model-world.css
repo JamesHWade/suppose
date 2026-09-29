@@ -1,0 +1,121 @@
+.model-world {
+  max-width: 1080px;
+  margin: auto;
+}
+.world-range-container {
+  margin-bottom: 18px;
+}
+.world-range-container label {
+  display: block;
+}
+.world-range-container output {
+  display: inline-block;
+  background: #633b83;
+  color: white;
+  border-radius: 4px;
+  padding: 1px 8px;
+  font-weight: 600;
+}
+.suppose-world-range {
+  display: block;
+  width: 100%;
+  accent-color: #633b83;
+  margin: 8px 0;
+}
+.world-range-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #79508d;
+}
+.model-world .world-explorer > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.model-world .world-explorer {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.model-world .world-controls {
+  display: block;
+}
+.model-world .world-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.model-world .world-fact {
+  padding: 16px;
+  background: #f4f0f8;
+  border-radius: 12px;
+}
+.model-world .world-fact strong {
+  display: block;
+  font-size: 1.5rem;
+}
+.model-world .world-step {
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #79508d;
+  margin-top: 24px;
+}
+.model-world .world-alert {
+  padding: 14px 18px;
+  background: #fff5db;
+  border-left: 3px solid #b74d08;
+}
+.model-world .shiny-plot-output {
+  max-width: 100%;
+  min-width: 0;
+}
+.model-world .shiny-plot-output img {
+  max-width: 100%;
+  height: auto;
+}
+.model-world pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.model-world h3 {
+  font-size: 1.2rem;
+  margin: 20px 0 12px;
+}
+.model-world .shiny-input-container {
+  max-width: 100%;
+  width: 100%;
+}
+.model-world .world-status {
+  margin: 12px 0;
+}
+.model-world .btn {
+  white-space: normal;
+}
+.model-world .world-review {
+  padding: 20px;
+  border: 1px solid #e4dce9;
+  border-radius: 12px;
+  margin: 16px 0;
+}
+.modal:has(.model-world) .modal-dialog {
+  max-width: 1140px;
+  width: calc(100% - 24px);
+}
+@media (max-width: 650px) {
+  .model-world .world-explorer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .model-world .world-controls,
+  .model-world .world-facts {
+    grid-template-columns: 1fr;
+  }
+  .model-world .world-review {
+    padding: 12px;
+  }
+  .model-world .world-fact strong {
+    font-size: 1.3rem;
+  }
+}

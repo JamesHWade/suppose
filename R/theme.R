@@ -29,3 +29,15 @@ suppose_brand_mark <- function() {
     class = "suppose-brand-mark"
   )
 }
+
+# A stylesheet or script from inst/www/<name>/, which Shiny serves once per page.
+suppose_dependency <- function(name, stylesheet = NULL, script = NULL) {
+  htmltools::htmlDependency(
+    paste0("suppose-", name),
+    as.character(utils::packageVersion("suppose")),
+    src = file.path("www", name),
+    package = "suppose",
+    stylesheet = stylesheet,
+    script = script
+  )
+}

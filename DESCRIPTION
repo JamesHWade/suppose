@@ -23,6 +23,7 @@ Suggests:
     httpuv,
     promises,
     bslib,
+    htmltools,
     ellmer (>= 0.5.0),
     deputy,
     R6,

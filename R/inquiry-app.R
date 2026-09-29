@@ -155,26 +155,6 @@ suppose_app <- function(
       worked_examples_ui()
     )
   )
-  page_style <- shiny::tags$head(shiny::tags$style(shiny::HTML(
-    "shiny-chat-container{min-height:0;--shiny-chat-message-bg-assistant:transparent}
-       .suppose-brand-mark{display:block;object-fit:contain;margin-bottom:20px}.worked-example-card{padding:16px 0;border-bottom:1px solid #dfd3e8}.worked-example-card h3{font-size:1.15rem}.welcome{max-width:650px;margin:0 auto;padding:30px 0 16px}
-       .welcome .eyebrow{letter-spacing:.13em;font-size:.72rem;color:#79508d;text-transform:uppercase}
-       .welcome h1{font:700 clamp(2.25rem,5vw,3.6rem)/1.08 var(--bs-font-sans-serif);letter-spacing:-.035em;margin:16px 0 22px}
-       .welcome .intro{font-size:1.1rem;line-height:1.6;max-width:570px;color:#695775}
-       .welcome .invitation{margin:24px 0 12px;font-size:.86rem;color:#695775}
-       .chat-examples{display:flex;flex-wrap:wrap;gap:8px}.chat-examples .btn:hover{background:#eee5f8;border-color:#b7a0ea}.chat-examples .btn{color:#633b83;border:1px solid #d9c9eb;border-radius:20px;background:transparent;font-size:.85rem;padding:8px 14px}
-       .inquiry-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;font-size:.8rem}
-       .footer-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.footer-tools .btn{border:0;background:transparent;color:#695775;font-size:.8rem;padding:6px 8px;white-space:nowrap}
-       .footer-tools .btn:hover{background:#eee5f8}.footer-status{color:#695775;max-width:58%;font-size:.75rem;line-height:1.35}
-       .modal-dialog{margin:16px auto}.modal-content{max-height:calc(100dvh - 32px)}.modal-body{overflow-y:auto}.modal-header,.modal-footer{flex-shrink:0}.model-facts{display:flex;gap:24px;flex-wrap:wrap}.command-list{display:grid;gap:8px}.command-list .btn{text-align:left;display:flex;gap:18px;align-items:baseline}.command-list strong{min-width:105px}.command-list span{white-space:normal}.footer-tools #open_models{max-width:180px;overflow:hidden;text-overflow:ellipsis}.inquiry-record{padding:10px 6px 24px;min-width:0;max-width:100%;overflow-wrap:anywhere}.inquiry-record .table-responsive{max-width:100%}.inquiry-record .table-responsive table{min-width:32rem;overflow-wrap:normal}.inquiry-record img{max-width:100%;height:auto}.inquiry-record h2{font-size:1.4rem}.inquiry-record .btn{margin:4px 5px 4px 0}
-       .inquiry-record details{margin:16px 0}.inquiry-record summary{font-weight:600}.inquiry-record blockquote{border-left:3px solid #b7a0ea;background:#fff5db;padding:10px 14px;border-radius:0 8px 8px 0}.hint{font-size:.87rem;color:#695775}
-       .record-field{margin-bottom:1rem}.record-field h3{font:600 .9rem system-ui;margin:0 0 .3rem}
-       .inquiry-chat-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}.inquiry-chat-decision details{margin:.75rem 0}
-       .record-field p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.proposal{border-left:3px solid #b74d08;padding-left:14px}
-       pre{white-space:pre-wrap;overflow-wrap:anywhere}textarea{min-height:60px}
-       :focus-visible{outline:3px solid #b74d08!important;outline-offset:3px}
-       @media(max-width:700px){.suppose-brand-mark{width:64px;height:74px;margin-bottom:12px}.welcome h1{font-size:2rem;margin:12px 0 16px}.welcome .intro{font-size:1rem;line-height:1.5}.welcome .invitation{margin:16px 0 10px}.modal .nav-tabs .nav-link{padding:.5rem .6rem}shiny-chat-container{padding:0 12px 8px}.welcome{padding:16px 4px}.inquiry-footer{flex-direction:column;align-items:stretch;gap:4px}.footer-status{max-width:none}}"
-  )))
   ui <- shinychat::page_chat(
     "Suppose",
     id = "inquiry",
@@ -255,17 +235,14 @@ suppose_app <- function(
       )
     )
   )
+  # Listed after the page so these styles follow the theme's.
   ui <- shiny::tagList(
-    page_style,
-    shiny::tags$head(
-      shiny::tags$style(
-        "button[aria-label='Edit message'], .shiny-chat-sibling-nav {display:none!important;}"
-      ),
-      shiny::tags$script(shiny::HTML(
-        "$(document).on('shiny:inputchanged', function(e) { if (['inquiry_message_edit','inquiry_message_navigate'].includes(e.name)) e.preventDefault(); }); $(document).on('shiny:connected', function() { Shiny.addCustomMessageHandler('suppose-open-section', function(id) { if (!['import-panel','prospective-panel','measurements-panel','sensitivity-panel','extension-panel','regression-panel','design-panel','regression_test-panel','regression_sensitivity-panel'].includes(id)) return; const panel = document.getElementById(id); if (panel) { panel.open = true; setTimeout(function() { panel.scrollIntoView({block: 'start'}); }, 250); } }); });"
-      ))
-    ),
-    ui
+    ui,
+    suppose_dependency(
+      "inquiry",
+      stylesheet = "inquiry.css",
+      script = "inquiry.js"
+    )
   )
   shiny::shinyApp(ui, function(input, output, session) {
     learning <- worked_example_session(
