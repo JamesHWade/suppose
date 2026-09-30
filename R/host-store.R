@@ -70,7 +70,7 @@ host_check_id <- function(x, arg, optional = FALSE) {
   }
   if (sum(host_json_cost(strsplit(x, "")[[1]])) > host_id_limit) {
     abort_suppose(
-      "{.arg {arg}} must be at most {host_id_limit} characters, a quote or backslash counting as two.",
+      "{.arg {arg}} must be at most {host_id_limit} characters, a quote, backslash or emoji counting as two.",
       arg = arg
     )
   }

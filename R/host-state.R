@@ -8,7 +8,8 @@
 # carries ids and short text within 6,000 characters in that form, caps
 # every list with a count of what it left out, and gives no instructions:
 # the method guidance belongs in the host's skill. host_read_inquiry() gives
-# the rest, one section and page at a time.
+# the rest, one section and page at a time. Characters are counted as a
+# JavaScript host counts them, in UTF-16 code units (host_utf16_length()).
 
 host_state_budget <- 6000L
 
@@ -45,15 +46,27 @@ host_cut <- function(x, n) {
   )
 }
 
-# What each character costs once a string is written as JSON: quotes,
-# backslashes and the common control characters take two, other control
-# characters six (\\u00XX).
+# What each character costs once a string is written as JSON, in the UTF-16
+# code units a JavaScript host counts: quotes, backslashes and the common
+# control characters take two, other control characters six (\\u00XX), and
+# a character beyond the Basic Multilingual Plane (most emoji) two.
 host_json_cost <- function(chars) {
   code <- vapply(chars, utf8ToInt, integer(1), USE.NAMES = FALSE)
   cost <- rep(1L, length(chars))
   cost[which(code < 32L)] <- 6L
+  cost[which(code > 65535L)] <- 2L
   cost[chars %in% c("\"", "\\", "\n", "\r", "\t", "\b", "\f")] <- 2L
   cost
+}
+
+# A string's length as a JavaScript host counts it, in UTF-16 code units: a
+# character beyond the Basic Multilingual Plane takes two.
+host_utf16_length <- function(x) {
+  code <- utf8ToInt(enc2utf8(as.character(x)))
+  if (anyNA(code)) {
+    return(nchar(x, type = "bytes"))
+  }
+  length(code) + sum(code > 65535L)
 }
 
 # Cuts `x` into pieces that each take at most `limit` characters once written
@@ -82,7 +95,7 @@ host_last_id <- function(entries) {
 }
 
 host_json_size <- function(x) {
-  nchar(jsonlite::toJSON(
+  host_utf16_length(jsonlite::toJSON(
     plain(x),
     auto_unbox = TRUE,
     null = "null",
@@ -641,7 +654,7 @@ host_read_inquiry <- function(
   # An item longer than a page is read in parts, each a page of its JSON.
   parts <- list()
   for (i in seq_along(items)) {
-    n <- nchar(texts[[i]])
+    n <- host_utf16_length(texts[[i]])
     if (n <= page_chars) {
       parts[[length(parts) + 1L]] <- list(
         item = i,

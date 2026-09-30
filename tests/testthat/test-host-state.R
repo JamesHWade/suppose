@@ -486,6 +486,43 @@ test_that("fields are cut by their size as JSON, so escapes cannot pass the budg
   )
 })
 
+test_that("sizes are counted as the host counts them, an emoji taking two", {
+  emoji <- "\U0001F600"
+  expect_identical(host_utf16_length(emoji), 2L)
+  expect_identical(host_utf16_length("ab"), 2L)
+  expect_identical(host_json_cost(c("a", emoji, "\"")), c(1L, 2L, 2L))
+  expect_identical(
+    host_cut(strrep(emoji, 100), 13L),
+    paste0(strrep(emoji, 6), "\u2026")
+  )
+  expect_identical(
+    host_json_chunks(strrep(emoji, 10), 6L),
+    c(rep(strrep(emoji, 3), 3), emoji)
+  )
+  f <- state_fixture()
+  k <- f$key()
+  wide <- strrep(emoji, 5000)
+  x <- accept_interpretation(
+    elicitation_record(claim(wide, "ada"), "One"),
+    wide,
+    "It says what I mean.",
+    "A shorter cure holds up as well."
+  )
+  host_record_write(f$store, k, "emoji", x, title = wide)
+  host_set_editing(f$store, k, form = wide, unsaved = TRUE)
+  doc <- host_state(f$store, k)
+  expect_lte(host_json_size(doc), host_state_budget)
+  expect_gt(
+    host_json_size(doc),
+    nchar(jsonlite::toJSON(
+      doc,
+      auto_unbox = TRUE,
+      null = "null",
+      pretty = TRUE
+    ))
+  )
+})
+
 test_that("the document stays within its budget whatever the host's ids and names", {
   f <- state_fixture()
   long <- strrep("x", host_id_limit)
