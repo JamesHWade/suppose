@@ -331,6 +331,40 @@ test_that("a draft reaches review only once its turn's settlement is written", {
   expect_identical(vapply(mine, `[[`, "", "status"), "failed")
 })
 
+test_that("a later reply that used no Suppose tool ends the tab's unreported one", {
+  skip_if_not_installed("ellmer")
+  f <- host_fixture()
+  words <- typed("A longer cure may make this coating more durable.")
+  host_call_tool(
+    f$store,
+    f$key("t-01"),
+    words,
+    "propose_interpretation",
+    propose()
+  )
+  # t-02 called nothing; its settlement is the first Suppose hears of it.
+  host_settle_turn(f$store, f$key("t-02"), "done")
+  expect_identical(
+    host_turn_read(f$store, f$key("t-01"), "t-01")$state,
+    "cancelled"
+  )
+  # t-01's report, arriving late, publishes nothing.
+  host_settle_turn(f$store, f$key("t-01"), "done")
+  expect_length(host_drafts(f$store, f$key("t-01")), 0L)
+  # Another tab's reply is left running.
+  host_call_tool(
+    f$store,
+    f$key("t-03", session = "tab-2"),
+    words,
+    "read_inquiry"
+  )
+  host_settle_turn(f$store, f$key("t-04"), "done")
+  expect_identical(
+    host_turn_read(f$store, f$key("t-03"), "t-03")$state,
+    "running"
+  )
+})
+
 test_that("a draft's status follows the settled turns", {
   states <- list(`t-1` = "done", `t-2` = "running", `t-3` = "cancelled")
   d <- function(id, turn, status = "ready", by = NULL) {
