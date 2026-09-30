@@ -36,11 +36,11 @@ host_key <- function(
   model = NULL
 ) {
   for (arg in c("user", "project", "conversation")) {
-    check_text(get(arg), arg)
+    host_check_id(get(arg), arg)
   }
-  check_text(session, "session", optional = TRUE)
-  check_text(turn, "turn", optional = TRUE)
-  check_text(model, "model", optional = TRUE)
+  host_check_id(session, "session", optional = TRUE)
+  host_check_id(turn, "turn", optional = TRUE)
+  host_check_id(model, "model", optional = TRUE)
   list(
     user = user,
     project = project,
@@ -49,6 +49,32 @@ host_key <- function(
     turn = turn,
     model = model
   )
+}
+
+# A host's ids are short, so none can crowd the state document past its size.
+# They are measured as the state document writes them: in JSON, where a quote
+# or a backslash takes two characters. Control characters, which take up to
+# six there, have no place in an id.
+host_id_limit <- 200L
+
+host_check_id <- function(x, arg, optional = FALSE) {
+  check_text(x, arg, optional = optional)
+  if (is.null(x)) {
+    return(invisible(x))
+  }
+  if (grepl("[[:cntrl:]]", x)) {
+    abort_suppose(
+      "{.arg {arg}} must not contain control characters.",
+      arg = arg
+    )
+  }
+  if (sum(host_json_cost(strsplit(x, "")[[1]])) > host_id_limit) {
+    abort_suppose(
+      "{.arg {arg}} must be at most {host_id_limit} characters, a quote, backslash or emoji counting as two.",
+      arg = arg
+    )
+  }
+  invisible(x)
 }
 
 # A host's identifier as one path segment. A short, plain name is used as it
@@ -133,6 +159,17 @@ host_read_all <- function(dir, glob = "*.json") {
 }
 
 # Newest first by an ISO timestamp field, whatever the locale.
+# A UTC timestamp as seconds, for ordering: as text, a stamp with fractions
+# of a second sorts before the same second without them, though it is later.
+# NA for one that is not a timestamp.
+host_time <- function(x) {
+  as.numeric(as.POSIXct(
+    as.character(x),
+    format = "%Y-%m-%dT%H:%M:%OSZ",
+    tz = "UTC"
+  ))
+}
+
 host_newest_first <- function(items, field) {
   if (!length(items)) {
     return(list())
@@ -142,7 +179,7 @@ host_newest_first <- function(items, field) {
     function(i) as.character(i[[field]] %||% ""),
     character(1)
   )
-  items[order(at, decreasing = TRUE, method = "radix")]
+  items[order(host_time(at), at, decreasing = TRUE, method = "radix")]
 }
 
 # --- Records ----------------------------------------------------------------
@@ -187,7 +224,7 @@ host_record_read <- function(store, key, id) {
 # included, which its revision count does not do for attached data, fits or
 # frozen tests.
 host_record_write <- function(store, key, id, x, title = NULL) {
-  check_text(id, "id")
+  host_check_id(id, "id")
   validate_record(x)
   dir <- host_record_dir(store, key, id)
   fs::dir_create(dir)
@@ -202,11 +239,27 @@ host_record_write <- function(store, key, id, x, title = NULL) {
     content_digest = content,
     state_revision = (old$state_revision %||% 0L) + as.integer(changed),
     revisions = length(x$revisions),
+    revised_at = host_revised_at(old, length(x$revisions)),
     review = host_review(x),
     updated_at = if (changed) now_utc() else old$updated_at %||% now_utc()
   )
   host_write_json(meta, fs::path(dir, "meta.json"))
   invisible(meta)
+}
+
+# When each revision was first written here, since a revision carries no
+# stamp of its own: a revision that adds nothing stamped (one that clears a
+# fit, say) is dated by it (host_last_decision()). Revisions a record already
+# had when this store first saw it, or before it kept these times, are left
+# undated ("") rather than dated by a later write.
+host_revised_at <- function(old, n) {
+  known <- as.character(unlist(old$revised_at %||% list()))
+  seen <- if (is.null(old)) n else as.integer(old$revisions %||% 0L)
+  known <- c(known, rep("", max(0L, seen - length(known))))
+  if (n <= length(known)) {
+    return(known[seq_len(n)])
+  }
+  c(known, rep(now_utc(), n - length(known)))
 }
 
 # A project's first record, from the scientist's own words, as the workbench

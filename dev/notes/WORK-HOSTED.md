@@ -49,9 +49,28 @@ the host's questions (`via`). Nothing lives in a Shiny session:
 - The record's state revision rises whenever its content changes, which its
   revision count does not do for attached data, fits or frozen tests.
 
+## SC-5: the state document (built)
+
+`R/host-state.R`. `host_state()` builds `suppose/state@1` for a tab: the open
+record, the project's other records (at most 20), the claim's fields (400
+characters each), the review status, the conversation's pending drafts (at
+most 8, ready or still being written), the pane's open form, retained counts,
+the latest fit and design, open tests soonest first, the last decision,
+one-line method limitations, whether quotes are host-verified, and the
+approval sentence. Lists shrink until the document fits 6,000 characters of
+indented JSON, and every capped list carries a count of what it left out.
+The document's `revision` is one sequence per conversation that rises
+whenever a tab's document changes. `host_state_text()` is its one line, and counts drafts awaiting review
+apart from those on an earlier revision (`pending_counts`).
+`host_read_inquiry(section, page)` reads one section at a time, `pending`
+and `records` included. Each page carries the section's `revision`; a later
+page read against a section that has changed is refused, and an item longer
+than a page comes in parts that join back into its JSON. On the four worked examples the document is 1,900 to
+2,400 characters; the workbench's own summary of the same records is 2,741
+to 7,996.
+
 ## Not built
 
-- SC-5, the bounded state document and `read_inquiry` by section.
 - SC-3, the embedded layout; SC-4, the MCP entry point that registers these
   functions as `suppose_*` tools and the `turn-settled` host call.
 - SC-6: locking and compare-and-swap on record digests for records shared by
