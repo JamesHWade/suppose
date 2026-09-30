@@ -207,6 +207,28 @@ host_last_decision <- function(x, state_revision) {
         list(author = e$assistance$applied_by),
         at = e$assistance$applied_at
       )
+    } else if (i > 1L) {
+      # A revision made by hand (a claim edit, a retained judgment, a fitted
+      # candidate) has no stamp of its own; what it added has one.
+      prev <- x$revisions[[i - 1L]]
+      if (!identical(e$claim$id, prev$claim$id)) {
+        add(sprintf("revised the claim in revision %d", i), e$claim)
+      }
+      seen <- vapply(
+        prev$judgments %||% list(),
+        function(j) as.character(j$id %||% ""),
+        character(1)
+      )
+      for (j in e$judgments %||% list()) {
+        if (!as.character(j$id %||% "") %in% seen) {
+          add(sprintf("retained a judgment in revision %d", i), j)
+        }
+      }
+      if (
+        !is.null(e$candidate) && !identical(e$candidate$id, prev$candidate$id)
+      ) {
+        add(sprintf("fitted a candidate in revision %d", i), e$candidate)
+      }
     }
     if (!is.null(e$acceptance)) {
       add(
@@ -548,7 +570,19 @@ host_read_inquiry <- function(
       e <- utils::tail(x$revisions, 1)[[1]]
       switch(
         section,
-        claim = list(c(plain(e$claim), list(review = host_review(x)))),
+        # With the numerical model retained beside the claim, if any: the
+        # fitted prior and its prediction's summary, not its draws.
+        claim = list(c(
+          plain(e$claim),
+          list(
+            review = host_review(x),
+            candidate = plain(e$candidate),
+            prediction = plain(e$prediction[setdiff(
+              names(e$prediction),
+              "draws"
+            )])
+          )
+        )),
         judgments = plain(e$judgments),
         observations = observation_inventory(x),
         predictor_datasets = plain(x$predictors),

@@ -362,6 +362,68 @@ test_that("the last decision is the latest, assessments included", {
   expect_identical(latest$by, "bo")
 })
 
+test_that("a revision made by hand is a decision too", {
+  x <- suppose_worked_example("plants")
+  last <- utils::tail(x$revisions, 1)[[1]]
+  revised <- revise_claim(
+    last$claim,
+    "bo",
+    "Narrower scope.",
+    scope = "Only the pilot line"
+  )
+  y <- record_revision(x, revised, reason = "Narrower scope.")
+  latest <- host_last_decision(y, 4L)
+  expect_identical(
+    latest$what,
+    sprintf("revised the claim in revision %d", length(y$revisions))
+  )
+  expect_identical(latest$by, "bo")
+  synthetic <- list(
+    revisions = list(
+      list(
+        claim = list(id = "c1", created_at = "2026-01-01T00:00:00Z"),
+        judgments = list()
+      ),
+      list(
+        claim = list(id = "c1"),
+        judgments = list(
+          list(id = "j1", author = "bo", created_at = "2026-02-01T00:00:00Z")
+        )
+      ),
+      list(
+        claim = list(id = "c1"),
+        judgments = list(list(id = "j1")),
+        candidate = list(id = "p1", created_at = "2026-03-01T00:00:00Z")
+      )
+    )
+  )
+  expect_identical(
+    host_last_decision(synthetic, 1L)$what,
+    "fitted a candidate in revision 3"
+  )
+  synthetic$revisions[[3]]$candidate <- NULL
+  latest <- host_last_decision(synthetic, 1L)
+  expect_identical(latest$what, "retained a judgment in revision 2")
+  expect_identical(latest$by, "bo")
+})
+
+test_that("the claim section carries its retained numerical model, not the draws", {
+  f <- state_fixture()
+  k <- f$key()
+  x <- suppose_worked_example("plants")
+  e <- utils::tail(x$revisions, 1)[[1]]
+  skip_if(is.null(e$candidate) || is.null(e$prediction))
+  host_record_write(f$store, k, "r-plants", x)
+  host_open_record(f$store, k, "r-plants")
+  item <- host_read_inquiry(f$store, k, "claim", page_chars = 1e6)$items[[1]]
+  expect_identical(item$candidate$method, e$candidate$method)
+  expect_equal(
+    item$prediction$summary$mean_difference$mean,
+    e$prediction$summary$mean_difference$mean
+  )
+  expect_null(item$prediction$draws)
+})
+
 test_that("fields are cut by their size as JSON, so escapes cannot pass the budget", {
   f <- state_fixture()
   long <- strrep("\"", host_id_limit %/% 2L)
