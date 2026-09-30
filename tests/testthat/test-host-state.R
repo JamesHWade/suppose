@@ -1,0 +1,236 @@
+state_fixture <- function(env = parent.frame()) {
+  store <- host_store(withr::local_tempdir(.local_envir = env))
+  key <- function(session = "tab-1", turn = NULL) {
+    host_key("ada", "cure-protocol", "c-1", session, turn)
+  }
+  list(store = store, key = key)
+}
+
+fake_draft <- function(store, key, n, record, kind = "interpretation") {
+  turn <- list(
+    record = record,
+    turn = sprintf("t-%03d", n),
+    session = "tab-1",
+    base_digest = host_record_meta(store, key, record)$digest
+  )
+  if (identical(kind, "interpretation")) {
+    host_draft_write(
+      store,
+      key,
+      turn,
+      kind,
+      proposal = list(id = sprintf("%012d%052d", n, 0L))
+    )
+  } else {
+    host_draft_write(
+      store,
+      key,
+      turn,
+      kind,
+      form = list(
+        id = sprintf("%012d%052d", n, 0L),
+        form = kind,
+        provided_fields = "formula",
+        source_quote = "Fit hardness against cure time."
+      )
+    )
+  }
+}
+
+test_that("the state document fits its budget and counts what its lists leave out", {
+  f <- state_fixture()
+  k <- f$key()
+  example <- suppose_worked_example("regression")
+  host_record_write(
+    f$store,
+    k,
+    "r-regression",
+    example,
+    title = "Cure time and hardness"
+  )
+  others <- vapply(
+    seq_len(25),
+    function(i) {
+      host_record_new(
+        f$store,
+        k,
+        sprintf("Belief number %d about coatings.", i),
+        "ada"
+      )
+    },
+    character(1)
+  )
+  host_open_record(f$store, k, "r-regression")
+  for (i in seq_len(12)) {
+    fake_draft(f$store, k, i, if (i %% 2) "r-regression" else others[[i]])
+  }
+  doc <- host_state(f$store, k)
+  expect_identical(doc$schema, "suppose/state@1")
+  expect_lte(host_json_size(doc), host_state_budget)
+  expect_identical(doc$record$id, "r-regression")
+  expect_identical(doc$record$title, "Cure time and hardness")
+  expect_identical(length(doc$records) + doc$records_more, 25L)
+  expect_lte(length(doc$records), 20L)
+  expect_identical(length(doc$pending) + doc$pending_more, 12L)
+  expect_lte(length(doc$pending), 8L)
+  # Drafts on the open record come first.
+  expect_identical(doc$pending[[1]]$record, "r-regression")
+  expect_true(doc$pending[[1]]$ready)
+  expect_true(doc$pending[[1]]$current)
+  expect_identical(doc$retained$regressions, 2L)
+  expect_identical(doc$latest$fit, utils::tail(example$regressions, 1)[[1]]$id)
+  expect_identical(doc$review, host_review(example))
+  expect_identical(doc$quotes, "host-verified")
+  expect_match(doc$approval, "Only the scientist's buttons")
+  expect_false(any(grepl("Use |Ask |Never ", doc$limitations)))
+  expect_false(is.null(doc$last_decision$what))
+  # The same record in the workbench's own summary runs to about 8,000.
+  expect_gt(
+    nchar(jsonlite::toJSON(
+      plain(inquiry_context_summary(list(
+        base = example,
+        changes = proposal_changes(),
+        form_state = list()
+      ))),
+      auto_unbox = TRUE,
+      null = "null",
+      digits = NA
+    )),
+    host_state_budget
+  )
+})
+
+test_that("the document's revision rises only when it changes, in one sequence per conversation", {
+  f <- state_fixture()
+  k <- f$key()
+  id <- host_record_new(f$store, k, "A longer cure helps.", "ada")
+  host_open_record(f$store, k, id)
+  first <- host_state(f$store, k)$revision
+  expect_identical(host_state(f$store, k, instance = "pane-7")$revision, first)
+  fake_draft(f$store, k, 1, id)
+  second <- host_state(f$store, k)$revision
+  expect_identical(second, first + 1L)
+  host_set_editing(f$store, k, "regression", unsaved = TRUE)
+  editing <- host_state(f$store, k)
+  expect_identical(editing$revision, second + 1L)
+  expect_identical(editing$editing$form, "regression")
+  expect_true(editing$editing$unsaved)
+  # Another tab reads the next number in the same sequence.
+  expect_identical(host_state(f$store, f$key("tab-2"))$revision, second + 2L)
+  expect_identical(host_state(f$store, k)$revision, second + 1L)
+})
+
+test_that("staged work shows as not ready until its turn is done", {
+  skip_if_not_installed("ellmer")
+  f <- state_fixture()
+  words <- list(
+    items = list(list(
+      turn = "t-01",
+      via = "typed",
+      text = "A longer cure may make this coating more durable."
+    ))
+  )
+  host_call_tool(
+    f$store,
+    f$key(turn = "t-01"),
+    words,
+    "propose_interpretation",
+    list(
+      wording = "A longer cure may make this coating more durable.",
+      source_quote = "A longer cure may make this coating more durable.",
+      reason = "As stated."
+    )
+  )
+  doc <- host_state(f$store, f$key())
+  expect_length(doc$pending, 1L)
+  expect_false(doc$pending[[1]]$ready)
+  expect_null(doc$pending[[1]]$draft)
+  expect_match(host_state_text(doc), "1 draft being written")
+  host_settle_turn(f$store, f$key(turn = "t-01"), "done")
+  doc <- host_state(f$store, f$key())
+  expect_true(doc$pending[[1]]$ready)
+  expect_match(doc$pending[[1]]$draft, "^d-")
+  text <- host_state_text(doc)
+  expect_match(text, doc$record$id, fixed = TRUE)
+  expect_match(text, "1 draft awaiting review")
+  expect_match(text, "unreviewed")
+  page <- host_read_inquiry(f$store, f$key(), "pending")
+  expect_identical(
+    page$items[[1]]$summary$claim$wording,
+    "A longer cure may make this coating more durable."
+  )
+  expect_identical(
+    page$items[[1]]$summary$sources[[1]]$quote,
+    words$items[[1]]$text
+  )
+})
+
+test_that("read_inquiry gives one section at a time, in pages", {
+  f <- state_fixture()
+  k <- f$key()
+  expect_error(
+    host_read_inquiry(f$store, k, "claim"),
+    class = "suppose_no_record"
+  )
+  expect_match(host_state_text(host_state(f$store, k)), "No Suppose record")
+  for (i in seq_len(6)) {
+    host_record_new(
+      f$store,
+      k,
+      sprintf("Belief number %d about coatings.", i),
+      "ada"
+    )
+  }
+  one <- host_read_inquiry(f$store, k, "records", page_chars = 400L)
+  expect_gt(one$pages, 1L)
+  expect_identical(one$total, 6L)
+  last <- host_read_inquiry(
+    f$store,
+    k,
+    "records",
+    page = one$pages,
+    page_chars = 400L
+  )
+  expect_gte(length(last$items), 1L)
+  expect_error(
+    host_read_inquiry(
+      f$store,
+      k,
+      "records",
+      page = one$pages + 1L,
+      page_chars = 400L
+    ),
+    class = "suppose_page"
+  )
+  claim <- host_read_inquiry(f$store, k, "claim")
+  expect_identical(claim$items[[1]]$review, "unreviewed")
+  expect_match(claim$items[[1]]$wording, "^Belief number")
+  expect_identical(host_read_inquiry(f$store, k, "regressions")$total, 0L)
+  expect_error(host_read_inquiry(f$store, k, "everything"))
+  # An item longer than a page is cut, and says so.
+  cut <- host_read_inquiry(f$store, k, "claim", page_chars = 250L)
+  expect_true(cut$items[[1]]$cut)
+  expect_match(cut$items[[1]]$note, "only its opening")
+})
+
+test_that("open tests are listed soonest first; assessed and replaced ones are not", {
+  x <- list(
+    commitments = list(
+      list(id = "a", horizon = "2026-12-01T00:00:00Z"),
+      list(id = "b", horizon = "2026-10-01T00:00:00Z"),
+      list(id = "c", horizon = "2026-11-01T00:00:00Z"),
+      list(id = "d", horizon = "2026-12-15T00:00:00Z", replaces = "a")
+    ),
+    assessments = list(
+      list(commitment_id = "c", status = "within_prediction"),
+      list(commitment_id = "b", status = "awaiting_outcomes")
+    ),
+    regression_commitments = list(list(
+      id = "r1",
+      horizon = "2026-10-15T00:00:00Z"
+    ))
+  )
+  open <- host_open_tests(x)
+  expect_identical(vapply(open, `[[`, "", "id"), c("b", "r1", "d"))
+  expect_identical(open[[2]]$kind, "regression")
+})
