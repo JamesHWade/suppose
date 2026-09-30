@@ -400,12 +400,14 @@ host_settle_turn <- function(store, key, outcome) {
         host_publish_drafts(store, key, turn, s)
       },
       suppose_stale = function(e) {
+        host_rollback_drafts(store, key, turn)
         structure(
           "The record changed during this reply, so its drafts were not published.",
           class = "host_not_published"
         )
       },
       error = function(e) {
+        host_rollback_drafts(store, key, turn)
         structure(
           paste(
             "Suppose could not finish this reply's drafts:",
@@ -538,6 +540,39 @@ host_replace_drafts <- function(store, key, turn, kind, id) {
       host_draft_supersede(store, key, old$id, by = id)
     }
   }
+}
+
+# Undoes a publication that stopped part way: the turn's drafts leave review
+# and the drafts they replaced are ready again, so a turn that did not finish
+# publishing publishes nothing. Best effort: a store that cannot be written
+# now leaves the turn failed all the same.
+host_rollback_drafts <- function(store, key, turn) {
+  tryCatch(
+    {
+      drafts <- host_read_all(host_paths(store, key)$drafts)
+      mine <- Filter(function(d) identical(d$turn, turn$turn), drafts)
+      ids <- vapply(mine, function(d) as.character(d$id), character(1))
+      for (d in mine) {
+        if (identical(d$status, "ready")) {
+          d$status <- "failed"
+          d$settled_at <- now_utc()
+          host_write_json(d, host_draft_path(store, key, d$id))
+        }
+      }
+      for (d in drafts) {
+        if (
+          identical(d$status, "superseded") && isTRUE(d$superseded_by %in% ids)
+        ) {
+          d$status <- "ready"
+          d$superseded_by <- NULL
+          d$settled_at <- NULL
+          host_write_json(d, host_draft_path(store, key, d$id))
+        }
+      }
+    },
+    error = function(e) NULL
+  )
+  invisible(NULL)
 }
 
 # Writes what a finished turn staged as drafts awaiting review.
