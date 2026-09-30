@@ -73,11 +73,6 @@ declares that floor, `Remotes:` installs Deputy from GitHub, and
 checks and `skip_if_no_deputy()`. Raise all three together when Suppose starts
 using a newer Deputy API. The workbench also uses Deputy's S7 permissions,
 usage, and context settings.
-Pull request and push checks install the Deputy revision in
-`Config/suppose/verified-deputy-revision` by pinning `Remotes` on the runner,
-so keep `Remotes` itself unpinned. The weekly `deputy-main.yaml` workflow,
-which can also be run by hand, checks Deputy's main branch instead; when it
-fails, Suppose needs a change before the verified revision is raised.
 Run `Rscript dev/plantgrowth-acceptance.R` to regenerate the retrospective
 real-data example. `dev/run-plantgrowth-app.R` opens the example on port 3900;
 `dev/run-lab-app.R` serves the ordinary workbench on port 3899.
