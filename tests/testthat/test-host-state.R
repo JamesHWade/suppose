@@ -210,6 +210,13 @@ test_that("read_inquiry gives one section at a time, in pages", {
     ),
     class = "suppose_page"
   )
+  # A page is a whole number of characters, large enough to hold one.
+  for (bad in list(NA_real_, "big", 1L, 99L, 250.5, c(400L, 500L))) {
+    expect_error(
+      host_read_inquiry(f$store, k, "records", page_chars = bad),
+      class = "suppose_input"
+    )
+  }
   # A later page needs the revision page 1 gave, and page 1's page size.
   expect_error(
     host_read_inquiry(f$store, k, "records", page = 2L, page_chars = 400L),

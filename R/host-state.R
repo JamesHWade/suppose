@@ -506,6 +506,11 @@ host_read_sections <- c(
   "model_references"
 )
 
+# The smallest page a section is read in: a line of JSON, and more than the six
+# characters the costliest character takes once escaped, so every part holds
+# at least one.
+host_page_min <- 100L
+
 # One section of the record, a page at a time. A page holds whole items up to
 # `page_chars` characters of JSON; an item longer than a page comes in parts,
 # each a page of its JSON. Each page carries the section's `revision`, which
@@ -522,6 +527,7 @@ host_read_inquiry <- function(
 ) {
   section <- rlang::arg_match0(section, host_read_sections)
   check_count(page, "page")
+  check_count(page_chars, "page_chars", lower = host_page_min)
   check_text(revision, "revision", optional = TRUE)
   # Without the revision, a later page could not tell that the section had
   # changed since page 1, and would lose or repeat items.
