@@ -13,7 +13,7 @@ fake_draft <- function(store, key, n, record, kind = "interpretation") {
     session = "tab-1",
     base_digest = host_record_meta(store, key, record)$digest
   )
-  if (identical(kind, "interpretation")) {
+  id <- if (identical(kind, "interpretation")) {
     host_draft_write(
       store,
       key,
@@ -35,6 +35,12 @@ fake_draft <- function(store, key, n, record, kind = "interpretation") {
       )
     )
   }
+  # A draft is in review once its turn has settled with it.
+  settled <- host_turn_read(store, key, turn$turn) %||%
+    c(turn, list(version = 1L, state = "done", drafts = list()))
+  settled$drafts <- c(unlist(settled$drafts), id)
+  host_turn_write(store, key, settled)
+  id
 }
 
 test_that("the state document fits its budget and counts what its lists leave out", {
@@ -189,7 +195,8 @@ test_that("read_inquiry gives one section at a time, in pages", {
     k,
     "records",
     page = one$pages,
-    page_chars = 400L
+    page_chars = 400L,
+    revision = one$revision
   )
   expect_gte(length(last$items), 1L)
   expect_error(
@@ -198,9 +205,15 @@ test_that("read_inquiry gives one section at a time, in pages", {
       k,
       "records",
       page = one$pages + 1L,
-      page_chars = 400L
+      page_chars = 400L,
+      revision = one$revision
     ),
     class = "suppose_page"
+  )
+  # A later page needs the revision page 1 gave.
+  expect_error(
+    host_read_inquiry(f$store, k, "records", page = 2L, page_chars = 400L),
+    class = "suppose_input"
   )
   claim <- host_read_inquiry(f$store, k, "claim")
   expect_identical(claim$items[[1]]$review, "unreviewed")
@@ -349,6 +362,41 @@ test_that("the last decision is the latest, assessments included", {
   expect_identical(latest$by, "bo")
 })
 
+test_that("fields are cut by their size as JSON, so escapes cannot pass the budget", {
+  f <- state_fixture()
+  long <- strrep("\"", host_id_limit %/% 2L)
+  k <- host_key(long, long, long, long, long, long)
+  escaped <- strrep("\u0001\"\\", 2000)
+  x <- accept_interpretation(
+    elicitation_record(claim(escaped, "ada"), "One"),
+    escaped,
+    "It says what I mean.",
+    "A shorter cure holds up as well."
+  )
+  host_record_write(f$store, k, long, x, title = escaped)
+  host_set_editing(f$store, k, form = escaped, unsaved = TRUE)
+  doc <- host_state(f$store, k, instance = long)
+  expect_lte(host_json_size(doc), host_state_budget)
+  written <- function(v) nchar(jsonlite::toJSON(v, auto_unbox = TRUE)) - 2L
+  expect_lte(written(doc$last_decision$by), 80L)
+  expect_lte(written(doc$editing$form), 80L)
+  expect_lte(written(doc$record$title), 120L)
+  expect_identical(host_cut("plain", 80L), "plain")
+  expect_identical(host_cut(strrep("\u0001", 20), 13L), "\u0001\u0001\u2026")
+  # A decision without an author keeps the key.
+  expect_true(
+    "by" %in%
+      names(host_last_decision(
+        list(
+          revisions = list(list(
+            acceptance = list(created_at = "2026-01-01T00:00:00Z")
+          ))
+        ),
+        1L
+      ))
+  )
+})
+
 test_that("the document stays within its budget whatever the host's ids and names", {
   f <- state_fixture()
   long <- strrep("x", host_id_limit)
@@ -366,6 +414,17 @@ test_that("the document stays within its budget whatever the host's ids and name
   expect_identical(doc$instance, long)
   expect_identical(nchar(doc$last_decision$by), 80L)
   expect_identical(nchar(doc$editing$form), 80L)
+  # Ids are measured as JSON writes them, and control characters are refused.
+  quoted <- strrep("\"", host_id_limit %/% 2L)
+  expect_identical(host_state(f$store, k, instance = quoted)$instance, quoted)
+  expect_error(
+    host_state(f$store, k, instance = paste0(quoted, "\"")),
+    class = "suppose_input"
+  )
+  expect_error(
+    host_key("ada", "p", "c", "tab-1", "t-\u0001"),
+    class = "suppose_input"
+  )
   too_long <- strrep("x", host_id_limit + 1L)
   expect_error(
     host_state(f$store, k, instance = too_long),

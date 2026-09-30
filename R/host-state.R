@@ -23,12 +23,26 @@ host_state_limitations <- c(
   "Model worlds are external simulation snapshots, not evidence."
 )
 
+# `x` as one string of at most `n` characters as the document writes it, in
+# JSON (host_json_cost()), so quotes and control characters in a field cannot
+# carry the document past its budget.
 host_cut <- function(x, n) {
   if (is.null(x) || !length(x)) {
     return(NULL)
   }
   x <- paste(as.character(unlist(x)), collapse = "; ")
-  if (nchar(x) > n) paste0(substr(x, 1L, n - 1L), "\u2026") else x
+  if (nchar(x) * 6L <= n) {
+    return(x)
+  }
+  chars <- strsplit(x, "")[[1]]
+  cost <- cumsum(host_json_cost(chars))
+  if (cost[[length(cost)]] <= n) {
+    return(x)
+  }
+  paste0(
+    paste(chars[seq_len(findInterval(n - 1L, cost))], collapse = ""),
+    "\u2026"
+  )
 }
 
 # What each character costs once a string is written as JSON: quotes,
@@ -237,9 +251,11 @@ host_last_decision <- function(x, state_revision) {
   }
   at <- vapply(found, function(f) as.character(f$at), character(1))
   last <- found[[order(at, decreasing = TRUE, method = "radix")[[1]]]]
-  last$outcome <- host_cut(last$outcome, 80L)
-  last$by <- host_cut(last$by, 80L)
-  last$at <- host_cut(last$at, 40L)
+  # `[<-` with a list keeps a field that is NULL, so the document's keys do not
+  # change with what a record happens to hold.
+  last["outcome"] <- list(host_cut(last$outcome, 80L))
+  last["by"] <- list(host_cut(last$by, 80L))
+  last["at"] <- list(host_cut(last$at, 40L))
   c(last, list(state_revision = state_revision))
 }
 
@@ -464,8 +480,8 @@ host_read_sections <- c(
 
 # One section of the record, a page at a time. A page holds whole items up to
 # `page_chars` characters of JSON; an item longer than a page comes in parts,
-# each a page of its JSON. Each page carries the section's `revision`; pass
-# it back with a later page, which is refused if the section has changed.
+# each a page of its JSON. Each page carries the section's `revision`; every
+# later page needs it back, and is refused if the section has changed.
 # `pending` and `records` are the conversation's and the project's.
 host_read_inquiry <- function(
   store,
@@ -478,6 +494,14 @@ host_read_inquiry <- function(
   section <- rlang::arg_match0(section, host_read_sections)
   check_count(page, "page")
   check_text(revision, "revision", optional = TRUE)
+  # Without the revision, a later page could not tell that the section had
+  # changed since page 1, and would lose or repeat items.
+  if (page > 1L && is.null(revision)) {
+    abort_suppose(
+      "Pass the {.arg revision} page 1 of {.val {section}} gave to read page {page}.",
+      arg = "revision"
+    )
+  }
   items <- if (identical(section, "records")) {
     lapply(host_records(store, key), function(r) {
       r[c("id", "title", "review", "revisions", "state_revision", "updated_at")]

@@ -52,13 +52,25 @@ host_key <- function(
 }
 
 # A host's ids are short, so none can crowd the state document past its size.
+# They are measured as the state document writes them: in JSON, where a quote
+# or a backslash takes two characters. Control characters, which take up to
+# six there, have no place in an id.
 host_id_limit <- 200L
 
 host_check_id <- function(x, arg, optional = FALSE) {
   check_text(x, arg, optional = optional)
-  if (!is.null(x) && nchar(x) > host_id_limit) {
+  if (is.null(x)) {
+    return(invisible(x))
+  }
+  if (grepl("[[:cntrl:]]", x)) {
     abort_suppose(
-      "{.arg {arg}} must be at most {host_id_limit} characters.",
+      "{.arg {arg}} must not contain control characters.",
+      arg = arg
+    )
+  }
+  if (sum(host_json_cost(strsplit(x, "")[[1]])) > host_id_limit) {
+    abort_suppose(
+      "{.arg {arg}} must be at most {host_id_limit} characters, a quote or backslash counting as two.",
       arg = arg
     )
   }
