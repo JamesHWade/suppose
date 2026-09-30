@@ -26,6 +26,7 @@ proposal_basis_id <- function(x) {
 #' generated code used them correctly. Live R objects are never serialized.
 #' @param x An elicitation record.
 #' @param execution Deputy's version 1 `extra$deputy_r` execution record.
+#'   Fields that version does not define are not stored.
 #' @param source_prompt User message that initiated the response.
 #' @param model Model identifier or a descriptive name for a manual analysis.
 #' @param request_id Host response identifier.
@@ -50,9 +51,16 @@ record_analysis <- function(x, execution, source_prompt, model, request_id) {
     "outcome",
     "segments"
   )
-  if (!setequal(names(execution), fields)) {
-    abort_suppose("Malformed execution record.", "analysis")
+  absent <- setdiff(fields, names(execution))
+  if (length(absent)) {
+    abort_suppose(
+      "Malformed execution record: missing field{?s} {.field {absent}}.",
+      "analysis"
+    )
   }
+  # Deputy may add fields to its version 1 record. Keep only the fields that
+  # version defines, in this order, so every sealed analysis has one shape.
+  execution <- execution[fields]
   for (nm in c("code", "session_id", "execution_id", "outcome")) {
     check_text(execution[[nm]], nm)
   }

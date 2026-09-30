@@ -37,8 +37,7 @@ inquiry_tool_choices <- function(tools) {
     run_r_code = "Run R code",
     run_bash = "Run a shell command",
     web_fetch = "Read a web page",
-    web_search = "Search the web",
-    deputy_read_tool_result = "Retrieve a large tool result"
+    web_search = "Search the web"
   )
   choices <- names(tools)
   display <- unname(labels[choices])
