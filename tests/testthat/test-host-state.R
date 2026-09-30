@@ -235,6 +235,21 @@ test_that("read_inquiry gives one section at a time, in pages", {
     simplifyVector = FALSE
   )
   expect_match(whole$wording, "^Belief number")
+  # A part is cut by its size once written as JSON, so quotes and
+  # backslashes cannot push it past its page.
+  quoted <- paste0("{\"q\":\"", strrep("\\\"", 400), strrep("x", 300), "\"}")
+  parts <- host_json_chunks(quoted, 250L)
+  expect_identical(paste(parts, collapse = ""), quoted)
+  written <- vapply(
+    parts,
+    function(p) nchar(jsonlite::toJSON(p, auto_unbox = TRUE)) - 2L,
+    integer(1)
+  )
+  expect_true(all(written <= 250L))
+  expect_identical(
+    host_json_chunks("\u0001a", 6L),
+    c("\u0001", "a")
+  )
   # A page read against a section that has changed is refused.
   host_record_new(f$store, k, "Belief number 7 about coatings.", "ada")
   expect_error(

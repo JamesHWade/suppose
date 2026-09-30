@@ -31,6 +31,38 @@ host_cut <- function(x, n) {
   if (nchar(x) > n) paste0(substr(x, 1L, n - 1L), "\u2026") else x
 }
 
+# What each character costs once a string is written as JSON: quotes,
+# backslashes and the common control characters take two, other control
+# characters six (\\u00XX).
+host_json_cost <- function(chars) {
+  code <- vapply(chars, utf8ToInt, integer(1), USE.NAMES = FALSE)
+  cost <- rep(1L, length(chars))
+  cost[which(code < 32L)] <- 6L
+  cost[chars %in% c("\"", "\\", "\n", "\r", "\t", "\b", "\f")] <- 2L
+  cost
+}
+
+# Cuts `x` into pieces that each take at most `limit` characters once written
+# as a JSON string, so a part of an item is no bigger on the wire than its
+# page allows however many quotes it holds.
+host_json_chunks <- function(x, limit) {
+  chars <- strsplit(x, "")[[1]]
+  if (!length(chars)) {
+    return("")
+  }
+  total <- cumsum(host_json_cost(chars))
+  out <- character()
+  start <- 1L
+  offset <- 0
+  while (start <= length(chars)) {
+    end <- max(start, findInterval(offset + limit, total))
+    out <- c(out, paste(chars[start:end], collapse = ""))
+    offset <- total[[end]]
+    start <- end + 1L
+  }
+  out
+}
+
 host_last_id <- function(entries) {
   if (length(entries)) entries[[length(entries)]]$id else NULL
 }
@@ -542,13 +574,13 @@ host_read_inquiry <- function(
       )
       next
     }
-    count <- ceiling(n / page_chars)
+    chunks <- host_json_chunks(texts[[i]], page_chars)
+    count <- length(chunks)
     for (k in seq_len(count)) {
-      text <- substr(texts[[i]], (k - 1) * page_chars + 1, k * page_chars)
       parts[[length(parts) + 1L]] <- list(
         item = i,
-        value = list(item = i, part = k, parts = count, json = text),
-        size = nchar(text)
+        value = list(item = i, part = k, parts = count, json = chunks[[k]]),
+        size = sum(host_json_cost(strsplit(chunks[[k]], "")[[1]]))
       )
     }
   }
