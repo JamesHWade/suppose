@@ -210,10 +210,20 @@ test_that("read_inquiry gives one section at a time, in pages", {
     ),
     class = "suppose_page"
   )
-  # A later page needs the revision page 1 gave.
+  # A later page needs the revision page 1 gave, and page 1's page size.
   expect_error(
     host_read_inquiry(f$store, k, "records", page = 2L, page_chars = 400L),
     class = "suppose_input"
+  )
+  expect_error(
+    host_read_inquiry(
+      f$store,
+      k,
+      "records",
+      page = 2L,
+      revision = one$revision
+    ),
+    class = "suppose_stale"
   )
   claim <- host_read_inquiry(f$store, k, "claim")
   expect_identical(claim$items[[1]]$review, "unreviewed")

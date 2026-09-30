@@ -508,8 +508,9 @@ host_read_sections <- c(
 
 # One section of the record, a page at a time. A page holds whole items up to
 # `page_chars` characters of JSON; an item longer than a page comes in parts,
-# each a page of its JSON. Each page carries the section's `revision`; every
-# later page needs it back, and is refused if the section has changed.
+# each a page of its JSON. Each page carries the section's `revision`, which
+# also binds the page size; every later page needs it back with the same
+# `page_chars`, and is refused if the section or the page size has changed.
 # `pending` and `records` are the conversation's and the project's.
 host_read_inquiry <- function(
   store,
@@ -617,12 +618,17 @@ host_read_inquiry <- function(
     ))
   }
   texts <- vapply(items, json_of, character(1))
-  # What the section held when these pages were cut: a page read against a
-  # different revision could lose or repeat items, so it is refused.
-  section_revision <- substr(object_id(texts), 1L, 12L)
+  # What the section held when these pages were cut, and how large they were:
+  # a page read against a different revision or page size could lose or
+  # repeat items, so it is refused.
+  section_revision <- substr(
+    object_id(list(items = unname(texts), page_chars = page_chars)),
+    1L,
+    12L
+  )
   if (!is.null(revision) && !identical(revision, section_revision)) {
     abort_suppose(
-      "Section {.val {section}} has changed since its first page was read. Read it again from page 1.",
+      "Section {.val {section}} has changed since its first page was read, or is read with another {.arg page_chars}. Read it again from page 1.",
       "stale"
     )
   }
