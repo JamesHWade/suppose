@@ -238,6 +238,43 @@ test_that("a call from a turn older than one its tab already began stages nothin
   )
 })
 
+test_that("a publication that fails part way leaves nothing of its turn in review", {
+  skip_if_not_installed("ellmer")
+  f <- host_fixture()
+  words <- typed("A longer cure may make this coating more durable.")
+  host_call_tool(
+    f$store,
+    f$key("t-01"),
+    words,
+    "propose_interpretation",
+    propose()
+  )
+  host_settle_turn(f$store, f$key("t-01"), "done")
+  first <- host_drafts(f$store, f$key("t-01"))[[1]]
+  words2 <- typed("A longer cure may make this coating more durable.", "t-02")
+  host_call_tool(
+    f$store,
+    f$key("t-02"),
+    words2,
+    "propose_interpretation",
+    propose("A longer cure makes this coating more durable.")
+  )
+  replace <- host_replace_drafts
+  local_mocked_bindings(host_replace_drafts = function(...) {
+    replace(...)
+    stop("disk full")
+  })
+  settled <- host_settle_turn(f$store, f$key("t-02"), "done")
+  expect_identical(settled$state, "failed")
+  expect_match(settled$note, "disk full")
+  ready <- host_drafts(f$store, f$key("t-02"))
+  expect_length(ready, 1L)
+  expect_identical(ready[[1]]$id, first$id)
+  mine <- host_drafts(f$store, f$key("t-02"), status = NULL)
+  mine <- Filter(function(d) identical(d$turn, "t-02"), mine)
+  expect_identical(vapply(mine, `[[`, "", "status"), "failed")
+})
+
 test_that("a later turn's draft replaces the earlier one and keeps its changes", {
   skip_if_not_installed("ellmer")
   f <- host_fixture()
