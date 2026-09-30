@@ -199,7 +199,8 @@ host_open_tests <- function(x) {
 }
 
 # The latest decision recorded in the record, by its timestamp.
-host_last_decision <- function(x, state_revision) {
+host_last_decision <- function(x, state_revision, revised_at = NULL) {
+  revised_at <- as.character(unlist(revised_at %||% list()))
   found <- list()
   add <- function(what, entry, outcome = NULL, at = entry$created_at) {
     if (is.null(entry) || is.null(at)) {
@@ -222,7 +223,10 @@ host_last_decision <- function(x, state_revision) {
       )
     } else if (i > 1L) {
       # A revision made by hand (a claim edit, a retained judgment, a fitted
-      # candidate) has no stamp of its own; what it added has one.
+      # candidate) has no stamp of its own; what it added has one. One that
+      # adds nothing stamped (it clears a fit or a review, say) is dated by
+      # when the store first wrote it, if it knows.
+      before <- length(found)
       prev <- x$revisions[[i - 1L]]
       if (!identical(e$claim$id, prev$claim$id)) {
         add(sprintf("revised the claim in revision %d", i), e$claim)
@@ -241,6 +245,10 @@ host_last_decision <- function(x, state_revision) {
         !is.null(e$candidate) && !identical(e$candidate$id, prev$candidate$id)
       ) {
         add(sprintf("fitted a candidate in revision %d", i), e$candidate)
+      }
+      stamp <- if (i <= length(revised_at)) revised_at[[i]] else ""
+      if (length(found) == before && !is.na(stamp) && nzchar(stamp)) {
+        add(sprintf("revised the record in revision %d", i), list(), at = stamp)
       }
     }
     if (!is.null(e$acceptance)) {
@@ -290,8 +298,11 @@ host_last_decision <- function(x, state_revision) {
   if (!length(found)) {
     return(NULL)
   }
+  # In time order, not as text: as text a stamp with fractions of a second
+  # sorts before the same second without them, though it is later.
   at <- vapply(found, function(f) as.character(f$at), character(1))
-  last <- found[[order(at, decreasing = TRUE, method = "radix")[[1]]]]
+  when <- as.numeric(as.POSIXct(at, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"))
+  last <- found[[order(when, at, decreasing = TRUE, method = "radix")[[1]]]]
   # `[<-` with a list keeps a field that is NULL, so the document's keys do not
   # change with what a record happens to hold.
   last["outcome"] <- list(host_cut(last$outcome, 80L))
@@ -395,7 +406,11 @@ host_state <- function(
         length(x$regression_sensitivities),
       model_worlds = length(x$model_worlds)
     )
-    doc$last_decision <- host_last_decision(x, meta$state_revision)
+    doc$last_decision <- host_last_decision(
+      x,
+      meta$state_revision,
+      revised_at = meta$revised_at
+    )
   }
   others <- Filter(function(r) !identical(r$id, id), records)
   # The lists shrink, then the claim's fields, until the document fits.

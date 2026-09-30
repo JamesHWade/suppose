@@ -432,6 +432,49 @@ test_that("a revision made by hand is a decision too", {
   latest <- host_last_decision(synthetic, 1L)
   expect_identical(latest$what, "retained a judgment in revision 2")
   expect_identical(latest$by, "bo")
+  # A revision that adds nothing stamped (it clears the fit) is dated by when
+  # the store first wrote it.
+  cleared <- host_last_decision(
+    synthetic,
+    1L,
+    revised_at = c("", "", "2026-04-01T00:00:00Z")
+  )
+  expect_identical(cleared$what, "revised the record in revision 3")
+  expect_identical(cleared$at, "2026-04-01T00:00:00Z")
+  # Stamps are compared as times: a fraction of a second is later.
+  timed <- list(
+    revisions = list(list(
+      claim = list(id = "c1", created_at = "2026-01-01T12:00:00Z")
+    )),
+    observations = list(list(id = "o1", created_at = "2026-01-01T12:00:00.5Z")),
+    assessments = list(list(
+      commitment_id = "t1",
+      status = "within_prediction",
+      assessed_at = "2026-01-01T12:00:00Z"
+    ))
+  )
+  expect_identical(host_last_decision(timed, 1L)$what, "attached measurements")
+})
+
+test_that("the store dates each revision when it first writes it", {
+  f <- state_fixture()
+  k <- f$key()
+  x <- suppose_worked_example("plants")
+  host_record_write(f$store, k, "r1", x)
+  first <- host_record_meta(f$store, k, "r1")
+  # What the record already had is not dated by this write.
+  expect_identical(unique(as.character(unlist(first$revised_at))), "")
+  last <- utils::tail(x$revisions, 1)[[1]]
+  y <- record_revision(
+    x,
+    revise_claim(last$claim, "bo", "Narrower.", scope = "Only the pilot line"),
+    reason = "Narrower."
+  )
+  host_record_write(f$store, k, "r1", y)
+  second <- as.character(unlist(host_record_meta(f$store, k, "r1")$revised_at))
+  expect_length(second, length(y$revisions))
+  expect_match(utils::tail(second, 1), "^[0-9]{4}-[0-9]{2}-[0-9]{2}T")
+  expect_identical(utils::head(second, -1), rep("", length(x$revisions)))
 })
 
 test_that("the claim section carries its retained numerical model, not the draws", {
