@@ -105,17 +105,15 @@ deputy_run_receipt <- function(agent) {
   )
 }
 
-# shinychat splices input with !!!. Deputy versions using list(...) rather
-# than list2(...) need dynamic-dots handling at this interface. This subclass
-# changes only argument collection and the controller reset below; execution
-# still enters Agent$stream_async with every argument the caller supplied.
+# Deputy's Agent with the inquiry's R session and tool settings. Streaming is
+# Deputy's own: it takes shinychat's spliced input and resets a reused
+# cancelled controller once a run is accepted.
 inquiry_agent_class <- function(
   rebuild = NULL,
   config = NULL,
   extras = list()
 ) {
   self <- private <- NULL # R6 supplies these bindings.
-  super <- NULL # R6 supplies the superclass binding in each method environment.
   R6::R6Class(
     "SupposeAgent",
     inherit = deputy::Agent,
@@ -153,26 +151,6 @@ inquiry_agent_class <- function(
           abort_suppose("This agent cannot be reconfigured.", "tools")
         }
         rebuild(settings)
-      },
-      stream_async = function(..., controller = NULL) {
-        # Messages and Deputy's own options (tool_mode, stream, run_context,
-        # type, ...) pass through unchanged, so new upstream options are kept.
-        args <- rlang::list2(...)
-        result <- rlang::exec(
-          super$stream_async,
-          !!!args,
-          controller = controller
-        )
-        # shinychat reuses its controller. Deputy returns a lazy stream and can
-        # stop before ellmer reaches its usual controller reset. Reset only after
-        # Deputy accepts this new run, before the stream is consumed.
-        if (
-          inherits(controller, "ellmer_stream_controller") &&
-            controller$cancelled
-        ) {
-          controller$reset()
-        }
-        result
       }
     )
   )
