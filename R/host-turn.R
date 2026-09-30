@@ -374,6 +374,11 @@ host_settle_turn <- function(store, key, outcome) {
   check_text(key$turn, "turn")
   turn <- host_turn_read(store, key, key$turn)
   if (is.null(turn)) {
+    # A reply that used no Suppose tool still ends the tab's earlier ones, as
+    # its first call would have, so none of them can publish after it.
+    if (!is.null(key$session)) {
+      host_supersede_turns(store, key)
+    }
     turn <- list(
       version = 1L,
       turn = key$turn,
