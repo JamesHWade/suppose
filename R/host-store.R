@@ -181,22 +181,25 @@ host_record_read <- function(store, key, id) {
   read_record(path)
 }
 
-# Writes a record and its meta. The state revision rises whenever the record's
-# content changes, which its revision count does not do for attached data,
-# fits or frozen tests.
+# Writes a record and its meta. `digest` is the record's proposal basis, which
+# drafts are made against and which a recorded analysis leaves alone. The
+# state revision rises whenever anything in the record changes, analyses
+# included, which its revision count does not do for attached data, fits or
+# frozen tests.
 host_record_write <- function(store, key, id, x, title = NULL) {
   check_text(id, "id")
   validate_record(x)
   dir <- host_record_dir(store, key, id)
   fs::dir_create(dir)
   old <- host_record_meta(store, key, id)
-  digest <- proposal_basis_id(x)
+  content <- object_id(x)
   write_record(x, fs::path(dir, "record.json"), overwrite = TRUE)
-  changed <- !identical(old$digest, digest)
+  changed <- !identical(old$content_digest, content)
   meta <- list(
     id = id,
     title = title %||% old$title %||% x$record_id,
-    digest = digest,
+    digest = proposal_basis_id(x),
+    content_digest = content,
     state_revision = (old$state_revision %||% 0L) + as.integer(changed),
     revisions = length(x$revisions),
     review = host_review(x),
