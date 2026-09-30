@@ -275,6 +275,82 @@ test_that("a publication that fails part way leaves nothing of its turn in revie
   expect_identical(vapply(mine, `[[`, "", "status"), "failed")
 })
 
+test_that("a draft reaches review only once its turn's settlement is written", {
+  skip_if_not_installed("ellmer")
+  f <- host_fixture()
+  words <- typed("A longer cure may make this coating more durable.")
+  host_call_tool(
+    f$store,
+    f$key("t-01"),
+    words,
+    "propose_interpretation",
+    propose()
+  )
+  host_settle_turn(f$store, f$key("t-01"), "done")
+  first <- host_drafts(f$store, f$key("t-01"))[[1]]
+  words2 <- typed("A longer cure may make this coating more durable.", "t-02")
+  host_call_tool(
+    f$store,
+    f$key("t-02"),
+    words2,
+    "propose_interpretation",
+    propose("A longer cure makes this coating more durable.")
+  )
+  # The process stops after the drafts are written and before the turn's
+  # settlement is: no handler runs.
+  with_mocked_bindings(
+    expect_error(host_settle_turn(f$store, f$key("t-02"), "done"), "killed"),
+    host_turn_write = function(...) stop("killed")
+  )
+  ready <- host_drafts(f$store, f$key("t-02"))
+  expect_identical(vapply(ready, `[[`, "", "id"), first$id)
+  staged <- Filter(
+    function(d) identical(d$turn, "t-02"),
+    host_drafts(f$store, f$key("t-02"), status = NULL)
+  )
+  expect_identical(vapply(staged, `[[`, "", "status"), "staged")
+  # After a restart, the tab's next reply ends the unreported one.
+  host_call_tool(
+    f$store,
+    f$key("t-03"),
+    typed("A longer cure may make this coating more durable.", "t-03"),
+    "read_inquiry"
+  )
+  expect_identical(
+    host_turn_read(f$store, f$key("t-02"), "t-02")$state,
+    "cancelled"
+  )
+  expect_identical(
+    vapply(host_drafts(f$store, f$key("t-03")), `[[`, "", "id"),
+    first$id
+  )
+  mine <- Filter(
+    function(d) identical(d$turn, "t-02"),
+    host_drafts(f$store, f$key("t-03"), status = NULL)
+  )
+  expect_identical(vapply(mine, `[[`, "", "status"), "failed")
+})
+
+test_that("a draft's status follows the settled turns", {
+  states <- list(`t-1` = "done", `t-2` = "running", `t-3` = "cancelled")
+  d <- function(id, turn, status = "ready", by = NULL) {
+    list(id = id, turn = turn, status = status, superseded_by = by)
+  }
+  published <- c("d-1", "d-4")
+  status <- function(x) host_draft_status(x, published, states)
+  expect_identical(status(d("d-1", "t-1")), "ready")
+  expect_identical(status(d("d-2", "t-2")), "staged")
+  expect_identical(status(d("d-3", "t-3")), "failed")
+  expect_identical(status(d("d-5", "t-9")), "failed")
+  expect_identical(
+    status(d("d-1", "t-1", "superseded", by = "d-4")),
+    "superseded"
+  )
+  expect_identical(status(d("d-1", "t-1", "superseded", by = "d-2")), "ready")
+  expect_identical(status(d("d-3", "t-3", "superseded", by = "d-2")), "failed")
+  expect_identical(status(d("d-1", "t-1", "accepted")), "accepted")
+})
+
 test_that("a later turn's draft replaces the earlier one and keeps its changes", {
   skip_if_not_installed("ellmer")
   f <- host_fixture()

@@ -103,6 +103,9 @@ host_supersede_turns <- function(store, key) {
       t$settled_at <- now_utc()
       t$note <- "A later reply from the same tab began before this one reported how it ended, so nothing it staged reached review."
       host_turn_write(store, key, t)
+      # Its process may have stopped part way through publishing; what it
+      # wrote was never reviewable (host_draft_status()), and is marked so.
+      host_rollback_drafts(store, key, t)
     }
   }
   invisible(NULL)
@@ -458,8 +461,31 @@ host_draft_read <- function(store, key, id) {
   host_read_json(host_draft_path(store, key, id))
 }
 
-# The conversation's drafts, newest first; by default only those awaiting
-# review.
+# A draft's status as the settled turns have it. A turn's record is written
+# whole when it settles, and that write is the commit: a draft is ready only
+# once its turn has settled `done` with the draft among those it published,
+# and a draft replaced by one whose turn never got that far is ready again.
+# So a process that stops while a turn publishes, where no handler can undo
+# anything (host_rollback_drafts()), leaves nothing of that turn in review.
+# `published` are the ids settled turns published; `states` each turn's state
+# by id. A draft not yet committed is `staged` while its turn runs and
+# `failed` once it has ended any other way.
+host_draft_status <- function(d, published, states) {
+  status <- as.character(d$status %||% "")
+  if (
+    identical(status, "superseded") && !isTRUE(d$superseded_by %in% published)
+  ) {
+    status <- "ready"
+  }
+  if (identical(status, "ready") && !isTRUE(d$id %in% published)) {
+    state <- states[[as.character(d$turn %||% "")]] %||% ""
+    status <- if (identical(state, "running")) "staged" else "failed"
+  }
+  status
+}
+
+# The conversation's drafts, newest first, each with its status as the settled
+# turns have it (host_draft_status()); by default only those awaiting review.
 host_drafts <- function(
   store,
   key,
@@ -467,13 +493,25 @@ host_drafts <- function(
   kind = NULL,
   status = "ready"
 ) {
+  turns <- host_turns(store, key)
+  published <- unlist(lapply(turns, function(t) {
+    if (identical(t$state, "done")) as.character(unlist(t$drafts))
+  }))
+  states <- stats::setNames(
+    lapply(turns, function(t) as.character(t$state %||% "")),
+    vapply(turns, function(t) as.character(t$turn %||% ""), character(1))
+  )
+  drafts <- lapply(host_read_all(host_paths(store, key)$drafts), function(d) {
+    d$status <- host_draft_status(d, published, states)
+    d
+  })
   drafts <- Filter(
     function(d) {
       (is.null(status) || d$status %in% status) &&
         (is.null(record) || identical(d$record, record)) &&
         (is.null(kind) || identical(d$kind, kind))
     },
-    host_read_all(host_paths(store, key)$drafts)
+    drafts
   )
   host_newest_first(drafts, "created_at")
 }
@@ -516,9 +554,11 @@ host_draft_write <- function(
   id
 }
 
+# `id` is ready (host_drafts()): on disk it may still say `superseded` by a
+# draft whose turn never settled, and the new draft now replaces it instead.
 host_draft_supersede <- function(store, key, id, by) {
   d <- host_draft_read(store, key, id)
-  if (is.null(d) || !identical(d$status, "ready")) {
+  if (is.null(d) || !d$status %in% c("ready", "superseded")) {
     return(invisible(d))
   }
   d$status <- "superseded"
