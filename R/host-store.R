@@ -36,11 +36,11 @@ host_key <- function(
   model = NULL
 ) {
   for (arg in c("user", "project", "conversation")) {
-    check_text(get(arg), arg)
+    host_check_id(get(arg), arg)
   }
-  check_text(session, "session", optional = TRUE)
-  check_text(turn, "turn", optional = TRUE)
-  check_text(model, "model", optional = TRUE)
+  host_check_id(session, "session", optional = TRUE)
+  host_check_id(turn, "turn", optional = TRUE)
+  host_check_id(model, "model", optional = TRUE)
   list(
     user = user,
     project = project,
@@ -49,6 +49,20 @@ host_key <- function(
     turn = turn,
     model = model
   )
+}
+
+# A host's ids are short, so none can crowd the state document past its size.
+host_id_limit <- 200L
+
+host_check_id <- function(x, arg, optional = FALSE) {
+  check_text(x, arg, optional = optional)
+  if (!is.null(x) && nchar(x) > host_id_limit) {
+    abort_suppose(
+      "{.arg {arg}} must be at most {host_id_limit} characters.",
+      arg = arg
+    )
+  }
+  invisible(x)
 }
 
 # A host's identifier as one path segment. A short, plain name is used as it
@@ -187,7 +201,7 @@ host_record_read <- function(store, key, id) {
 # included, which its revision count does not do for attached data, fits or
 # frozen tests.
 host_record_write <- function(store, key, id, x, title = NULL) {
-  check_text(id, "id")
+  host_check_id(id, "id")
   validate_record(x)
   dir <- host_record_dir(store, key, id)
   fs::dir_create(dir)

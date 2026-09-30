@@ -320,4 +320,48 @@ test_that("the last decision is the latest, assessments included", {
   latest <- host_last_decision(assessed, 1L)
   expect_identical(latest$what, "assessed a test")
   expect_identical(latest$outcome, "within_prediction")
+  attached <- list(
+    revisions = x$revisions,
+    regression_commitments = list(
+      list(id = "c2", author = "ada", created_at = "2098-01-01T00:00:00Z")
+    ),
+    regression_test_data = list(
+      list(author = "bo", created_at = "2098-02-01T00:00:00Z")
+    )
+  )
+  latest <- host_last_decision(attached, 1L)
+  expect_identical(latest$what, "attached regression test data")
+  expect_identical(latest$by, "bo")
+})
+
+test_that("the document stays within its budget whatever the host's ids and names", {
+  f <- state_fixture()
+  long <- strrep("x", host_id_limit)
+  k <- host_key(long, long, long, long, long, long)
+  x <- accept_interpretation(
+    elicitation_record(claim(strrep("A long belief. ", 400), "ada"), "One"),
+    strrep("y", 5000),
+    "It says what I mean.",
+    "A shorter cure holds up as well."
+  )
+  host_record_write(f$store, k, long, x, title = strrep("t", 5000))
+  host_set_editing(f$store, k, form = strrep("f", 5000), unsaved = TRUE)
+  doc <- host_state(f$store, k, instance = long)
+  expect_lte(host_json_size(doc), host_state_budget)
+  expect_identical(doc$instance, long)
+  expect_identical(nchar(doc$last_decision$by), 80L)
+  expect_identical(nchar(doc$editing$form), 80L)
+  too_long <- strrep("x", host_id_limit + 1L)
+  expect_error(
+    host_state(f$store, k, instance = too_long),
+    class = "suppose_input"
+  )
+  expect_error(
+    host_key("ada", "p", "c", "tab-1", too_long),
+    class = "suppose_input"
+  )
+  expect_error(
+    host_record_write(f$store, k, too_long, x),
+    class = "suppose_input"
+  )
 })

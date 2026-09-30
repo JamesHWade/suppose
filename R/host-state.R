@@ -180,9 +180,11 @@ host_last_decision <- function(x, state_revision) {
     regressions = "retained a regression",
     research_designs = "retained a research design",
     regression_commitments = "froze a regression test",
+    regression_test_data = "attached regression test data",
     regression_sensitivities = "retained a regression sensitivity check",
     model_worlds = "added a model world",
-    model_implications = "retained a model implication"
+    model_implications = "retained a model implication",
+    model_references = "related a claim to a model"
   )
   for (name in names(kinds)) {
     for (entry in x[[name]]) {
@@ -204,6 +206,8 @@ host_last_decision <- function(x, state_revision) {
   at <- vapply(found, function(f) as.character(f$at), character(1))
   last <- found[[order(at, decreasing = TRUE, method = "radix")[[1]]]]
   last$outcome <- host_cut(last$outcome, 80L)
+  last$by <- host_cut(last$by, 80L)
+  last$at <- host_cut(last$at, 40L)
   c(last, list(state_revision = state_revision))
 }
 
@@ -229,8 +233,15 @@ host_state <- function(
   quotes = "host-verified"
 ) {
   check_text(key$session, "session")
+  host_check_id(instance, "instance", optional = TRUE)
   quotes <- rlang::arg_match0(quotes, c("host-verified", "unverified"))
   editing <- host_conversation(store, key)$editing[[key$session]]
+  if (!is.null(editing)) {
+    editing <- list(
+      form = host_cut(editing$form, 80L),
+      unsaved = isTRUE(editing$unsaved)
+    )
+  }
   id <- host_current_record(store, key)
   records <- host_records(store, key)
   pending <- host_pending(store, key, open = id)
