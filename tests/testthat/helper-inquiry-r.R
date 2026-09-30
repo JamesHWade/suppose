@@ -36,7 +36,7 @@ r_text <- function(x) {
 }
 
 fixture_r_agent <- function() {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   skip_if_not_installed("ellmer")
   suppose_agent(
     ellmer::chat_openai_compatible(

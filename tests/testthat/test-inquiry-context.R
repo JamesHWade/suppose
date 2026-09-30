@@ -42,7 +42,7 @@ test_that("validation errors retain useful classes without serializing closure g
 
 test_that("agent reconfiguration transfers archived results without transferring tools", {
   skip_if_not_installed("ellmer")
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   archive <- withr::local_tempdir()
   from <- suppose_agent(
     ellmer::chat_openai_compatible(

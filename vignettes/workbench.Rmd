@@ -28,10 +28,10 @@ pak::pak("JamesHWade/suppose", dependencies = NA)
 ```
 
 The UI depends on Shiny, bslib, and shinychat 0.5.0 or later. AI conversations
-also use Deputy and ellmer. The ellmer revision below passed focused workbench
-checks on 9 September 2026. The Deputy revision is the package's recorded
-compatibility reference. These are development snapshots; the complete
-installation recipe has not been revalidated in a fresh environment.
+also use Deputy 0.0.0.9001 or later, from GitHub, and ellmer. The ellmer
+revision below passed focused workbench checks on 9 September 2026. These are
+development snapshots; the complete installation recipe has not been
+revalidated in a fresh environment.
 
 ```{r app-install, eval=FALSE}
 pak::pak(c(
@@ -41,7 +41,7 @@ pak::pak(c(
   "ggplot2",
   "shinychat",
   "tidyverse/ellmer@92cfa7f48270048105ea1bfb44d23a2e59c2df6e",
-  "JamesHWade/deputy@502871f9908bbef798a4cd33fce6552094e9086e"
+  "JamesHWade/deputy"
 ))
 ```
 

@@ -67,14 +67,17 @@ Development tools such as pak, pkgload, pkgbuild, rcmdcheck, and pkgdown do not
 belong in runtime Imports unless the package actually uses them. Use usethis CI
 and release helpers when a remote or release workflow is established.
 
-The conversation R integration is validated against the Deputy revision in
-`Config/suppose/verified-deputy-revision`, installed locally in
-`.suppose/runtime-library`. Add that directory to `.libPaths()` before loading
-Suppose. This also uses Deputy's S7 permissions, usage, and context settings.
-Pull request and push checks install that revision by pinning `Remotes` on the
-runner, so keep `Remotes` itself unpinned. The weekly `deputy-main.yaml`
-workflow, which can also be run by hand, checks Deputy's main branch instead;
-when it fails, Suppose needs a change before the verified revision is raised.
+The conversation workbench needs Deputy 0.0.0.9001 or later. DESCRIPTION
+declares that floor, `Remotes:` installs Deputy from GitHub, and
+`deputy_version` in `R/inquiry-agent.R` holds the same value for runtime
+checks and `skip_if_no_deputy()`. Raise all three together when Suppose starts
+using a newer Deputy API. The workbench also uses Deputy's S7 permissions,
+usage, and context settings.
+Pull request and push checks install the Deputy revision in
+`Config/suppose/verified-deputy-revision` by pinning `Remotes` on the runner,
+so keep `Remotes` itself unpinned. The weekly `deputy-main.yaml` workflow,
+which can also be run by hand, checks Deputy's main branch instead; when it
+fails, Suppose needs a change before the verified revision is raised.
 Run `Rscript dev/plantgrowth-acceptance.R` to regenerate the retrospective
 real-data example. `dev/run-plantgrowth-app.R` opens the example on port 3900;
 `dev/run-lab-app.R` serves the ordinary workbench on port 3899.

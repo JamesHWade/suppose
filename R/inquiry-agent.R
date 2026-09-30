@@ -1,3 +1,7 @@
+# The oldest Deputy with the APIs the workbench uses, such as RSession,
+# AskUserDeferred and tool_metadata(). DESCRIPTION declares the same floor.
+deputy_version <- "0.0.0.9001"
+
 #' Create the Deputy agent used by the inquiry workbench
 #'
 #' The returned Deputy Agent is passed directly to `shinychat::chat_server()`.
@@ -24,7 +28,7 @@ suppose_agent <- function(
   working_dir = getwd(),
   conversation_id = basename(tempfile("inquiry_"))
 ) {
-  rlang::check_installed("deputy")
+  rlang::check_installed("deputy", version = deputy_version)
   extras <- inquiry_extra_tools(bundles)
   check_text(working_dir, "working_dir")
   if (!dir.exists(working_dir)) {
@@ -121,12 +125,6 @@ inquiry_agent_class <- function(
       inquiry_extra_tools = function() {
         if (!"r" %in% config$bundles) {
           return(extras)
-        }
-        if (!"RSession" %in% getNamespaceExports("deputy")) {
-          abort_suppose(
-            "Install the verified Deputy RSession development revision before enabling R execution.",
-            "dependency"
-          )
         }
         if (is.null(private$inquiry_runtime)) {
           private$inquiry_runtime <- deputy::RSession$new(self)

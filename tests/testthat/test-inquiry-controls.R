@@ -39,7 +39,7 @@ test_that("the picker admits text tool models and preserves unknown pricing", {
 })
 
 test_that("switching Deputy models preserves conversation and record", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   skip_if_not_installed("shinychat")
   factory <- function(model) {
     suppose_agent(ellmer::chat_openai_compatible(
@@ -138,7 +138,7 @@ test_that("model changes keep prior proposals and attribute later corrections", 
 })
 
 test_that("picker changes are explicit and commands only operate the app", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   skip_if_not_installed("shinychat")
   local_mocked_bindings(suppose_muse = function(model, max_tokens) {
     ellmer::chat_openai_compatible(
