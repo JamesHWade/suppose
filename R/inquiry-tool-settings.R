@@ -73,8 +73,9 @@ inquiry_draft_annotations <- function() {
 
 # The inquiry tools are allowed by their own annotations. There is no
 # permission callback: Deputy lets one narrow what the capabilities allow,
-# never widen it. Deputy's own reader for large offloaded results is exempt
-# from the allowlist, so it is not listed.
+# never widen it. Current Deputy exempts its own reader for large offloaded
+# results from the allowlist; it stays listed for Deputy installations that
+# predate the exemption, since DESCRIPTION cannot require a newer revision.
 inquiry_permissions <- function(bundles, working_dir) {
   core <- c(
     "read_inquiry",
@@ -88,7 +89,8 @@ inquiry_permissions <- function(bundles, working_dir) {
     "draft_research_design",
     "draft_regression_test",
     "draft_regression_sensitivity",
-    "ask_user"
+    "ask_user",
+    "deputy_read_tool_result"
   )
   extra <- vapply(
     inquiry_extra_tools(bundles),

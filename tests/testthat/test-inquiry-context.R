@@ -136,7 +136,6 @@ test_that("a rebuilt agent reads archived results under the inquiry allowlist", 
   session <- new_proposal_session(function() suppose_example(), general = TRUE)
   id <- session$begin("Read the archived result")
   to$set_tools(c(session$tools(id), to$inquiry_extra_tools()))
-  expect_false("deputy_read_tool_result" %in% to$permissions@tool_allowlist)
   read <- deputy::result_tool_results(to$run_sync("Read the archived result"))
   expect_length(read, 1)
   expect_identical(read[[1]]$tool_name, "deputy_read_tool_result")
