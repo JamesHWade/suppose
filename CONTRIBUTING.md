@@ -33,6 +33,10 @@ rebuilding and closing the agent), `R/inquiry-history-binding.R` (the chat,
 saved conversations, download and reopen), `R/inquiry-editor.R` (the record
 editor) and `R/inquiry-forms.R` (the forms in the drawer). Stylesheets and
 scripts are files in `inst/www/`, attached with `suppose_dependency()`.
+`R/host-store.R` and `R/host-turn.R` serve hosts that own the conversation:
+each call rebuilds the assistant's proposal session from a store on disk,
+and a turn's drafts reach review only when the host reports it done (see
+`dev/notes/WORK-HOSTED.md`).
 Working notes, backlogs and reviews live in `dev/notes/`; written evidence
 reports stay in `artifacts/` beside the ignored outputs of the `dev/` scripts.
 
