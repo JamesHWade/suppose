@@ -28,7 +28,7 @@ host_cut <- function(x, n) {
     return(NULL)
   }
   x <- paste(as.character(unlist(x)), collapse = "; ")
-  if (nchar(x) > n) paste0(substr(x, 1L, n - 1L), "…") else x
+  if (nchar(x) > n) paste0(substr(x, 1L, n - 1L), "\u2026") else x
 }
 
 host_last_id <- function(entries) {
