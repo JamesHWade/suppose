@@ -360,6 +360,16 @@ test_that("the last decision is the latest, assessments included", {
   latest <- host_last_decision(attached, 1L)
   expect_identical(latest$what, "attached regression test data")
   expect_identical(latest$by, "bo")
+  # A model world is stamped in its provenance.
+  world <- list(
+    revisions = x$revisions,
+    model_worlds = list(
+      list(id = "w1", provenance = list(created_at = "2099-03-01T00:00:00Z"))
+    )
+  )
+  latest <- host_last_decision(world, 1L)
+  expect_identical(latest$what, "added a model world")
+  expect_identical(latest$at, "2099-03-01T00:00:00Z")
 })
 
 test_that("a revision made by hand is a decision too", {

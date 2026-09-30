@@ -256,7 +256,13 @@ host_last_decision <- function(x, state_revision) {
   )
   for (name in names(kinds)) {
     for (entry in x[[name]]) {
-      add(kinds[[name]], entry, outcome = entry$choice %||% NULL)
+      # A model world is stamped in its provenance, not on itself.
+      add(
+        kinds[[name]],
+        entry,
+        outcome = entry$choice %||% NULL,
+        at = entry$created_at %||% entry$provenance$created_at
+      )
     }
   }
   # Assessments are stamped when they were assessed, not created.
