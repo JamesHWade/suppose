@@ -163,7 +163,13 @@ host_pending <- function(store, key, open = NULL) {
   }
   on_open <- vapply(items, function(i) identical(i$record, open), logical(1))
   at <- vapply(items, function(i) i$at %||% "", character(1))
-  items[order(!on_open, at, decreasing = c(FALSE, TRUE), method = "radix")]
+  items[order(
+    !on_open,
+    host_time(at),
+    at,
+    decreasing = c(FALSE, TRUE, TRUE),
+    method = "radix"
+  )]
 }
 
 host_open_tests <- function(x) {
@@ -195,7 +201,7 @@ host_open_tests <- function(x) {
     return(list())
   }
   deadline <- vapply(tests, function(t) as.character(t$deadline), character(1))
-  tests[order(deadline, na.last = TRUE, method = "radix")]
+  tests[order(host_time(deadline), deadline, na.last = TRUE, method = "radix")]
 }
 
 # The latest decision recorded in the record, by its timestamp.
@@ -298,11 +304,11 @@ host_last_decision <- function(x, state_revision, revised_at = NULL) {
   if (!length(found)) {
     return(NULL)
   }
-  # In time order, not as text: as text a stamp with fractions of a second
-  # sorts before the same second without them, though it is later.
+  # In time order, not as text (host_time()).
   at <- vapply(found, function(f) as.character(f$at), character(1))
-  when <- as.numeric(as.POSIXct(at, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"))
-  last <- found[[order(when, at, decreasing = TRUE, method = "radix")[[1]]]]
+  last <- found[[order(host_time(at), at, decreasing = TRUE, method = "radix")[[
+    1
+  ]]]]
   # `[<-` with a list keeps a field that is NULL, so the document's keys do not
   # change with what a record happens to hold.
   last["outcome"] <- list(host_cut(last$outcome, 80L))

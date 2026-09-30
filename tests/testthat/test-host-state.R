@@ -314,6 +314,22 @@ test_that("open tests are listed soonest first; assessed and replaced ones are n
   )
   open <- host_open_tests(x)
   expect_identical(vapply(open, `[[`, "", "id"), c("b", "r1", "d"))
+  # Deadlines are compared as times: a fraction of a second is later.
+  same_second <- list(
+    commitments = list(
+      list(id = "late", horizon = "2026-10-01T12:00:00.5Z"),
+      list(id = "early", horizon = "2026-10-01T12:00:00Z")
+    )
+  )
+  expect_identical(
+    vapply(host_open_tests(same_second), `[[`, "", "id"),
+    c("early", "late")
+  )
+  expect_identical(
+    host_time(c("2026-10-01T12:00:00Z", "2026-10-01T12:00:00.5Z", "soon")) -
+      host_time("2026-10-01T12:00:00Z"),
+    c(0, 0.5, NA)
+  )
   expect_identical(open[[2]]$kind, "regression")
 })
 

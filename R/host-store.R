@@ -159,6 +159,17 @@ host_read_all <- function(dir, glob = "*.json") {
 }
 
 # Newest first by an ISO timestamp field, whatever the locale.
+# A UTC timestamp as seconds, for ordering: as text, a stamp with fractions
+# of a second sorts before the same second without them, though it is later.
+# NA for one that is not a timestamp.
+host_time <- function(x) {
+  as.numeric(as.POSIXct(
+    as.character(x),
+    format = "%Y-%m-%dT%H:%M:%OSZ",
+    tz = "UTC"
+  ))
+}
+
 host_newest_first <- function(items, field) {
   if (!length(items)) {
     return(list())
@@ -168,7 +179,7 @@ host_newest_first <- function(items, field) {
     function(i) as.character(i[[field]] %||% ""),
     character(1)
   )
-  items[order(at, decreasing = TRUE, method = "radix")]
+  items[order(host_time(at), at, decreasing = TRUE, method = "radix")]
 }
 
 # --- Records ----------------------------------------------------------------
