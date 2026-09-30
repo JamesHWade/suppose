@@ -1,6 +1,6 @@
 # The oldest Deputy with the APIs the workbench uses, such as RSession,
 # AskUserDeferred and tool_metadata(). DESCRIPTION declares the same floor.
-deputy_version <- "0.0.0.9001"
+deputy_version <- "0.0.0.9002"
 
 #' Create the Deputy agent used by the inquiry workbench
 #'

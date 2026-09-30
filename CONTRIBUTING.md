@@ -67,7 +67,7 @@ Development tools such as pak, pkgload, pkgbuild, rcmdcheck, and pkgdown do not
 belong in runtime Imports unless the package actually uses them. Use usethis CI
 and release helpers when a remote or release workflow is established.
 
-The conversation workbench needs Deputy 0.0.0.9001 or later. DESCRIPTION
+The conversation workbench needs Deputy 0.0.0.9002 or later. DESCRIPTION
 declares that floor, `Remotes:` installs Deputy from GitHub, and
 `deputy_version` in `R/inquiry-agent.R` holds the same value for runtime
 checks and `skip_if_no_deputy()`. Raise all three together when Suppose starts
