@@ -189,8 +189,14 @@ host_last_decision <- function(x, state_revision) {
       add(kinds[[name]], entry, outcome = entry$choice %||% NULL)
     }
   }
+  # Assessments are stamped when they were assessed, not created.
   for (entry in c(x$assessments, x$regression_assessments)) {
-    add("assessed a test", entry, outcome = entry$status)
+    add(
+      "assessed a test",
+      entry,
+      outcome = entry$status,
+      at = entry$assessed_at %||% entry$created_at
+    )
   }
   if (!length(found)) {
     return(NULL)
@@ -239,6 +245,19 @@ host_state <- function(
     review = NULL,
     pending = list(),
     pending_more = 0L,
+    pending_counts = list(
+      ready = sum(vapply(
+        pending,
+        function(p) isTRUE(p$ready) && isTRUE(p$current),
+        logical(1)
+      )),
+      stale = sum(vapply(
+        pending,
+        function(p) isTRUE(p$ready) && !isTRUE(p$current),
+        logical(1)
+      )),
+      drafting = sum(vapply(pending, function(p) !isTRUE(p$ready), logical(1)))
+    ),
     editing = editing,
     retained = NULL,
     latest = NULL,
@@ -352,18 +371,18 @@ host_state_text <- function(doc) {
       doc$approval
     ))
   }
-  ready <- sum(vapply(doc$pending, function(p) isTRUE(p$ready), logical(1)))
-  drafting <- length(doc$pending) - ready
+  counts <- doc$pending_counts
   count <- function(n, one, many = paste0(one, "s")) {
     if (n) sprintf("%d %s", n, if (n == 1L) one else many)
   }
   parts <- c(
+    count(counts$ready, "draft awaiting review", "drafts awaiting review"),
     count(
-      ready + doc$pending_more,
-      "draft awaiting review",
-      "drafts awaiting review"
+      counts$stale,
+      "draft on an earlier revision",
+      "drafts on an earlier revision"
     ),
-    count(drafting, "draft being written", "drafts being written"),
+    count(counts$drafting, "draft being written", "drafts being written"),
     count(doc$retained$observations, "attached measurement set"),
     count(doc$retained$regressions, "regression"),
     count(length(doc$latest$tests) + doc$latest$tests_more, "open test")
@@ -401,17 +420,21 @@ host_read_sections <- c(
 )
 
 # One section of the record, a page at a time. A page holds whole items up to
-# `page_chars` characters of JSON; an item longer than a page is cut, and says
-# so. `pending` and `records` are the conversation's and the project's.
+# `page_chars` characters of JSON; an item longer than a page comes in parts,
+# each a page of its JSON. Each page carries the section's `revision`; pass
+# it back with a later page, which is refused if the section has changed.
+# `pending` and `records` are the conversation's and the project's.
 host_read_inquiry <- function(
   store,
   key,
   section,
   page = 1L,
-  page_chars = host_state_budget
+  page_chars = host_state_budget,
+  revision = NULL
 ) {
   section <- rlang::arg_match0(section, host_read_sections)
   check_count(page, "page")
+  check_text(revision, "revision", optional = TRUE)
   items <- if (identical(section, "records")) {
     lapply(host_records(store, key), function(r) {
       r[c("id", "title", "review", "revisions", "state_revision", "updated_at")]
@@ -477,64 +500,72 @@ host_read_inquiry <- function(
     }
   }
   items <- lapply(items %||% list(), plain)
-  sizes <- vapply(
-    items,
-    function(i) {
-      nchar(jsonlite::toJSON(
-        i,
-        auto_unbox = TRUE,
-        null = "null",
-        na = "null",
-        digits = NA
-      ))
-    },
-    numeric(1)
-  )
-  # Whole items per page, greedily, and at least one.
-  pages <- integer(length(items))
-  current <- 1L
-  used <- 0
-  for (i in seq_along(items)) {
-    if (used > 0 && used + sizes[[i]] > page_chars) {
-      current <- current + 1L
-      used <- 0
-    }
-    pages[[i]] <- current
-    used <- used + sizes[[i]]
-  }
-  total <- if (length(items)) max(pages) else 1L
-  if (page > total) {
-    abort_suppose(
-      "Section {.val {section}} has {total} page{?s}.",
-      "page"
-    )
-  }
-  mine <- items[pages == page]
-  mine <- lapply(mine, function(i) {
-    text <- as.character(jsonlite::toJSON(
+  json_of <- function(i) {
+    as.character(jsonlite::toJSON(
       i,
       auto_unbox = TRUE,
       null = "null",
       na = "null",
       digits = NA
     ))
-    if (nchar(text) <= page_chars) {
-      return(i)
-    }
-    list(
-      cut = TRUE,
-      preview = substr(text, 1L, page_chars - 200L),
-      note = sprintf(
-        "This item is %d characters of JSON; only its opening is shown.",
-        nchar(text)
-      )
+  }
+  texts <- vapply(items, json_of, character(1))
+  # What the section held when these pages were cut: a page read against a
+  # different revision could lose or repeat items, so it is refused.
+  section_revision <- substr(object_id(texts), 1L, 12L)
+  if (!is.null(revision) && !identical(revision, section_revision)) {
+    abort_suppose(
+      "Section {.val {section}} has changed since its first page was read. Read it again from page 1.",
+      "stale"
     )
-  })
+  }
+  # An item longer than a page is read in parts, each a page of its JSON.
+  parts <- list()
+  for (i in seq_along(items)) {
+    n <- nchar(texts[[i]])
+    if (n <= page_chars) {
+      parts[[length(parts) + 1L]] <- list(
+        item = i,
+        value = items[[i]],
+        size = n
+      )
+      next
+    }
+    count <- ceiling(n / page_chars)
+    for (k in seq_len(count)) {
+      text <- substr(texts[[i]], (k - 1) * page_chars + 1, k * page_chars)
+      parts[[length(parts) + 1L]] <- list(
+        item = i,
+        value = list(item = i, part = k, parts = count, json = text),
+        size = nchar(text)
+      )
+    }
+  }
+  # Whole items (or parts) per page, greedily, and at least one.
+  pages <- integer(length(parts))
+  current <- 1L
+  used <- 0
+  for (j in seq_along(parts)) {
+    if (used > 0 && used + parts[[j]]$size > page_chars) {
+      current <- current + 1L
+      used <- 0
+    }
+    pages[[j]] <- current
+    used <- used + parts[[j]]$size
+  }
+  total <- if (length(parts)) max(pages) else 1L
+  if (page > total) {
+    abort_suppose(
+      "Section {.val {section}} has {total} page{?s}.",
+      "page"
+    )
+  }
   list(
     section = section,
+    revision = section_revision,
     page = as.integer(page),
     pages = total,
-    items = mine,
+    items = lapply(parts[pages == page], `[[`, "value"),
     total = length(items)
   )
 }

@@ -60,9 +60,12 @@ one-line method limitations, whether quotes are host-verified, and the
 approval sentence. Lists shrink until the document fits 6,000 characters of
 indented JSON, and every capped list carries a count of what it left out.
 The document's `revision` is one sequence per conversation that rises
-whenever a tab's document changes. `host_state_text()` is its one line, and
+whenever a tab's document changes. `host_state_text()` is its one line, and counts drafts awaiting review
+apart from those on an earlier revision (`pending_counts`).
 `host_read_inquiry(section, page)` reads one section at a time, `pending`
-and `records` included. On the four worked examples the document is 1,900 to
+and `records` included. Each page carries the section's `revision`; a later
+page read against a section that has changed is refused, and an item longer
+than a page comes in parts that join back into its JSON. On the four worked examples the document is 1,900 to
 2,400 characters; the workbench's own summary of the same records is 2,741
 to 7,996.
 

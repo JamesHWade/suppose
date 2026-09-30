@@ -207,10 +207,47 @@ test_that("read_inquiry gives one section at a time, in pages", {
   expect_match(claim$items[[1]]$wording, "^Belief number")
   expect_identical(host_read_inquiry(f$store, k, "regressions")$total, 0L)
   expect_error(host_read_inquiry(f$store, k, "everything"))
-  # An item longer than a page is cut, and says so.
-  cut <- host_read_inquiry(f$store, k, "claim", page_chars = 250L)
-  expect_true(cut$items[[1]]$cut)
-  expect_match(cut$items[[1]]$note, "only its opening")
+  # Whole items share a page when they fit.
+  expect_length(
+    host_read_inquiry(f$store, k, "records", page_chars = 1e5)$items,
+    6L
+  )
+  # An item longer than a page is read in parts that put it back together.
+  first <- host_read_inquiry(f$store, k, "claim", page_chars = 250L)
+  expect_gt(first$pages, 1L)
+  json <- vapply(
+    seq_len(first$pages),
+    function(p) {
+      got <- host_read_inquiry(
+        f$store,
+        k,
+        "claim",
+        page = p,
+        page_chars = 250L,
+        revision = first$revision
+      )
+      paste(vapply(got$items, `[[`, "", "json"), collapse = "")
+    },
+    character(1)
+  )
+  whole <- jsonlite::fromJSON(
+    paste(json, collapse = ""),
+    simplifyVector = FALSE
+  )
+  expect_match(whole$wording, "^Belief number")
+  # A page read against a section that has changed is refused.
+  host_record_new(f$store, k, "Belief number 7 about coatings.", "ada")
+  expect_error(
+    host_read_inquiry(
+      f$store,
+      k,
+      "records",
+      page = 2L,
+      page_chars = 400L,
+      revision = one$revision
+    ),
+    class = "suppose_stale"
+  )
 })
 
 test_that("open tests are listed soonest first; assessed and replaced ones are not", {
@@ -233,4 +270,54 @@ test_that("open tests are listed soonest first; assessed and replaced ones are n
   open <- host_open_tests(x)
   expect_identical(vapply(open, `[[`, "", "id"), c("b", "r1", "d"))
   expect_identical(open[[2]]$kind, "regression")
+})
+
+test_that("drafts on an earlier revision are counted apart from those awaiting review", {
+  f <- state_fixture()
+  k <- f$key()
+  id <- host_record_new(f$store, k, "A longer cure helps.", "ada")
+  host_open_record(f$store, k, id)
+  fake_draft(f$store, k, 1, id)
+  expect_true(host_state(f$store, k)$pending[[1]]$current)
+  expect_match(
+    host_state_text(host_state(f$store, k)),
+    "1 draft awaiting review"
+  )
+  x <- accept_interpretation(
+    host_record_read(f$store, k, id),
+    "ada",
+    "It says what I mean.",
+    "A shorter cure may do."
+  )
+  host_record_write(f$store, k, id, x)
+  doc <- host_state(f$store, k)
+  expect_false(doc$pending[[1]]$current)
+  expect_identical(doc$pending_counts$stale, 1L)
+  text <- host_state_text(doc)
+  expect_match(text, "1 draft on an earlier revision")
+  expect_false(grepl("awaiting review", text))
+})
+
+test_that("the last decision is the latest, assessments included", {
+  x <- suppose_worked_example("plants")
+  last <- host_last_decision(x, 3L)
+  stamps <- unlist(lapply(
+    c(x$observations, x$updates, x$sensitivities),
+    `[[`,
+    "created_at"
+  ))
+  expect_identical(last$at, max(stamps))
+  expect_identical(last$state_revision, 3L)
+  assessed <- list(
+    revisions = x$revisions,
+    commitments = list(list(id = "c1", created_at = "2026-01-01T00:00:00Z")),
+    assessments = list(list(
+      commitment_id = "c1",
+      status = "within_prediction",
+      assessed_at = "2099-01-01T00:00:00Z"
+    ))
+  )
+  latest <- host_last_decision(assessed, 1L)
+  expect_identical(latest$what, "assessed a test")
+  expect_identical(latest$outcome, "within_prediction")
 })
