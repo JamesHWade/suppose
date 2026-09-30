@@ -28,7 +28,7 @@ pak::pak("JamesHWade/suppose", dependencies = NA)
 ```
 
 The UI depends on Shiny, bslib, and shinychat 0.5.0 or later. AI conversations
-also use Deputy 0.0.0.9001 or later, from GitHub, and ellmer. The ellmer
+also use Deputy 0.0.0.9002 or later, from GitHub, and ellmer. The ellmer
 revision below passed focused workbench checks on 9 September 2026. These are
 development snapshots; the complete installation recipe has not been
 revalidated in a fresh environment.

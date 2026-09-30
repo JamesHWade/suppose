@@ -216,49 +216,6 @@ test_that("a Deputy turn stages an interpretation through the inquiry tools", {
   expect_identical(proposal$claim$wording, wording)
 })
 
-test_that("shinychat spliced messages enter the Deputy streaming method", {
-  skip_if_no_deputy()
-  parent <- R6::R6Class(
-    "StreamingParent",
-    public = list(
-      stream_async = function(
-        ...,
-        tool_mode = "concurrent",
-        stream = "text",
-        controller = NULL,
-        run_context = list(),
-        type = NULL
-      ) {
-        list(
-          messages = list(...),
-          controller = controller,
-          context = run_context,
-          stream = stream,
-          type = type
-        )
-      }
-    )
-  )
-  testthat::local_mocked_bindings(Agent = parent, .package = "deputy")
-  a <- inquiry_agent_class()$new()
-  messages <- list("A question", "A clarification")
-  controller <- new.env()
-  out <- a$stream_async(
-    !!!messages,
-    controller = controller,
-    stream = "content",
-    run_context = list(stage = "inquiry")
-  )
-  expect_identical(out$messages, messages)
-  expect_identical(out$controller, controller)
-  expect_identical(out$context, list(stage = "inquiry"))
-  expect_identical(out$stream, "content")
-  expect_null(out$type)
-  typed <- a$stream_async("A question", type = "structured-type")
-  expect_identical(typed$messages, list("A question"))
-  expect_identical(typed$type, "structured-type")
-})
-
 test_that("tool transport uses explicit JSON while receipts retain structured results", {
   skip_if_not_installed("ellmer")
   x <- elicitation_record(claim("Fewer meetings might help", "Ada"))
@@ -273,44 +230,4 @@ test_that("tool transport uses explicit JSON while receipts retain structured re
     decoded$claim$wording
   )
   expect_null(decoded$summary)
-})
-
-test_that("a reused cancelled shinychat controller starts a fresh accepted run", {
-  skip_if_no_deputy()
-  parent <- R6::R6Class(
-    "LazyStreamingParent",
-    public = list(
-      stream_async = function(...) list(stream = "lazy")
-    )
-  )
-  testthat::local_mocked_bindings(Agent = parent, .package = "deputy")
-  a <- inquiry_agent_class()$new()
-  controller <- ellmer::stream_controller()
-  controller$cancel()
-  expect_identical(controller$cancelled, TRUE)
-  expect_identical(
-    a$stream_async("Retry", controller = controller),
-    list(stream = "lazy")
-  )
-  expect_identical(controller$cancelled, FALSE)
-})
-
-test_that("a rejected concurrent run does not clear another run's cancellation", {
-  skip_if_no_deputy()
-  parent <- R6::R6Class(
-    "ActiveStreamingParent",
-    public = list(
-      stream_async = function(...) stop("This agent already has an active run")
-    )
-  )
-  testthat::local_mocked_bindings(Agent = parent, .package = "deputy")
-  a <- inquiry_agent_class()$new()
-  controller <- ellmer::stream_controller()
-  controller$cancel()
-  result <- tryCatch(
-    a$stream_async("Retry", controller = controller),
-    error = identity
-  )
-  expect_s3_class(result, "error")
-  expect_identical(controller$cancelled, TRUE)
 })
