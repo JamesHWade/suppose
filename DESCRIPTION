@@ -25,7 +25,7 @@ Suggests:
     bslib,
     htmltools,
     ellmer (>= 0.5.0),
-    deputy,
+    deputy (>= 0.0.0.9001),
     R6,
     shiny (>= 1.10.0),
     shinychat (>= 0.5.0),
@@ -42,7 +42,6 @@ Imports:
     withr
 Depends: 
     R (>= 4.1.0)
-Config/suppose/verified-deputy-revision: 502871f9908bbef798a4cd33fce6552094e9086e
 Config/Needs/website: pkgdown, knitr, rmarkdown
 Remotes:
     JamesHWade/deputy

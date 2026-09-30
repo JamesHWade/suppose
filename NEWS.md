@@ -1,5 +1,7 @@
 # suppose (development version)
 
+* The conversation workbench now requires Deputy 0.0.0.9001 or later, declared in DESCRIPTION. Suppose no longer checks at run time which Deputy functions exist, and an `agent_factory` used with an older Deputy stops with a message naming the version it needs.
+
 * `record_summary()` returns the plain-data summary of a record that `suppose inspect --json` prints. The command-line app no longer calls internal functions.
 
 * The workbench needs shinychat 0.5.0 or later, now on CRAN, instead of a development snapshot. Deputy is declared as a GitHub remote so a full install can resolve it. Tests skip, rather than fail, when a suggested package is missing.

@@ -65,7 +65,7 @@ test_that("analysis journal survives JSON and does not stale pending proposals",
 })
 
 test_that("activity receipts preserve S7 run and usage values", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   result <- deputy::AgentResult(
     response = "Done",
     run_id = "run1",
@@ -82,7 +82,7 @@ test_that("activity receipts preserve S7 run and usage values", {
 test_that("conversation restoration resets runtime outside a reactive consumer", {
   skip_if_no_app()
   skip_if_not_installed("ellmer")
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   shiny::testServer(
     function(input, output, session) {
       state <- inquiry_server(
@@ -115,7 +115,7 @@ test_that("conversation restoration resets runtime outside a reactive consumer",
 })
 
 test_that("an analysis arriving during a proposal preserves reviewability", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   skip_if_not_installed("ellmer")
   words <- "Longer exposure may change the response."
   x <- elicitation_record(claim(words, "Analyst"))

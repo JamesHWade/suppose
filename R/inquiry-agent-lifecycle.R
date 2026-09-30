@@ -13,6 +13,14 @@ inquiry_new_agent <- function(chat_factory, agent_factory) {
   if (!is.null(agent) && !inherits(agent, "Agent")) {
     abort_suppose("agent_factory must return a fresh Deputy Agent.", "agent")
   }
+  if (
+    !is.null(agent) && !rlang::is_installed("deputy", version = deputy_version)
+  ) {
+    abort_suppose(
+      paste0("The workbench needs Deputy ", deputy_version, " or later."),
+      "dependency"
+    )
+  }
   agent
 }
 

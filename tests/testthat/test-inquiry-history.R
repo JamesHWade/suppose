@@ -46,7 +46,7 @@ test_that("tool failures persist their message without R execution internals", {
 })
 
 test_that("initial portable conversations open with persistent history enabled", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   skip_if_not_installed("shinychat")
   messages <- list(
     list(role = "user", text = "A coating may help"),
@@ -99,7 +99,7 @@ test_that("initial portable conversations open with persistent history enabled",
 })
 
 test_that("cancelled and failed placeholders are not replayed to the agent", {
-  skip_if_not_installed("deputy")
+  skip_if_no_deputy()
   skip_if_not_installed("shinychat")
   entry <- function(role, text, status = "complete") {
     list(role = role, text = text, status = status, created_at = now_utc())

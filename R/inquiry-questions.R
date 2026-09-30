@@ -6,8 +6,7 @@
 # a model run waiting on the browser.
 
 inquiry_questions_available <- function() {
-  requireNamespace("deputy", quietly = TRUE) &&
-    "AskUserDeferred" %in% getNamespaceExports("deputy")
+  rlang::is_installed("deputy", version = deputy_version)
 }
 
 inquiry_question_prompt <- function() {

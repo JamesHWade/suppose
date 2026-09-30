@@ -474,19 +474,7 @@ inquiry_tools_server <- function(
     if (is.null(tool)) {
       return(NULL)
     }
-    metadata <- if ("tool_metadata" %in% getNamespaceExports("deputy")) {
-      getExportedValue("deputy", "tool_metadata")(tool)
-    } else {
-      extra_names <- c(
-        unlist(lapply(inquiry_tool_bundles(), `[[`, "tools")),
-        "deputy_read_tool_result"
-      )
-      list(
-        source = list(
-          package = if (tool@name %in% extra_names) "Deputy" else "Suppose"
-        )
-      )
-    }
+    metadata <- deputy::tool_metadata(tool)
     shiny::tagList(
       shiny::tags$p(tool@description),
       shiny::tags$p(
