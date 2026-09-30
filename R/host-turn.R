@@ -10,8 +10,9 @@
 #
 # A turn that never reports, because the host restarted mid-reply, stays
 # unfinished. A later turn from the same tab cancels it, since a tab runs one
-# turn at a time; a turn from another tab never does. The scientist can
-# discard what an unfinished turn staged.
+# turn at a time; a turn from another tab never does. For the same reason, a
+# turn whose first call arrives after a later one from its tab has begun is
+# cancelled at once. The scientist can discard what an unfinished turn staged.
 
 host_word_sources <- c("typed", "suggestion", "ask_scientist")
 
@@ -136,6 +137,34 @@ host_begin_turn <- function(store, key, words) {
       )
     }
     return(turn)
+  }
+  # A call that arrives after a later turn from its tab has begun belongs to a
+  # reply that has already ended, so it is recorded as cancelled and stages
+  # nothing that could replace the later turn's drafts.
+  later <- Filter(
+    function(t) {
+      identical(t$session, key$session) && host_before(key$turn, t$turn)
+    },
+    host_turns(store, key)
+  )
+  if (length(later)) {
+    host_turn_write(
+      store,
+      key,
+      list(
+        version = 1L,
+        turn = key$turn,
+        session = key$session,
+        record = NULL,
+        state = "cancelled",
+        settled_at = now_utc(),
+        note = "A later reply from the same tab had already begun when this one first called Suppose, so it staged nothing."
+      )
+    )
+    abort_suppose(
+      "A later reply from this tab has already begun, so this one cannot stage anything.",
+      "cancelled"
+    )
   }
   host_supersede_turns(store, key)
   id <- host_current_record(store, key)

@@ -196,6 +196,48 @@ test_that("a later turn from the same tab ends an unreported one; another tab's 
   )
 })
 
+test_that("a call from a turn older than one its tab already began stages nothing", {
+  skip_if_not_installed("ellmer")
+  f <- host_fixture()
+  words <- typed("A longer cure may make this coating more durable.", "t-02")
+  host_call_tool(
+    f$store,
+    f$key("t-02"),
+    words,
+    "propose_interpretation",
+    propose()
+  )
+  host_settle_turn(f$store, f$key("t-02"), "done")
+  expect_error(
+    host_call_tool(
+      f$store,
+      f$key("t-01"),
+      words,
+      "propose_interpretation",
+      propose("A shorter cure is as durable.")
+    ),
+    class = "suppose_cancelled"
+  )
+  expect_identical(
+    host_turn_read(f$store, f$key("t-01"), "t-01")$state,
+    "cancelled"
+  )
+  # Its late report changes nothing, and the later turn's draft stands.
+  host_settle_turn(f$store, f$key("t-01"), "done")
+  drafts <- host_drafts(f$store, f$key("t-01"))
+  expect_length(drafts, 1L)
+  expect_identical(drafts[[1]]$turn, "t-02")
+  # Another tab's turns are its own.
+  expect_no_error(
+    host_call_tool(
+      f$store,
+      f$key("t-00", session = "tab-2"),
+      words,
+      "read_inquiry"
+    )
+  )
+})
+
 test_that("a later turn's draft replaces the earlier one and keeps its changes", {
   skip_if_not_installed("ellmer")
   f <- host_fixture()
@@ -504,6 +546,36 @@ test_that("records never share a file, whatever their ids", {
     host_segment(sub("^\\+", "", host_segment("a b")))
   ))
   expect_match(host_segment("a b"), "^\\+")
+})
+
+test_that("a recorded analysis moves the state revision, not the drafts' basis", {
+  skip_if_not_installed("deputy")
+  f <- host_fixture()
+  k <- f$key(NULL)
+  x <- suppose_example()
+  host_record_write(f$store, k, "x", x)
+  before <- host_record_meta(f$store, k, "x")
+  host_record_write(f$store, k, "x", host_record_read(f$store, k, "x"))
+  expect_identical(
+    host_record_meta(f$store, k, "x")$state_revision,
+    before$state_revision
+  )
+  execution <- list(
+    schema_version = 1L,
+    code = "1 + 1",
+    session_id = "s-1",
+    execution_id = "e-1",
+    generation = 1L,
+    fresh = TRUE,
+    reset_reason = NULL,
+    outcome = "complete",
+    segments = list(list(type = "output", text = "[1] 2"))
+  )
+  x <- record_analysis(x, execution, "Add", "fixture", "request1")
+  host_record_write(f$store, k, "x", x)
+  after <- host_record_meta(f$store, k, "x")
+  expect_identical(after$state_revision, before$state_revision + 1L)
+  expect_identical(after$digest, before$digest)
 })
 
 test_that("arguments arriving as JSON take the types the tool declares", {
