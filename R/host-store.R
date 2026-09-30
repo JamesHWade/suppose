@@ -9,8 +9,8 @@
 # session, and a restarted process loses nothing but the call in flight.
 #
 # <dir>/users/<user>/<project>/
-#   records/<id>.json            a record bundle, as write_record() writes it
-#   records/<id>.meta.json       its title, digest and state revision
+#   records/<id>/record.json     a record bundle, as write_record() writes it
+#   records/<id>/meta.json       its title, digest and state revision
 #   conversations/<conversation>/
 #     state.json                 the open record per tab and the last opened
 #     turns/<turn>.json          what a turn staged, and how it ended
@@ -51,8 +51,9 @@ host_key <- function(
   )
 }
 
-# A host's identifier as one path segment. Anything that is not already a
-# short, plain name gets a digest suffix, so two ids never share a folder.
+# A host's identifier as one path segment. A short, plain name is used as it
+# is; anything else becomes `+`, a readable slug and a digest. A plain name
+# cannot start with `+`, so two ids never share a folder.
 host_segment <- function(x) {
   if (grepl("^[A-Za-z0-9_-][A-Za-z0-9._-]{0,79}$", x)) {
     return(x)
@@ -60,6 +61,7 @@ host_segment <- function(x) {
   slug <- substr(gsub("[^A-Za-z0-9._-]+", "-", x), 1L, 40L)
   slug <- gsub("^[.-]+", "", slug)
   paste0(
+    "+",
     if (nzchar(slug)) paste0(slug, "-") else "",
     substr(digest::digest(x, algo = "sha256", serialize = FALSE), 1L, 12L)
   )
@@ -119,16 +121,39 @@ host_read_json <- function(path) {
   restore_record_types(x)
 }
 
+# The files in a directory of the store, read, in no particular order.
+host_read_all <- function(dir, glob = "*.json") {
+  if (!fs::dir_exists(dir)) {
+    return(list())
+  }
+  Filter(
+    Negate(is.null),
+    unname(lapply(fs::dir_ls(dir, glob = glob), host_read_json))
+  )
+}
+
+# Newest first by an ISO timestamp field, whatever the locale.
+host_newest_first <- function(items, field) {
+  if (!length(items)) {
+    return(list())
+  }
+  at <- vapply(
+    items,
+    function(i) as.character(i[[field]] %||% ""),
+    character(1)
+  )
+  items[order(at, decreasing = TRUE, method = "radix")]
+}
+
 # --- Records ----------------------------------------------------------------
 
+# Each record has a directory of its own, so no id can name another's file.
+host_record_dir <- function(store, key, id) {
+  fs::path(host_paths(store, key)$records, host_segment(id))
+}
+
 host_record_meta <- function(store, key, id) {
-  host_read_json(fs::path(
-    host_paths(store, key)$records,
-    paste0(
-      host_segment(id),
-      ".meta.json"
-    )
-  ))
+  host_read_json(fs::path(host_record_dir(store, key, id), "meta.json"))
 }
 
 # The project's records, most recently changed first.
@@ -138,22 +163,14 @@ host_records <- function(store, key) {
     return(list())
   }
   metas <- lapply(
-    fs::dir_ls(dir, glob = "*.meta.json"),
+    fs::path(fs::dir_ls(dir, type = "directory"), "meta.json"),
     host_read_json
   )
-  metas <- Filter(Negate(is.null), unname(metas))
-  if (!length(metas)) {
-    return(list())
-  }
-  at <- vapply(metas, function(m) m$updated_at %||% "", character(1))
-  metas[order(at, decreasing = TRUE)]
+  host_newest_first(Filter(Negate(is.null), unname(metas)), "updated_at")
 }
 
 host_record_read <- function(store, key, id) {
-  path <- fs::path(
-    host_paths(store, key)$records,
-    paste0(host_segment(id), ".json")
-  )
+  path <- fs::path(host_record_dir(store, key, id), "record.json")
   if (!fs::file_exists(path)) {
     abort_suppose(
       "There is no record {.val {id}} in this project.",
@@ -168,16 +185,13 @@ host_record_read <- function(store, key, id) {
 # content changes, which its revision count does not do for attached data,
 # fits or frozen tests.
 host_record_write <- function(store, key, id, x, title = NULL) {
+  check_text(id, "id")
   validate_record(x)
-  dir <- host_paths(store, key)$records
+  dir <- host_record_dir(store, key, id)
   fs::dir_create(dir)
   old <- host_record_meta(store, key, id)
   digest <- proposal_basis_id(x)
-  write_record(
-    x,
-    fs::path(dir, paste0(host_segment(id), ".json")),
-    overwrite = TRUE
-  )
+  write_record(x, fs::path(dir, "record.json"), overwrite = TRUE)
   changed <- !identical(old$digest, digest)
   meta <- list(
     id = id,
@@ -188,7 +202,7 @@ host_record_write <- function(store, key, id, x, title = NULL) {
     review = host_review(x),
     updated_at = if (changed) now_utc() else old$updated_at %||% now_utc()
   )
-  host_write_json(meta, fs::path(dir, paste0(host_segment(id), ".meta.json")))
+  host_write_json(meta, fs::path(dir, "meta.json"))
   invisible(meta)
 }
 

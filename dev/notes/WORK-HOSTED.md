@@ -13,8 +13,8 @@ scientist's words: what they typed, suggestions they clicked, and answers to
 the host's questions (`via`). Nothing lives in a Shiny session:
 
     <dir>/users/<user>/<project>/
-      records/<id>.json            a record bundle (write_record())
-      records/<id>.meta.json       title, digest, state revision
+      records/<id>/record.json     a record bundle (write_record())
+      records/<id>/meta.json       title, digest, state revision
       conversations/<conversation>/
         state.json                 open record per tab, last opened, revisions
         turns/<turn>.json          what a turn staged, and how it ended
@@ -32,8 +32,20 @@ the host's questions (`via`). Nothing lives in a Shiny session:
 - A turn that never reports stays unfinished. A later turn from the same tab
   cancels it; a turn from another tab never does. `host_discard_turn()` is
   the scientist's way to drop one.
-- A project with no record gets one from the first typed words, titled
-  "My inquiry", authored by the host's user id.
+- A project with no record gets one from this turn's typed words (or the
+  latest typed), titled "My inquiry", authored by the host's user id. Every
+  word must say where it came from; an item without `via` is refused.
+- A turn keeps every word it was given across its calls, with times, so a
+  draft's provenance holds the words its quotes came from.
+- Staged changes are rebuilt with their text lists restored (JSON returns an
+  explicitly cleared list as `list()`), and each form starts from the latest
+  current draft of it, so a follow-up keeps the settings it leaves out.
+- Arguments arriving as JSON take the types each tool declares.
+- A new draft replaces only the drafts of its kind that were there before its
+  turn began; one another tab published meanwhile stays beside it.
+- A turn the host reports before Suppose saw it is recorded as settled, so a
+  later call cannot start it, and a turn whose drafts cannot be finished is
+  recorded as failed rather than left running.
 - The record's state revision rises whenever its content changes, which its
   revision count does not do for attached data, fits or frozen tests.
 

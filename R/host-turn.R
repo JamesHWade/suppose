@@ -13,10 +13,12 @@
 # turn at a time; a turn from another tab never does. The scientist can
 # discard what an unfinished turn staged.
 
+host_word_sources <- c("typed", "suggestion", "ask_scientist")
+
 # The scientist's words as the host vouches for them: what they typed, a
-# suggestion they clicked, or an answer they gave to a host question. They
-# replace the workbench's transcript, so the quote checks run on them
-# unchanged, and `via` goes into each draft's provenance.
+# suggestion they clicked, or an answer they gave to a host question, each
+# saying which. They replace the workbench's transcript, so the quote checks
+# run on them unchanged, and `via` goes into each draft's provenance.
 host_words <- function(words) {
   items <- if (
     is.list(words) && !is.null(names(words)) && "items" %in% names(words)
@@ -32,26 +34,37 @@ host_words <- function(words) {
     abort_suppose("The scientist's words must be a list of items.", "source")
   }
   lapply(items, function(w) {
-    via <- w$via %||% "typed"
+    via <- w$via
     if (
       !is.character(via) ||
         length(via) != 1L ||
-        !via %in% c("typed", "suggestion", "ask_scientist")
+        !via %in% host_word_sources
     ) {
       abort_suppose(
-        "The scientist's words come from typing, a suggestion or an answer.",
+        "Each of the scientist's words must say whether it was typed, a suggestion or an answer.",
         "source"
       )
     }
     check_text(w$text, "text")
+    at <- w$at %||% w$created_at %||% now_utc()
     list(
       role = "user",
       text = w$text,
       status = "complete",
+      created_at = as.character(at)[[1]],
       via = via,
-      turn = w$turn %||% NA_character_
+      turn = as.character(w$turn %||% NA_character_)[[1]]
     )
   })
+}
+
+# The words a turn has been given across its calls: each call's window adds
+# what is new, so a quote checked on an earlier call stays in the draft's
+# provenance even when a later window no longer holds it.
+host_merge_words <- function(old, new) {
+  id <- function(w) paste(w$turn, w$via, w$text, sep = "\u001f")
+  seen <- vapply(old, id, character(1))
+  c(old, Filter(function(w) !id(w) %in% seen, new))
 }
 
 host_turn_path <- function(store, key, turn) {
@@ -67,14 +80,7 @@ host_turn_write <- function(store, key, turn) {
 }
 
 host_turns <- function(store, key) {
-  dir <- host_paths(store, key)$turns
-  if (!fs::dir_exists(dir)) {
-    return(list())
-  }
-  Filter(
-    Negate(is.null),
-    unname(lapply(fs::dir_ls(dir, glob = "*.json"), host_read_json))
-  )
+  host_read_all(host_paths(store, key)$turns)
 }
 
 # Whether turn id `a` started before `b`, compared byte by byte whatever the
@@ -101,9 +107,20 @@ host_supersede_turns <- function(store, key) {
   invisible(NULL)
 }
 
+# The typed words a project's first record starts from: this turn's, or else
+# the latest the scientist typed.
+host_first_words <- function(words, turn) {
+  typed <- Filter(function(w) identical(w$via, "typed"), words)
+  if (!length(typed)) {
+    return(NULL)
+  }
+  now <- Filter(function(w) identical(w$turn, turn), typed)
+  utils::tail(if (length(now)) now else typed, 1)[[1]]$text
+}
+
 # Begins the turn `key$turn`, or returns it if it is running. A turn keeps the
 # record open in its tab at its first call. In a project with no record, the
-# scientist's first typed words start one.
+# scientist's typed words start one.
 host_begin_turn <- function(store, key, words) {
   check_text(key$session, "session")
   check_text(key$turn, "turn")
@@ -123,14 +140,14 @@ host_begin_turn <- function(store, key, words) {
   host_supersede_turns(store, key)
   id <- host_current_record(store, key)
   if (is.null(id)) {
-    typed <- Filter(function(w) identical(w$via, "typed"), words)
-    if (!length(typed)) {
+    text <- host_first_words(words, key$turn)
+    if (is.null(text)) {
       abort_suppose(
-        "This project has no Suppose record yet. One starts from the scientist's first typed words.",
+        "This project has no Suppose record yet. One starts from the scientist's typed words.",
         "no_record"
       )
     }
-    id <- host_record_new(store, key, typed[[1]]$text, author = key$user)
+    id <- host_record_new(store, key, text, author = key$user)
   }
   if (is.null(host_conversation(store, key)$open[[key$session]])) {
     host_open_record(store, key, id)
@@ -156,11 +173,54 @@ host_begin_turn <- function(store, key, words) {
     receipts = previous$proposal$context$tool_results %||% list(),
     changed = FALSE,
     form_drafts = list(),
-    words = words,
+    words = list(),
     drafts = list()
   )
   host_turn_write(store, key, turn)
   turn
+}
+
+# Staged changes are not sealed, so their text lists come back from JSON as
+# lists, and an explicitly cleared one as list() rather than character().
+host_restore_changes <- function(changes) {
+  text <- function(x) {
+    if (is.list(x) && all(vapply(x, is.character, logical(1)))) {
+      as.character(unlist(x, use.names = FALSE))
+    } else {
+      x
+    }
+  }
+  for (name in c("expectations", "assumptions", "unresolved")) {
+    if (name %in% names(changes$claim)) {
+      changes$claim[name] <- list(text(changes$claim[[name]]))
+    }
+  }
+  if (!is.null(changes$ideas)) {
+    changes$ideas <- text(changes$ideas)
+  }
+  changes
+}
+
+# What each form already holds, from the latest current draft of it on the
+# record, so a follow-up draft keeps the settings it leaves out, as the
+# workbench's open form does.
+host_form_state <- function(store, key, record, digest) {
+  state <- list()
+  for (d in host_drafts(store, key, record = record)) {
+    form <- d$form
+    if (
+      is.null(form) ||
+        !identical(d$base_digest, digest) ||
+        !is.null(state[[form$form]])
+    ) {
+      next
+    }
+    state[[form$form]] <- list(
+      values = form$values,
+      version = object_id(form$values)
+    )
+  }
+  state
 }
 
 # A proposal session holding the turn's staged work, against the turn's
@@ -197,16 +257,55 @@ host_session <- function(store, key, turn, words) {
   s$request <- list(
     id = turn$turn,
     base = x,
-    changes = turn$changes,
+    changes = host_restore_changes(turn$changes),
     receipts = turn$receipts %||% list(),
     previous = previous,
     changed = isTRUE(turn$changed),
     form_drafts = turn$form_drafts %||% list(),
-    form_state = list()
+    form_state = host_form_state(store, key, turn$record, turn$base_digest)
   )
   s$phase <- "running"
   s$published <- published
   s
+}
+
+# A tool's arguments as the tool declares them. Over MCP they arrive as
+# parsed JSON, where an array is a list; ellmer converts them the same way
+# before it calls a tool.
+host_tool_arguments <- function(tool, arguments) {
+  types <- tool@arguments@properties
+  arguments <- arguments[!vapply(arguments, is.null, logical(1))]
+  for (name in intersect(names(arguments), names(types))) {
+    value <- arguments[[name]]
+    type <- types[[name]]
+    if (S7::S7_inherits(type, ellmer::TypeArray) && is.list(value)) {
+      scalar <- vapply(
+        value,
+        function(v) is.atomic(v) && length(v) == 1L,
+        logical(1)
+      )
+      if (all(scalar)) {
+        items <- type@items
+        value <- if (
+          !length(value) && S7::S7_inherits(items, ellmer::TypeBasic)
+        ) {
+          switch(
+            items@type,
+            number = numeric(),
+            integer = integer(),
+            boolean = logical(),
+            character()
+          )
+        } else {
+          unlist(value, use.names = FALSE)
+        }
+      }
+    } else if (is.list(value) && length(value) == 1L && is.atomic(value[[1]])) {
+      value <- value[[1]]
+    }
+    arguments[name] <- list(value)
+  }
+  arguments
 }
 
 # Calls one of the assistant's inquiry tools for a host's turn: `key` names
@@ -216,13 +315,15 @@ host_session <- function(store, key, turn, words) {
 host_call_tool <- function(store, key, words, name, arguments = list()) {
   words <- host_words(words)
   turn <- host_begin_turn(store, key, words)
+  words <- host_merge_words(turn$words %||% list(), words)
   s <- host_session(store, key, turn, words)
   tools <- s$tools(turn$turn)
   names(tools) <- vapply(tools, function(t) t@name, character(1))
   if (!name %in% names(tools)) {
     abort_suppose("Suppose has no tool {.val {name}}.", "unknown_tool")
   }
-  value <- do.call(tools[[name]], arguments)
+  tool <- tools[[name]]
+  value <- do.call(tool, host_tool_arguments(tool, arguments))
   turn$changes <- s$request$changes
   turn$receipts <- s$request$receipts
   turn$changed <- isTRUE(s$request$changed)
@@ -233,13 +334,28 @@ host_call_tool <- function(store, key, words, name, arguments = list()) {
 }
 
 # Records how a host's turn ended. `done` makes what the turn staged a review;
-# `stopped` and `failed` discard it. A turn already settled, or one that never
-# called a tool, is left as it is.
+# `stopped` and `failed` discard it. A turn already settled is left as it is,
+# and a turn Suppose never saw is recorded as settled, so a call that arrives
+# after the report cannot start it.
 host_settle_turn <- function(store, key, outcome) {
   outcome <- rlang::arg_match0(outcome, c("done", "stopped", "failed"))
   check_text(key$turn, "turn")
   turn <- host_turn_read(store, key, key$turn)
-  if (is.null(turn) || !identical(turn$state, "running")) {
+  if (is.null(turn)) {
+    turn <- list(
+      version = 1L,
+      turn = key$turn,
+      session = key$session,
+      record = NULL,
+      state = outcome,
+      outcome = outcome,
+      settled_at = now_utc(),
+      note = "The host reported how this reply ended before it called Suppose."
+    )
+    host_turn_write(store, key, turn)
+    return(invisible(turn))
+  }
+  if (!identical(turn$state, "running")) {
     return(invisible(turn))
   }
   if (!is.null(key$session) && !identical(turn$session, key$session)) {
@@ -248,17 +364,35 @@ host_settle_turn <- function(store, key, outcome) {
   turn$outcome <- outcome
   turn$settled_at <- now_utc()
   if (identical(outcome, "done")) {
-    s <- tryCatch(
-      host_session(store, key, turn, turn$words %||% list()),
-      suppose_stale = function(e) NULL
+    finished <- tryCatch(
+      {
+        s <- host_session(store, key, turn, turn$words %||% list())
+        s$finish(turn$turn, "")
+        host_publish_drafts(store, key, turn, s)
+      },
+      suppose_stale = function(e) {
+        structure(
+          "The record changed during this reply, so its drafts were not published.",
+          class = "host_not_published"
+        )
+      },
+      error = function(e) {
+        structure(
+          paste(
+            "Suppose could not finish this reply's drafts:",
+            cli::ansi_strip(conditionMessage(e))
+          ),
+          class = c("host_failed", "host_not_published")
+        )
+      }
     )
-    if (is.null(s)) {
-      turn$note <- "The record changed during this reply, so its drafts were not published."
+    if (inherits(finished, "host_not_published")) {
+      turn$note <- unclass(finished)
+      turn$state <- if (inherits(finished, "host_failed")) "failed" else "done"
     } else {
-      s$finish(turn$turn, "")
-      turn$drafts <- host_publish_drafts(store, key, turn, s)
+      turn$drafts <- finished
+      turn$state <- "done"
     }
-    turn$state <- "done"
   } else {
     turn$state <- outcome
     turn$note <- sprintf(
@@ -302,27 +436,15 @@ host_drafts <- function(
   kind = NULL,
   status = "ready"
 ) {
-  dir <- host_paths(store, key)$drafts
-  if (!fs::dir_exists(dir)) {
-    return(list())
-  }
-  drafts <- Filter(
-    Negate(is.null),
-    unname(lapply(fs::dir_ls(dir, glob = "*.json"), host_read_json))
-  )
   drafts <- Filter(
     function(d) {
       (is.null(status) || d$status %in% status) &&
         (is.null(record) || identical(d$record, record)) &&
         (is.null(kind) || identical(d$kind, kind))
     },
-    drafts
+    host_read_all(host_paths(store, key)$drafts)
   )
-  if (!length(drafts)) {
-    return(list())
-  }
-  at <- vapply(drafts, function(d) d$created_at %||% "", character(1))
-  drafts[order(at, decreasing = TRUE)]
+  host_newest_first(drafts, "created_at")
 }
 
 host_previous_draft <- function(store, key, record, digest) {
@@ -375,8 +497,21 @@ host_draft_supersede <- function(store, key, id, by) {
   invisible(d)
 }
 
-# Writes what a finished turn staged as drafts awaiting review. A draft
-# replaces the earlier one of the same kind on the same record.
+# A new draft replaces the ready drafts of its kind on its record that were
+# there before its turn began. One another tab published while the turn ran
+# stays beside it, for the scientist to choose between.
+host_replace_drafts <- function(store, key, turn, kind, id) {
+  for (old in host_drafts(store, key, record = turn$record, kind = kind)) {
+    if (
+      !identical(old$id, id) &&
+        host_before(old$created_at %||% "", turn$started_at %||% "")
+    ) {
+      host_draft_supersede(store, key, old$id, by = id)
+    }
+  }
+}
+
+# Writes what a finished turn staged as drafts awaiting review.
 host_publish_drafts <- function(store, key, turn, s) {
   ids <- character()
   p <- s$published$proposal
@@ -385,30 +520,12 @@ host_publish_drafts <- function(store, key, turn, s) {
   }
   if (!is.null(p) && !identical(p$id, previous$proposal$id)) {
     id <- host_draft_write(store, key, turn, "interpretation", proposal = p)
-    for (old in host_drafts(
-      store,
-      key,
-      record = turn$record,
-      kind = "interpretation"
-    )) {
-      if (!identical(old$id, id)) {
-        host_draft_supersede(store, key, old$id, by = id)
-      }
-    }
+    host_replace_drafts(store, key, turn, "interpretation", id)
     ids <- c(ids, id)
   }
   for (form in s$published$forms) {
     id <- host_draft_write(store, key, turn, form$form, form = form)
-    for (old in host_drafts(
-      store,
-      key,
-      record = turn$record,
-      kind = form$form
-    )) {
-      if (!identical(old$id, id)) {
-        host_draft_supersede(store, key, old$id, by = id)
-      }
-    }
+    host_replace_drafts(store, key, turn, form$form, id)
     ids <- c(ids, id)
   }
   ids
